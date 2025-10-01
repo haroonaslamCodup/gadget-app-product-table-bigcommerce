@@ -31,7 +31,7 @@ export default async function route({ reply, logger, connections, api }: RouteCo
 
         // Try to get store from database
         try {
-            const store = await api.bigcommerce.store.findFirst();
+            const store = await api.internal.bigcommerce.store.findFirst();
             if (store) {
                 status.storeFound = true;
                 status.storeHash = store.storeHash || null;
@@ -49,7 +49,7 @@ export default async function route({ reply, logger, connections, api }: RouteCo
                 } catch (connectionError) {
                     const errorMessage = (connectionError as Error).message;
                     logger.warn(`Connection test failed: ${errorMessage}`);
-                    
+
                     // Only set error if it's not just about missing credentials (that's normal in some contexts)
                     if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
                         logger.warn("Connection test failed due to authentication issue");
