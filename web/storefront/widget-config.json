@@ -1,0 +1,60 @@
+{
+  "name": "Product Table Widget",
+  "description": "Display products in customizable table format with customer group-specific pricing",
+  "schema": [
+    {
+      "type": "tab",
+      "label": "Widget Selection",
+      "sections": [
+        {
+          "label": "Widget Configuration",
+          "settings": [
+            {
+              "type": "select",
+              "label": "Select Widget",
+              "id": "widgetId",
+              "required": true,
+              "helpText": "Choose the product table widget to display",
+              "options": []
+            }
+          ]
+        },
+        {
+          "label": "Display Options",
+          "settings": [
+            {
+              "type": "boolean",
+              "label": "Show Search Filter",
+              "id": "showSearch",
+              "default": true
+            },
+            {
+              "type": "boolean",
+              "label": "Show View Switcher",
+              "id": "showViewSwitcher",
+              "default": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "tab",
+      "label": "Advanced",
+      "sections": [
+        {
+          "label": "Custom CSS",
+          "settings": [
+            {
+              "type": "code",
+              "label": "Custom CSS",
+              "id": "customCSS",
+              "language": "css",
+              "helpText": "Add custom CSS to style the widget"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

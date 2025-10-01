@@ -12,12 +12,19 @@ import {
 } from "react-router";
 import { api } from "../api";
 import { IndexPage } from "../routes/index";
+import { WidgetsPage } from "../routes/widgets";
+import { WidgetNewPage } from "../routes/widget-new";
+import { WidgetEditPage } from "../routes/widget-edit";
+import { Navigation } from "./Navigation";
 
 function App() {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<Layout />}>
         <Route index element={<IndexPage />} />
+        <Route path="widgets" element={<WidgetsPage />} />
+        <Route path="widgets/new" element={<WidgetNewPage />} />
+        <Route path="widgets/:id/edit" element={<WidgetEditPage />} />
         <Route path="*" element={<Error404 />} />
       </Route>
     )
@@ -58,7 +65,14 @@ function AuthenticatedApp() {
       marginHorizontal={{ mobile: 'none', tablet: 'xxxLarge' }}
       marginVertical={{ mobile: 'none', tablet: "xxLarge" }}
     >
-      {isAuthenticated ? <Outlet /> : <UnauthenticatedApp />}
+      {isAuthenticated ? (
+        <>
+          <Navigation />
+          <Outlet />
+        </>
+      ) : (
+        <UnauthenticatedApp />
+      )}
     </Box>)
 }
 

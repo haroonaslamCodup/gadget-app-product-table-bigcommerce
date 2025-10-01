@@ -23,6 +23,16 @@ export const permissions: GadgetPermissions = {
             uninstall: true,
           },
         },
+        widgetInstance: {
+          read: {
+            filter: "accessControl/filters/widgetInstance.gelly",
+          },
+          actions: {
+            create: true,
+            delete: true,
+            update: true,
+          },
+        },
       },
     },
     unauthenticated: {

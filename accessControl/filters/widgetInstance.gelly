@@ -1,0 +1,3 @@
+filter ($session: Session) on WidgetInstance [
+  where store.id == $session.bigcommerceStoreId
+]

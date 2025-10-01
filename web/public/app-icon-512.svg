@@ -1,0 +1,42 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A73E8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1557B0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="url(#bgGradient)"/>
+
+  <!-- Table Icon -->
+  <g transform="translate(96, 96)">
+    <!-- Header Row -->
+    <rect x="0" y="0" width="320" height="64" rx="8" fill="white" opacity="0.95"/>
+    <text x="16" y="40" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#1A73E8">Product Table</text>
+
+    <!-- Row 1 -->
+    <rect x="0" y="80" width="320" height="56" rx="8" fill="white" opacity="0.75"/>
+    <circle cx="28" cy="108" r="16" fill="#E0E0E0"/>
+    <rect x="60" y="96" width="120" height="8" rx="4" fill="#E0E0E0"/>
+    <rect x="60" y="112" width="80" height="8" rx="4" fill="#E0E0E0"/>
+
+    <!-- Row 2 -->
+    <rect x="0" y="152" width="320" height="56" rx="8" fill="white" opacity="0.75"/>
+    <circle cx="28" cy="180" r="16" fill="#E0E0E0"/>
+    <rect x="60" y="168" width="100" height="8" rx="4" fill="#E0E0E0"/>
+    <rect x="60" y="184" width="60" height="8" rx="4" fill="#E0E0E0"/>
+
+    <!-- Row 3 -->
+    <rect x="0" y="224" width="320" height="56" rx="8" fill="white" opacity="0.75"/>
+    <circle cx="28" cy="252" r="16" fill="#E0E0E0"/>
+    <rect x="60" y="240" width="110" height="8" rx="4" fill="#E0E0E0"/>
+    <rect x="60" y="256" width="70" height="8" rx="4" fill="#E0E0E0"/>
+
+    <!-- Checkmark badge -->
+    <g transform="translate(260, 220)">
+      <circle cx="28" cy="28" r="40" fill="#4CAF50"/>
+      <path d="M16 28L24 36L40 20" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g>
+  </g>
+</svg>

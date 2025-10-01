@@ -4,3 +4,5 @@ node_modules/
 .react-router/
 Architecture.md
 CLAUDE.md
+APP_SETUP.md
+.gitignore
