@@ -13,10 +13,10 @@ export default async function route({ reply, logger, connections, request, api }
     logger.info(`BigCommerce current: ${!!connections.bigcommerce?.current}`);
 
     // Get the Gadget app URL for the widget script
-    const gadgetAppUrl = process.env.GADGET_APP_URL || process.env.GADGET_PUBLIC_APP_URL || "https://your-app.gadget.app";
+    const rawGadgetAppUrl = process.env.GADGET_APP_URL || process.env.GADGET_PUBLIC_APP_URL || "https://your-app.gadget.app";
 
     // Ensure gadgetAppUrl is a valid string to prevent "Cannot read properties of undefined" error
-    if (!gadgetAppUrl || typeof gadgetAppUrl !== 'string') {
+    if (!rawGadgetAppUrl || typeof rawGadgetAppUrl !== 'string') {
       logger.error("Gadget app URL is not properly configured");
       return reply.code(500).send({
         success: false,
@@ -24,6 +24,8 @@ export default async function route({ reply, logger, connections, request, api }
       });
     }
 
+    // Normalize URL to avoid double slashes
+    const gadgetAppUrl = rawGadgetAppUrl.replace(/\/+$/, "");
     const scriptSrc = `${gadgetAppUrl}/widget-loader.js`;
 
     // Try to get BigCommerce connection
