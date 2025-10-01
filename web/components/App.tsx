@@ -1,22 +1,34 @@
-import { Box, Link, Panel, ProgressCircle, Text } from "@bigcommerce/big-design"
+import { Box, Link, Panel, ProgressCircle, Text } from "@bigcommerce/big-design";
 import { Provider as GadgetProvider, useGadget } from "@gadgetinc/react-bigcommerce";
 import {
   Outlet,
   Route,
   RouterProvider,
   createBrowserRouter,
+  createHashRouter,
   createRoutesFromElements,
 } from "react-router";
 import { api } from "../api";
 import { IndexPage } from "../routes/index";
-import { WidgetsPage } from "../routes/widgets";
-import { WidgetNewPage } from "../routes/widget-new";
-import { WidgetEditPage } from "../routes/widget-edit";
 import { SetupPage } from "../routes/setup";
+import { WidgetEditPage } from "../routes/widget-edit";
+import { WidgetNewPage } from "../routes/widget-new";
+import { WidgetsPage } from "../routes/widgets";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Navigation } from "./Navigation";
 
 function App() {
-  const router = createBrowserRouter(
+  const isEmbedded = (() => {
+    try {
+      if (window.self !== window.top) return true;
+      const ref = document.referrer ? new URL(document.referrer) : null;
+      return !!ref && /mybigcommerce\.com$/i.test(ref.hostname);
+    } catch (_e) {
+      return false;
+    }
+  })();
+
+  const router = (isEmbedded ? createHashRouter : createBrowserRouter)(
     createRoutesFromElements(
       <Route path="/" element={<Layout />}>
         <Route index element={<IndexPage />} />
@@ -29,7 +41,11 @@ function App() {
     )
   );
 
-  return <RouterProvider router={router} />
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
+  )
 }
 
 function Layout() {
@@ -76,9 +92,11 @@ function AuthenticatedApp() {
 }
 
 function UnauthenticatedApp() {
+  const env = process.env.GADGET_PUBLIC_APP_ENV || "development";
+  const href = `/edit/${env}/files/web/components/App.tsx`;
   return (
     <Panel description="App must be viewed in the BigCommerce control panel">
-      <Text>Edit this page: <Link target="_blank" href={`/edit/${process.env.GADGET_PUBLIC_APP_ENV}/files/web/components/App.tsx`}>web/components/App.tsx</Link></Text>
+      <Text>Edit this page: <Link target="_blank" href={href}>web/components/App.tsx</Link></Text>
     </Panel>
   )
 }

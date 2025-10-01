@@ -1,10 +1,10 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
 import { GlobalStyles } from '@bigcommerce/big-design';
 import { theme as defaultTheme } from '@bigcommerce/big-design-theme';
-import { createGlobalStyle, ThemeProvider } from 'styled-components';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { createGlobalStyle, ThemeProvider } from 'styled-components';
 import App from "./components/App";
 
 const root = document.getElementById("root");
@@ -13,7 +13,7 @@ if (!root) throw new Error("#root element not found for booting react app");
 const AppGlobalStyles = createGlobalStyle`
   body {
     height: 100%;
-    background-color: ${({ theme }) => theme.colors.secondary10}
+    background-color: ${({ theme }) => (theme && theme.colors && theme.colors.secondary10) ? theme.colors.secondary10 : '#f5f7f9'}
   }
 `
 
