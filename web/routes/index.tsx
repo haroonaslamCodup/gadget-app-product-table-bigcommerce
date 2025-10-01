@@ -1,7 +1,7 @@
-import { useNavigate } from "react-router";
-import { Box, Button, Panel, Text, Flex, H1, H2, Link } from "@bigcommerce/big-design";
-import { CheckIcon, StoreIcon, AddIcon } from '@bigcommerce/big-design-icons';
+import { Box, Button, Flex, H1, H2, Link, Message, Panel, Text } from "@bigcommerce/big-design";
+import { AddIcon, CheckIcon, ErrorIcon, StoreIcon, WarningIcon } from '@bigcommerce/big-design-icons';
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 import { api } from "../api";
 import { useWidgets } from "../hooks/useWidgets";
 
@@ -13,19 +13,53 @@ export const IndexPage = () => {
     queryFn: () => api.bigcommerce.store.findFirst(),
   });
 
+  const { data: connectionStatus } = useQuery({
+    queryKey: ["connection-status"],
+    queryFn: () => fetch("/api/connection-status").then(res => res.json()),
+    refetchInterval: 30000, // Check every 30 seconds
+  });
+
   const { data: widgets } = useWidgets(store?.id);
 
   return (
     <>
       <Flex justifyContent="space-between" alignItems="center" marginBottom="large">
         <H1>Product Table Widget</H1>
-        <Button
-          iconLeft={<AddIcon />}
-          onClick={() => navigate("/widgets/new")}
-        >
-          Create Widget
-        </Button>
+        <Flex>
+          {connectionStatus && !connectionStatus.credentialsValid && (
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/setup")}
+              marginRight="small"
+            >
+              Setup Required
+            </Button>
+          )}
+          <Button
+            iconLeft={<AddIcon />}
+            onClick={() => navigate("/widgets/new")}
+            disabled={connectionStatus && !connectionStatus.credentialsValid}
+          >
+            Create Widget
+          </Button>
+        </Flex>
       </Flex>
+
+      {/* Connection Status Alert */}
+      {connectionStatus && !connectionStatus.credentialsValid && (
+        <Message
+          type="error"
+          messages={[{
+            text: connectionStatus.error || "BigCommerce connection is not working properly"
+          }]}
+          marginBottom="medium"
+          actions={[{
+            actionType: "normal",
+            text: "Go to Setup",
+            onClick: () => navigate("/setup")
+          }]}
+        />
+      )}
 
       <Panel
         header="Welcome!"
@@ -33,8 +67,22 @@ export const IndexPage = () => {
       >
         <Flex flexDirection="column">
           <Flex alignItems="center" marginBottom="small">
-            <CheckIcon color="success" />
-            <Text marginLeft="xSmall">Successfully connected to BigCommerce</Text>
+            {connectionStatus?.credentialsValid ? (
+              <>
+                <CheckIcon color="success" />
+                <Text marginLeft="xSmall">Successfully connected to BigCommerce</Text>
+              </>
+            ) : connectionStatus?.storeFound ? (
+              <>
+                <WarningIcon color="warning" />
+                <Text marginLeft="xSmall">Connection needs to be refreshed</Text>
+              </>
+            ) : (
+              <>
+                <ErrorIcon color="danger" />
+                <Text marginLeft="xSmall">BigCommerce connection not found</Text>
+              </>
+            )}
           </Flex>
 
           <Box>

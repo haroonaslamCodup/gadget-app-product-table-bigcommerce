@@ -1,6 +1,11 @@
-import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from "@tanstack/react-query";
+import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import { api } from "../api";
-import type { WidgetInstance, WidgetFormData } from "../types";
+import type { WidgetFormData, WidgetInstance } from "../types";
+
+// Helper function to safely convert dates to ISO strings
+const safeToISOString = (date: any): string => {
+  return date ? date.toISOString() : new Date().toISOString();
+};
 
 /**
  * Hook to fetch all widgets for a specific store
@@ -13,13 +18,13 @@ export const useWidgets = (storeId?: string): UseQueryResult<WidgetInstance[], E
         filter: storeId ? { store: { id: { equals: storeId } } } : undefined,
         sort: { createdAt: "Descending" }
       });
-      
+
       // Transform GadgetRecord to WidgetInstance
       return result.map((record: any) => {
         const widget: WidgetInstance = {
           id: record.id,
-          createdAt: record.createdAt.toISOString(),
-          updatedAt: record.updatedAt.toISOString(),
+          createdAt: safeToISOString(record.createdAt),
+          updatedAt: safeToISOString(record.updatedAt),
           widgetId: record.widgetId || '',
           widgetName: record.widgetName || undefined,
           displayFormat: record.displayFormat as any,
@@ -72,8 +77,8 @@ export const useWidget = (widgetId?: string): UseQueryResult<WidgetInstance | nu
       const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
+        createdAt: safeToISOString(record.createdAt),
+        updatedAt: safeToISOString(record.updatedAt),
         widgetId: record.widgetId || '',
         widgetName: record.widgetName || undefined,
         displayFormat: record.displayFormat as any,
@@ -115,7 +120,7 @@ export const useWidgetById = (id?: string): UseQueryResult<WidgetInstance | null
     queryKey: ["widget", "id", id],
     queryFn: async () => {
       if (!id) return null;
-      
+
       const result = await api.widgetInstance.findOne(id);
 
       if (!result) return null;
@@ -123,8 +128,8 @@ export const useWidgetById = (id?: string): UseQueryResult<WidgetInstance | null
       const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
+        createdAt: safeToISOString(record.createdAt),
+        updatedAt: safeToISOString(record.updatedAt),
         widgetId: record.widgetId || '',
         widgetName: record.widgetName || undefined,
         displayFormat: record.displayFormat as any,
@@ -171,8 +176,8 @@ export const useCreateWidget = (): UseMutationResult<WidgetInstance, Error, Part
       const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
+        createdAt: safeToISOString(record.createdAt),
+        updatedAt: safeToISOString(record.updatedAt),
         widgetId: record.widgetId || '',
         widgetName: record.widgetName || undefined,
         displayFormat: record.displayFormat as any,
@@ -230,8 +235,8 @@ export const useUpdateWidget = (): UseMutationResult<
       const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
+        createdAt: safeToISOString(record.createdAt),
+        updatedAt: safeToISOString(record.updatedAt),
         widgetId: record.widgetId || '',
         widgetName: record.widgetName || undefined,
         displayFormat: record.displayFormat as any,
@@ -355,8 +360,8 @@ export const useDuplicateWidget = (storeId?: string): UseMutationResult<WidgetIn
       const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
+        createdAt: safeToISOString(record.createdAt),
+        updatedAt: safeToISOString(record.updatedAt),
         widgetId: record.widgetId || '',
         widgetName: record.widgetName || undefined,
         displayFormat: record.displayFormat as any,

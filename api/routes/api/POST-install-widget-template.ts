@@ -23,17 +23,17 @@ export default async function route({ reply, logger, connections, request, api }
         if (store) {
           logger.info(`Found store in database: ${store.storeHash}`);
           logger.info(`Store scopes: ${JSON.stringify(store.scopes)}`);
-          
+
           // Check if the store has necessary scopes for widget template management
           // BigCommerce uses different scope names than generic OAuth scopes
           const requiredScopes = ['store_v2_content', 'store_storefront_api', 'store_themes_manage'];
           const availableScopes = Array.isArray(store.scopes) ? store.scopes as string[] : [];
           const hasRequiredScopes = requiredScopes.some(scope => availableScopes.includes(scope));
-          
+
           logger.info(`Available scopes: ${JSON.stringify(availableScopes)}`);
           logger.info(`Required scopes: ${JSON.stringify(requiredScopes)}`);
           logger.info(`Has required scopes for widget templates: ${hasRequiredScopes}`);
-          
+
           if (!hasRequiredScopes) {
             logger.warn("Store missing required scopes for widget template installation");
             return reply.code(200).send({
@@ -64,17 +64,55 @@ export default async function route({ reply, logger, connections, request, api }
               ]
             });
           }
-          
+
           try {
             bigcommerceConnection = connections.bigcommerce.forStore(store);
             logger.info(`Created connection for store: ${!!bigcommerceConnection}`);
-            
-            // If connection is successful, log the available API capabilities
+
+            // Test the connection by making a simple API call
             if (bigcommerceConnection) {
-              logger.info("Connection established successfully with appropriate scopes");
+              try {
+                await bigcommerceConnection.v2.get('/store' as any);
+                logger.info("Connection established successfully with valid credentials");
+              } catch (testError) {
+                logger.warn(`Connection test failed: ${(testError as Error).message}`);
+                throw new Error(`Invalid credentials: ${(testError as Error).message}`);
+              }
             }
           } catch (connectionError) {
-            logger.warn(`Connection failed despite having required scopes: ${(connectionError as Error).message}`);
+            const errorMessage = (connectionError as Error).message;
+            logger.warn(`Connection failed: ${errorMessage}`);
+
+            // Check if this is an access token error
+            if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
+              return reply.code(200).send({
+                success: false,
+                error: "AUTHENTICATION_REQUIRED",
+                message: "The app needs to be reinstalled to refresh authentication credentials.",
+                instructions: [
+                  "The BigCommerce connection has expired or is invalid.",
+                  "To fix this issue:",
+                  "",
+                  "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
+                  "2. Find 'Product Table Widget' app",
+                  "3. Click 'Uninstall' to remove the app completely",
+                  "4. Reinstall the app from the BigCommerce marketplace",
+                  "5. Make sure to approve all permission requests during installation",
+                  "",
+                  "This will refresh the authentication and restore full functionality.",
+                  "",
+                  "If you continue to have issues, you can add widgets manually:",
+                  "1. Go to BigCommerce Page Builder",
+                  "2. Add an 'HTML' widget to your page",
+                  "3. Paste this code:",
+                  `<div id="product-table-{WIDGET_ID}" class="product-table-widget" data-product-table-widget='{"widgetId":"{WIDGET_ID}"}'><div class="loading">Loading...</div></div>`,
+                  "4. Replace {WIDGET_ID} with your actual widget ID"
+                ]
+              });
+            }
+
+            // For other connection errors, provide manual setup
+            logger.warn(`Non-authentication connection error: ${errorMessage}`);
           }
         } else {
           logger.warn(`No store found in database`);

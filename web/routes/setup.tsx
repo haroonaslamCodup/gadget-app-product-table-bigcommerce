@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Box, Button, H1, H2, Panel, Text, Flex, Link, Message } from "@bigcommerce/big-design";
+import { Box, Button, Flex, H1, H2, Link, Message, Panel, Text } from "@bigcommerce/big-design";
 import { CheckIcon, ErrorIcon } from "@bigcommerce/big-design-icons";
+import { useState } from "react";
 
 export const SetupPage = () => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [widgetTemplateInstalled, setWidgetTemplateInstalled] = useState(false);
   const [scriptInstalled, setScriptInstalled] = useState(false);
-  const [alertMessage, setAlertMessage] = useState<{type: 'success' | 'error' | 'warning'; text: string} | null>(null);
+  const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
   const [manualInstructions, setManualInstructions] = useState<string[] | null>(null);
 
   const installWidgetTemplate = async () => {
@@ -35,10 +35,19 @@ export const SetupPage = () => {
           });
         }
       } else {
-        setAlertMessage({
-          type: "error",
-          text: `Failed to install widget template: ${data.error}`
-        });
+        // Handle authentication errors specifically
+        if (data.error === "AUTHENTICATION_REQUIRED") {
+          setAlertMessage({
+            type: "error",
+            text: data.message || "Authentication required - please reinstall the app."
+          });
+          setManualInstructions(data.instructions || []);
+        } else {
+          setAlertMessage({
+            type: "error",
+            text: `Failed to install widget template: ${data.error}`
+          });
+        }
       }
     } catch (error) {
       setAlertMessage({
@@ -78,10 +87,19 @@ export const SetupPage = () => {
           });
         }
       } else {
-        setAlertMessage({
-          type: "error",
-          text: `Failed to install widget script: ${data.error}`
-        });
+        // Handle authentication errors specifically
+        if (data.error === "AUTHENTICATION_REQUIRED") {
+          setAlertMessage({
+            type: "error",
+            text: data.message || "Authentication required - please reinstall the app."
+          });
+          setManualInstructions(data.instructions || []);
+        } else {
+          setAlertMessage({
+            type: "error",
+            text: `Failed to install widget script: ${data.error}`
+          });
+        }
       }
     } catch (error) {
       setAlertMessage({
@@ -225,11 +243,21 @@ export const SetupPage = () => {
       {/* Troubleshooting */}
       <Panel header="Troubleshooting">
         <Box>
-          <Text bold marginBottom="xSmall">Widget not appearing in Page Builder?</Text>
+          <Text bold marginBottom="xSmall">Getting "access token is required" error?</Text>
+          <ul>
+            <li><Text>This means the app needs to be reinstalled to refresh authentication</Text></li>
+            <li><Text>Go to BigCommerce Admin → Apps & Customizations → My Apps</Text></li>
+            <li><Text>Find this app and click "Uninstall"</Text></li>
+            <li><Text>Reinstall from the BigCommerce marketplace</Text></li>
+            <li><Text>Make sure to approve all permission requests during installation</Text></li>
+          </ul>
+
+          <Text bold marginTop="medium" marginBottom="xSmall">Widget not appearing in Page Builder?</Text>
           <ul>
             <li><Text>Wait 1-2 minutes after installation and refresh</Text></li>
             <li><Text>Clear your browser cache</Text></li>
             <li><Text>Try reinstalling the widget template</Text></li>
+            <li><Text>Check if your BigCommerce plan supports Widget Templates API</Text></li>
           </ul>
 
           <Text bold marginTop="medium" marginBottom="xSmall">Widget not working on storefront?</Text>
@@ -238,12 +266,22 @@ export const SetupPage = () => {
             <li><Text>Check browser console for errors</Text></li>
             <li><Text>Verify the Widget ID is correct</Text></li>
             <li><Text>Make sure the widget is marked as Active</Text></li>
+            <li><Text>Ensure the widget script URL is accessible</Text></li>
+          </ul>
+
+          <Text bold marginTop="medium" marginBottom="xSmall">Connection issues?</Text>
+          <ul>
+            <li><Text>Check the connection status on the main dashboard</Text></li>
+            <li><Text>Verify your BigCommerce store has the required scopes</Text></li>
+            <li><Text>Try refreshing the page and running setup again</Text></li>
+            <li><Text>If issues persist, reinstall the app completely</Text></li>
           </ul>
 
           <Text bold marginTop="medium" marginBottom="xSmall">Need to reinstall?</Text>
           <Text>
             You can run the installation steps again at any time.
             It won't create duplicates - existing installations will be detected.
+            If you're having persistent issues, try uninstalling and reinstalling the entire app.
           </Text>
         </Box>
       </Panel>
