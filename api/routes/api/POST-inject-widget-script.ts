@@ -14,6 +14,16 @@ export default async function route({ reply, logger, connections, request, api }
 
     // Get the Gadget app URL for the widget script
     const gadgetAppUrl = process.env.GADGET_APP_URL || process.env.GADGET_PUBLIC_APP_URL || "https://your-app.gadget.app";
+    
+    // Ensure gadgetAppUrl is a valid string to prevent "Cannot read properties of undefined" error
+    if (!gadgetAppUrl || typeof gadgetAppUrl !== 'string') {
+      logger.error("Gadget app URL is not properly configured");
+      return reply.code(500).send({
+        success: false,
+        error: "Gadget app URL is not properly configured"
+      });
+    }
+    
     const scriptSrc = `${gadgetAppUrl}/widget-loader.js`;
 
     // Try to get BigCommerce connection
@@ -26,24 +36,72 @@ export default async function route({ reply, logger, connections, request, api }
         const store = await api.bigcommerce.store.findFirst();
         if (store) {
           logger.info(`Found store in database: ${store.storeHash}`);
+          logger.info(`Store scopes: ${JSON.stringify(store.scopes)}`);
+          
+          // Check if the store has necessary scopes for script management
+          // BigCommerce uses different scope names than generic OAuth scopes
+          const requiredScopes = ['store_v2_content', 'store_storefront_api', 'store_themes_manage'];
+          const availableScopes = Array.isArray(store.scopes) ? store.scopes as string[] : [];
+          const hasRequiredScopes = requiredScopes.some(scope => availableScopes.includes(scope));
+          
+          logger.info(`Available scopes: ${JSON.stringify(availableScopes)}`);
+          logger.info(`Required scopes: ${JSON.stringify(requiredScopes)}`);
+          logger.info(`Has required scopes for script injection: ${hasRequiredScopes}`);
+          
+          if (!hasRequiredScopes) {
+            logger.warn("Store missing required scopes for script injection");
+            return reply.code(200).send({
+              success: true,
+              manualSetup: true,
+              scriptSrc,
+              message: "App permissions are insufficient. Please reinstall with required permissions.",
+              instructions: [
+                "Required permissions for automatic setup:",
+                "- Content management (store_v2_content)",
+                "- Storefront API access (store_storefront_api)",
+                "- Theme management (store_themes_manage)",
+                "",
+                "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
+                "2. Remove the app completely",
+                "3. Reinstall from the BigCommerce marketplace to grant required permissions",
+                "4. Ensure to approve all permission requests during installation",
+                "",
+                "Alternatively, add the widget script manually:",
+                "Option 1: Use Script Manager (Recommended)",
+                "1. Go to Storefront → Script Manager",
+                "2. Click 'Create a Script'",
+                `3. Script URL: ${scriptSrc}`,
+                "4. Location: Footer, Load method: Defer, Pages: All pages",
+                "",
+                "Option 2: Edit Theme Files",
+                "1. Go to Storefront → Themes → [Active Theme] → Advanced → Edit Theme Files",
+                "2. Open templates/layout/base.html",
+                `3. Add before </body>: <script src="${scriptSrc}" defer></script>`
+              ]
+            });
+          }
           
           try {
             // Try to create a connection for the store - this will fail if credentials are invalid
             bigcommerceConnection = connections.bigcommerce.forStore(store);
             logger.info(`Created connection for store: ${!!bigcommerceConnection}`);
+            
+            // If connection is successful, log the available API capabilities
+            if (bigcommerceConnection) {
+              logger.info("Connection established successfully with appropriate scopes");
+            }
           } catch (connectionError) {
-            logger.warn("Store found in database but unable to create connection - please reinstall the app on your BigCommerce store");
+            logger.warn(`Connection failed despite having required scopes: ${(connectionError as Error).message}`);
             return reply.code(200).send({
               success: true,
               manualSetup: true,
               scriptSrc,
-              message: "Store credentials are missing or invalid. Please reinstall the app on your BigCommerce store.",
+              message: "Connection failed despite having required permissions. Please consult with app support.",
               instructions: [
-                "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
-                "2. Find your app and reinstall it to establish the connection",
-                "3. Once reinstalled, try this setup process again",
+                "The app has the required permissions but connection is still failing.",
+                "This may indicate a configuration issue with the app.",
                 "",
-                "Alternatively, add the widget script manually:",
+                "To add the widget script manually:",
                 "Option 1: Use Script Manager (Recommended)",
                 "1. Go to Storefront → Script Manager",
                 "2. Click 'Create a Script'",

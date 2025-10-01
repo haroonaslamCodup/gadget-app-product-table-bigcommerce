@@ -21,12 +21,60 @@ export default async function route({ reply, logger, connections, request, api }
       try {
         const store = await api.bigcommerce.store.findFirst();
         if (store) {
+          logger.info(`Found store in database: ${store.storeHash}`);
+          logger.info(`Store scopes: ${JSON.stringify(store.scopes)}`);
+          
+          // Check if the store has necessary scopes for widget template management
+          // BigCommerce uses different scope names than generic OAuth scopes
+          const requiredScopes = ['store_v2_content', 'store_storefront_api', 'store_themes_manage'];
+          const availableScopes = Array.isArray(store.scopes) ? store.scopes as string[] : [];
+          const hasRequiredScopes = requiredScopes.some(scope => availableScopes.includes(scope));
+          
+          logger.info(`Available scopes: ${JSON.stringify(availableScopes)}`);
+          logger.info(`Required scopes: ${JSON.stringify(requiredScopes)}`);
+          logger.info(`Has required scopes for widget templates: ${hasRequiredScopes}`);
+          
+          if (!hasRequiredScopes) {
+            logger.warn("Store missing required scopes for widget template installation");
+            return reply.code(200).send({
+              success: true,
+              manualSetup: true,
+              message: "App permissions are insufficient for automatic widget template installation.",
+              instructions: [
+                "Required permissions for automatic setup:",
+                "- Content management (store_v2_content)",
+                "- Storefront API access (store_storefront_api)",
+                "- Theme management (store_themes_manage)",
+                "",
+                "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
+                "2. Remove the app completely",
+                "3. Reinstall from the BigCommerce marketplace to grant required permissions",
+                "4. Ensure to approve all permission requests during installation",
+                "",
+                "To add widgets manually:",
+                "1. Go to BigCommerce Admin → Storefront → My Themes",
+                "2. Click 'Customize' on your active theme",
+                "3. Navigate to the page where you want to add the widget",
+                "4. Click 'Add Widget' or drag a widget zone",
+                "5. Select 'HTML' widget from the dropdown",
+                "6. Paste this code (replace YOUR_WIDGET_ID):",
+                '<div id="product-table-YOUR_WIDGET_ID" class="product-table-widget" data-product-table-widget=\'{"widgetId":"YOUR_WIDGET_ID"}\'><div class="loading">Loading products...</div></div>',
+                "7. Replace YOUR_WIDGET_ID with the actual Widget ID from the Widgets page",
+                "8. Click 'Save' and 'Publish'"
+              ]
+            });
+          }
+          
           try {
             bigcommerceConnection = connections.bigcommerce.forStore(store);
-            logger.info(`Found store in database: ${store.storeHash}`);
             logger.info(`Created connection for store: ${!!bigcommerceConnection}`);
+            
+            // If connection is successful, log the available API capabilities
+            if (bigcommerceConnection) {
+              logger.info("Connection established successfully with appropriate scopes");
+            }
           } catch (connectionError) {
-            logger.warn(`Store found but unable to create connection: ${store.storeHash}`);
+            logger.warn(`Connection failed despite having required scopes: ${(connectionError as Error).message}`);
           }
         } else {
           logger.warn(`No store found in database`);
