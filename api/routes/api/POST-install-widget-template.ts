@@ -21,98 +21,26 @@ export default async function route({ reply, logger, connections, request, api }
       try {
         const store = await api.bigcommerce.store.findFirst();
         if (store) {
-          logger.info(`Found store in database: ${store.storeHash}`);
-          logger.info(`Store scopes: ${JSON.stringify(store.scopes)}`);
-
-          // Check if the store has necessary scopes for widget template management
-          // BigCommerce uses different scope names than generic OAuth scopes
-          const requiredScopes = ['store_v2_content', 'store_storefront_api', 'store_themes_manage'];
-          const availableScopes = Array.isArray(store.scopes) ? store.scopes as string[] : [];
-          const hasRequiredScopes = requiredScopes.some(scope => availableScopes.includes(scope));
-
-          logger.info(`Available scopes: ${JSON.stringify(availableScopes)}`);
-          logger.info(`Required scopes: ${JSON.stringify(requiredScopes)}`);
-          logger.info(`Has required scopes for widget templates: ${hasRequiredScopes}`);
-
-          if (!hasRequiredScopes) {
-            logger.warn("Store missing required scopes for widget template installation");
-            return reply.code(200).send({
-              success: true,
-              manualSetup: true,
-              message: "App permissions are insufficient for automatic widget template installation.",
-              instructions: [
-                "Required permissions for automatic setup:",
-                "- Content management (store_v2_content)",
-                "- Storefront API access (store_storefront_api)",
-                "- Theme management (store_themes_manage)",
-                "",
-                "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
-                "2. Remove the app completely",
-                "3. Reinstall from the BigCommerce marketplace to grant required permissions",
-                "4. Ensure to approve all permission requests during installation",
-                "",
-                "To add widgets manually:",
-                "1. Go to BigCommerce Admin → Storefront → My Themes",
-                "2. Click 'Customize' on your active theme",
-                "3. Navigate to the page where you want to add the widget",
-                "4. Click 'Add Widget' or drag a widget zone",
-                "5. Select 'HTML' widget from the dropdown",
-                "6. Paste this code (replace YOUR_WIDGET_ID):",
-                '<div id="product-table-YOUR_WIDGET_ID" class="product-table-widget" data-product-table-widget=\'{"widgetId":"YOUR_WIDGET_ID"}\'><div class="loading">Loading products...</div></div>',
-                "7. Replace YOUR_WIDGET_ID with the actual Widget ID from the Widgets page",
-                "8. Click 'Save' and 'Publish'"
-              ]
-            });
-          }
-
-          try {
-            bigcommerceConnection = connections.bigcommerce.forStore(store);
-            logger.info(`Created connection for store: ${!!bigcommerceConnection}`);
-
-            // Test the connection by making a simple API call
-            if (bigcommerceConnection) {
-              try {
-                await bigcommerceConnection.v2.get('/store' as any);
-                logger.info("Connection established successfully with valid credentials");
-              } catch (testError) {
-                logger.warn(`Connection test failed: ${(testError as Error).message}`);
-                throw new Error(`Invalid credentials: ${(testError as Error).message}`);
-              }
+          logger.info(`Found store in database: ${store.storeHash || store.id}`);
+          
+          // For Gadget's single-click connection, the connection should be available via the context
+          // The authentication is managed by Gadget, so if a store exists, we should have a connection
+          // Try the current connection again, which might be available now that we know a store exists
+          bigcommerceConnection = connections.bigcommerce?.current;
+          
+          if (bigcommerceConnection) {
+            try {
+              // Test the connection by making a simple API call
+              await bigcommerceConnection.v2.get('/store' as any);
+              logger.info("Current connection established successfully with valid credentials");
+            } catch (testError) {
+              const errorMessage = (testError as Error).message;
+              logger.warn(`Connection test failed: ${errorMessage}`);
+              
+              // If the current connection exists but doesn't work, we'll handle it below
             }
-          } catch (connectionError) {
-            const errorMessage = (connectionError as Error).message;
-            logger.warn(`Connection failed: ${errorMessage}`);
-
-            // Check if this is an access token error
-            if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
-              return reply.code(200).send({
-                success: false,
-                error: "AUTHENTICATION_REQUIRED",
-                message: "The app needs to be reinstalled to refresh authentication credentials.",
-                instructions: [
-                  "The BigCommerce connection has expired or is invalid.",
-                  "To fix this issue:",
-                  "",
-                  "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
-                  "2. Find 'Product Table Widget' app",
-                  "3. Click 'Uninstall' to remove the app completely",
-                  "4. Reinstall the app from the BigCommerce marketplace",
-                  "5. Make sure to approve all permission requests during installation",
-                  "",
-                  "This will refresh the authentication and restore full functionality.",
-                  "",
-                  "If you continue to have issues, you can add widgets manually:",
-                  "1. Go to BigCommerce Page Builder",
-                  "2. Add an 'HTML' widget to your page",
-                  "3. Paste this code:",
-                  `<div id="product-table-{WIDGET_ID}" class="product-table-widget" data-product-table-widget='{"widgetId":"{WIDGET_ID}"}'><div class="loading">Loading...</div></div>`,
-                  "4. Replace {WIDGET_ID} with your actual widget ID"
-                ]
-              });
-            }
-
-            // For other connection errors, provide manual setup
-            logger.warn(`Non-authentication connection error: ${errorMessage}`);
+          } else {
+            logger.warn("No current connection available even though store exists in database");
           }
         } else {
           logger.warn(`No store found in database`);
@@ -237,9 +165,39 @@ export default async function route({ reply, logger, connections, request, api }
       }
     } catch (apiError: unknown) {
       const apiErr = apiError as any;
-      logger.warn(`Widget Templates API error: ${apiErr?.message || JSON.stringify(apiErr)}`);
+      const errorMessage = apiErr?.message || JSON.stringify(apiErr);
+      logger.warn(`Widget Templates API error: ${errorMessage}`);
 
-      // Widget Templates API might not be available on all plans
+      // Check if this is an authentication error
+      if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
+        logger.error("Access token is required during widget template installation - authentication has failed");
+        return reply.code(200).send({
+          success: false,
+          error: "AUTHENTICATION_REQUIRED",
+          message: "The app needs to be reinstalled to refresh authentication credentials.",
+          instructions: [
+            "The BigCommerce connection has expired or is invalid.",
+            "To fix this issue:",
+            "",
+            "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
+            "2. Find 'Product Table Widget' app",
+            "3. Click 'Uninstall' to remove the app completely",
+            "4. Reinstall the app from the BigCommerce marketplace",
+            "5. Make sure to approve all permission requests during installation",
+            "",
+            "This will refresh the authentication and restore full functionality.",
+            "",
+            "If you continue to have issues, you can add widgets manually:",
+            "1. Go to BigCommerce Page Builder",
+            "2. Add an 'HTML' widget to your page",
+            "3. Paste this code:",
+            `<div id="product-table-{WIDGET_ID}" class="product-table-widget" data-product-table-widget='{"widgetId":"{WIDGET_ID}"}'><div class="loading">Loading...</div></div>`,
+            "4. Replace {WIDGET_ID} with your actual widget ID"
+          ]
+        });
+      }
+
+      // Widget Templates API might not be available on all plans or might fail for other reasons
       // Return success with instructions for manual setup
       return reply.code(200).send({
         success: true,

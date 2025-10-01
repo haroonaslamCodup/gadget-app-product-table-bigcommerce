@@ -35,122 +35,26 @@ export default async function route({ reply, logger, connections, request, api }
       try {
         const store = await api.bigcommerce.store.findFirst();
         if (store) {
-          logger.info(`Found store in database: ${store.storeHash}`);
-          logger.info(`Store scopes: ${JSON.stringify(store.scopes)}`);
-
-          // Check if the store has necessary scopes for script management
-          // BigCommerce uses different scope names than generic OAuth scopes
-          const requiredScopes = ['store_v2_content', 'store_storefront_api', 'store_themes_manage'];
-          const availableScopes = Array.isArray(store.scopes) ? store.scopes as string[] : [];
-          const hasRequiredScopes = requiredScopes.some(scope => availableScopes.includes(scope));
-
-          logger.info(`Available scopes: ${JSON.stringify(availableScopes)}`);
-          logger.info(`Required scopes: ${JSON.stringify(requiredScopes)}`);
-          logger.info(`Has required scopes for script injection: ${hasRequiredScopes}`);
-
-          if (!hasRequiredScopes) {
-            logger.warn("Store missing required scopes for script injection");
-            return reply.code(200).send({
-              success: true,
-              manualSetup: true,
-              scriptSrc,
-              message: "App permissions are insufficient. Please reinstall with required permissions.",
-              instructions: [
-                "Required permissions for automatic setup:",
-                "- Content management (store_v2_content)",
-                "- Storefront API access (store_storefront_api)",
-                "- Theme management (store_themes_manage)",
-                "",
-                "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
-                "2. Remove the app completely",
-                "3. Reinstall from the BigCommerce marketplace to grant required permissions",
-                "4. Ensure to approve all permission requests during installation",
-                "",
-                "Alternatively, add the widget script manually:",
-                "Option 1: Use Script Manager (Recommended)",
-                "1. Go to Storefront → Script Manager",
-                "2. Click 'Create a Script'",
-                `3. Script URL: ${scriptSrc}`,
-                "4. Location: Footer, Load method: Defer, Pages: All pages",
-                "",
-                "Option 2: Edit Theme Files",
-                "1. Go to Storefront → Themes → [Active Theme] → Advanced → Edit Theme Files",
-                "2. Open templates/layout/base.html",
-                `3. Add before </body>: <script src="${scriptSrc}" defer></script>`
-              ]
-            });
-          }
-
-          try {
-            // Try to create a connection for the store - this will fail if credentials are invalid
-            bigcommerceConnection = connections.bigcommerce.forStore(store);
-            logger.info(`Created connection for store: ${!!bigcommerceConnection}`);
-
-            // Test the connection by making a simple API call
-            if (bigcommerceConnection) {
-              try {
-                await bigcommerceConnection.v2.get('/store' as any);
-                logger.info("Connection established successfully with valid credentials");
-              } catch (testError) {
-                logger.warn(`Connection test failed: ${(testError as Error).message}`);
-                throw new Error(`Invalid credentials: ${(testError as Error).message}`);
-              }
+          logger.info(`Found store in database: ${store.storeHash || store.id}`);
+          
+          // For Gadget's single-click connection, the connection should be available via the context
+          // The authentication is managed by Gadget, so if a store exists, we should have a connection
+          // Try the current connection again, which might be available now that we know a store exists
+          bigcommerceConnection = connections.bigcommerce?.current;
+          
+          if (bigcommerceConnection) {
+            try {
+              // Test the connection by making a simple API call
+              await bigcommerceConnection.v2.get('/store' as any);
+              logger.info("Current connection established successfully with valid credentials");
+            } catch (testError) {
+              const errorMessage = (testError as Error).message;
+              logger.warn(`Connection test failed: ${errorMessage}`);
+              
+              // If the current connection exists but doesn't work, we'll handle it below
             }
-          } catch (connectionError) {
-            const errorMessage = (connectionError as Error).message;
-            logger.warn(`Connection failed: ${errorMessage}`);
-
-            // Check if this is an access token error
-            if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
-              return reply.code(200).send({
-                success: false,
-                error: "AUTHENTICATION_REQUIRED",
-                message: "The app needs to be reinstalled to refresh authentication credentials.",
-                instructions: [
-                  "The BigCommerce connection has expired or is invalid.",
-                  "To fix this issue:",
-                  "",
-                  "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
-                  "2. Find 'Product Table Widget' app",
-                  "3. Click 'Uninstall' to remove the app completely",
-                  "4. Reinstall the app from the BigCommerce marketplace",
-                  "5. Make sure to approve all permission requests during installation",
-                  "",
-                  "This will refresh the authentication and restore full functionality.",
-                  "",
-                  "If you continue to have issues, you can add the widget script manually:",
-                  "Option 1: Use Script Manager (Recommended)",
-                  "1. Go to Storefront → Script Manager",
-                  "2. Click 'Create a Script'",
-                  `3. Script URL: ${scriptSrc}`,
-                  "4. Location: Footer, Load method: Defer, Pages: All pages"
-                ]
-              });
-            }
-
-            // For other connection errors, provide manual setup
-            return reply.code(200).send({
-              success: true,
-              manualSetup: true,
-              scriptSrc,
-              message: "Connection failed despite having required permissions. Please add the script manually.",
-              instructions: [
-                "The app has the required permissions but connection is still failing.",
-                "This may indicate a temporary API issue.",
-                "",
-                "To add the widget script manually:",
-                "Option 1: Use Script Manager (Recommended)",
-                "1. Go to Storefront → Script Manager",
-                "2. Click 'Create a Script'",
-                `3. Script URL: ${scriptSrc}`,
-                "4. Location: Footer, Load method: Defer, Pages: All pages",
-                "",
-                "Option 2: Edit Theme Files",
-                "1. Go to Storefront → Themes → [Active Theme] → Advanced → Edit Theme Files",
-                "2. Open templates/layout/base.html",
-                `3. Add before </body>: <script src="${scriptSrc}" defer></script>`
-              ]
-            });
+          } else {
+            logger.warn("No current connection available even though store exists in database");
           }
         } else {
           logger.warn("No store found in database");
@@ -198,7 +102,38 @@ export default async function route({ reply, logger, connections, request, api }
     try {
       existingScripts = await bigcommerceConnection.v3.get('/content/scripts') as any;
     } catch (getError) {
-      logger.warn(`Could not fetch existing scripts: ${(getError as Error).message}`);
+      const errorMessage = (getError as Error).message;
+      logger.warn(`Could not fetch existing scripts: ${errorMessage}`);
+      
+      // Check if this is an access token problem
+      if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
+        logger.error("Access token is required - authentication has failed");
+        return reply.code(200).send({
+          success: false,
+          error: "AUTHENTICATION_REQUIRED",
+          message: "The app needs to be reinstalled to refresh authentication credentials.",
+          instructions: [
+            "The BigCommerce connection has expired or is invalid.",
+            "To fix this issue:",
+            "",
+            "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
+            "2. Find 'Product Table Widget' app",
+            "3. Click 'Uninstall' to remove the app completely",
+            "4. Reinstall the app from the BigCommerce marketplace",
+            "5. Make sure to approve all permission requests during installation",
+            "",
+            "This will refresh the authentication and restore full functionality.",
+            "",
+            "If you continue to have issues, you can add the widget script manually:",
+            "Option 1: Use Script Manager (Recommended)",
+            "1. Go to Storefront → Script Manager",
+            "2. Click 'Create a Script",
+            `3. Script URL: ${scriptSrc}`,
+            "4. Location: Footer, Load method: Defer, Pages: All pages"
+          ]
+        });
+      }
+      
       existingScripts = { data: [] };
     }
 
@@ -245,9 +180,39 @@ export default async function route({ reply, logger, connections, request, api }
       }
     } catch (apiError: unknown) {
       const apiErr = apiError as any;
-      logger.warn(`Script injection API error: ${apiErr?.message || JSON.stringify(apiErr)}`);
+      const errorMessage = apiErr?.message || JSON.stringify(apiErr);
+      logger.warn(`Script injection API error: ${errorMessage}`);
 
-      // Scripts API might not be available or might fail
+      // Check if this is an authentication error
+      if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
+        logger.error("Access token is required during script injection - authentication has failed");
+        return reply.code(200).send({
+          success: false,
+          error: "AUTHENTICATION_REQUIRED",
+          message: "The app needs to be reinstalled to refresh authentication credentials.",
+          instructions: [
+            "The BigCommerce connection has expired or is invalid.",
+            "To fix this issue:",
+            "",
+            "1. Go to BigCommerce Admin → Apps & Customizations → My Apps",
+            "2. Find 'Product Table Widget' app",
+            "3. Click 'Uninstall' to remove the app completely",
+            "4. Reinstall the app from the BigCommerce marketplace",
+            "5. Make sure to approve all permission requests during installation",
+            "",
+            "This will refresh the authentication and restore full functionality.",
+            "",
+            "If you continue to have issues, you can add the widget script manually:",
+            "Option 1: Use Script Manager (Recommended)",
+            "1. Go to Storefront → Script Manager",
+            "2. Click 'Create a Script",
+            `3. Script URL: ${scriptSrc}`,
+            "4. Location: Footer, Load method: Defer, Pages: All pages"
+          ]
+        });
+      }
+
+      // Scripts API might not be available or might fail for other reasons
       // Return success with manual instructions
       return reply.code(200).send({
         success: true,

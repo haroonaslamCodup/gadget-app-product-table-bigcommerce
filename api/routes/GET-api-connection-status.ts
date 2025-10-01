@@ -47,8 +47,16 @@ export default async function route({ reply, logger, connections, api }: RouteCo
                         logger.info("BigCommerce connection is valid");
                     }
                 } catch (connectionError) {
-                    status.error = `Connection test failed: ${(connectionError as Error).message}`;
-                    logger.warn(`Connection test failed: ${(connectionError as Error).message}`);
+                    const errorMessage = (connectionError as Error).message;
+                    logger.warn(`Connection test failed: ${errorMessage}`);
+                    
+                    // Only set error if it's not just about missing credentials (that's normal in some contexts)
+                    if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
+                        logger.warn("Connection test failed due to authentication issue");
+                        status.error = `Authentication issue: ${errorMessage}`;
+                    } else {
+                        status.error = `Connection test failed: ${errorMessage}`;
+                    }
                 }
             } else {
                 status.error = "No store found in database";
