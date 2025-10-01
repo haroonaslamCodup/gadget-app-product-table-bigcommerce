@@ -1,0 +1,6 @@
+.gadget/
+node_modules/
+**/.DS_Store
+.react-router/
+Architecture.md
+CLAUDE.md
