@@ -179,7 +179,7 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
           <Table>
             <ProductTableHeader
               columns={columns}
-              onSort={config.enableCustomerSorting ? setSortBy : undefined}
+              onSort={config.enableCustomerSorting ? ((sort: string) => setSortBy(sort as any)) : undefined}
               currentSort={sortBy}
             />
             <tbody>

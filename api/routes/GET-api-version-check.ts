@@ -58,10 +58,11 @@ export default async function route({ request, reply, api, logger }: RouteContex
             lastChecked: new Date(),
           });
         }
-      } catch (updateError) {
+      } catch (updateError: unknown) {
+        const err = updateError as Error;
         logger.warn("Failed to update lastChecked timestamp", {
           widgetId,
-          error: updateError.message
+          error: err.message
         });
       }
     }
@@ -74,8 +75,9 @@ export default async function route({ request, reply, api, logger }: RouteContex
       .header("Cache-Control", "public, max-age=3600") // Cache for 1 hour
       .send(versionInfo);
 
-  } catch (error) {
-    logger.error("Error checking version", { error: error.message, stack: error.stack });
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error("Error checking version", { error: err.message, stack: err.stack });
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

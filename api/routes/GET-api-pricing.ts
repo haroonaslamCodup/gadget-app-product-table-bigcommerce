@@ -14,7 +14,7 @@ import type { RouteContext } from "gadget-server";
  * - quantity: Quantity for bulk pricing
  */
 
-export default async function route({ request, reply, api, logger, connections }: RouteContext) {
+export default async function route({ request, reply, logger, connections }: RouteContext) {
   try {
     const url = new URL(request.url);
     const params = url.searchParams;
@@ -38,25 +38,29 @@ export default async function route({ request, reply, api, logger, connections }
     });
 
     // Fetch base product pricing
-    const productResponse = await connections.bigcommerce.get(`/v3/catalog/products/${productId}`);
+    const productResponse = await connections.bigcommerce.request({
+      method: 'GET',
+      url: `/v3/catalog/products/${productId}`
+    });
 
     if (!productResponse || !productResponse.data) {
       return reply.code(404).send({ error: "Product not found" });
     }
 
-    const product = productResponse.data;
+    const product = productResponse.data as any;
     let basePrice = product.price;
     let salePrice = product.sale_price;
     let calculatedPrice = product.calculated_price;
 
     // If variant is specified, get variant pricing
     if (variantId) {
-      const variantResponse = await connections.bigcommerce.get(
-        `/v3/catalog/products/${productId}/variants/${variantId}`
-      );
+      const variantResponse = await connections.bigcommerce.request({
+        method: 'GET',
+        url: `/v3/catalog/products/${productId}/variants/${variantId}`
+      });
 
       if (variantResponse && variantResponse.data) {
-        const variant = variantResponse.data;
+        const variant = variantResponse.data as any;
         basePrice = variant.price || basePrice;
         salePrice = variant.sale_price || salePrice;
         calculatedPrice = variant.calculated_price || calculatedPrice;
@@ -96,8 +100,9 @@ export default async function route({ request, reply, api, logger, connections }
       .header("Cache-Control", "private, max-age=120") // Cache for 2 minutes (pricing changes more frequently)
       .send(pricing);
 
-  } catch (error) {
-    logger.error("Error fetching pricing", { error: error.message, stack: error.stack });
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error("Error fetching pricing", { error: err.message, stack: err.stack });
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

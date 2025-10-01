@@ -5,7 +5,7 @@ import type { RouteHandler } from "gadget-server";
  * Returns widget configuration for storefront rendering
  * This route is public and does NOT require authentication (used on storefront)
  */
-const route: RouteHandler = async ({ request, reply, api, logger, params }) => {
+const route: RouteHandler = async ({ reply, api, logger, params }) => {
   try {
     const widgetId = params.widgetId;
 
@@ -19,13 +19,13 @@ const route: RouteHandler = async ({ request, reply, api, logger, params }) => {
     // Fetch widget by widgetId (not database ID)
     const widgets = await api.widgetInstance.findMany({
       filter: {
-        widgetId: { equals: widgetId },
+        widgetId: { equals: widgetId as string },
         isActive: { equals: true },
       },
       first: 1,
     });
 
-    const widget = widgets[0];
+    const widget = widgets[0] as any;
 
     if (!widget) {
       return reply.code(404).send({
@@ -64,7 +64,7 @@ const route: RouteHandler = async ({ request, reply, api, logger, params }) => {
       success: true,
       widget: config,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error({ error }, "Error fetching widget configuration");
     reply.code(500).send({
       success: false,

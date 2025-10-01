@@ -4,7 +4,7 @@ import type { RouteHandler } from "gadget-server";
  * Route handler for GET /api/widgets/list
  * Returns a list of active widgets for Page Builder dropdown
  */
-const route: RouteHandler = async ({ request, reply, api, logger, connections }) => {
+const route: RouteHandler = async ({ reply, api, logger, connections }) => {
   try {
     // Get store from session
     const storeId = connections.bigcommerce?.currentStoreId;
@@ -32,7 +32,7 @@ const route: RouteHandler = async ({ request, reply, api, logger, connections })
     });
 
     // Format for Page Builder dropdown
-    const widgetOptions = widgets.map((widget) => ({
+    const widgetOptions = widgets.map((widget: any) => ({
       label: widget.widgetName || `Widget ${widget.widgetId}`,
       value: widget.widgetId,
       caption: `${widget.displayFormat || 'standard'} - ${widget.placementLocation || 'any'}`,
@@ -42,7 +42,7 @@ const route: RouteHandler = async ({ request, reply, api, logger, connections })
       success: true,
       widgets: widgetOptions,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error({ error }, "Error fetching widgets list");
     reply.code(500).send({
       success: false,

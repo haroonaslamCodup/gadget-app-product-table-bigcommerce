@@ -19,7 +19,6 @@ import type { WidgetInstance } from "../types";
 
 export const WidgetsPage = () => {
   const navigate = useNavigate();
-  const [selectedWidget, setSelectedWidget] = useState<string | null>(null);
 
   // Fetch current store
   const { data: store, isLoading: storeLoading } = useQuery({

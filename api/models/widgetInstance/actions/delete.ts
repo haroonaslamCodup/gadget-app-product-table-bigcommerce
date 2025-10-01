@@ -1,18 +1,15 @@
 import { deleteRecord, ActionOptions } from "gadget-server";
 
-export const run: ActionRun = async ({ params, record, logger, api }) => {
+export const run: ActionRun = async ({ record, logger }) => {
   // Log widget deletion
-  logger.info("Deleting widget instance", {
-    widgetId: record.widgetId,
-    widgetName: record.widgetName
-  });
+  logger.info(`Deleting widget instance: ${record.widgetId}`);
 
   // Delete the record
   await deleteRecord(record);
 };
 
-export const onSuccess: ActionOnSuccess = async ({ params, record, logger, api }) => {
-  logger.info("Widget instance deleted successfully", { widgetId: record.widgetId });
+export const onSuccess: ActionOnSuccess = async ({ record, logger }) => {
+  logger.info(`Widget instance deleted successfully: ${record.widgetId}`);
 };
 
 export const options: ActionOptions = {

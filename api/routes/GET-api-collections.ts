@@ -11,7 +11,7 @@ import type { RouteContext } from "gadget-server";
  * - limit: Items per page (default: 100)
  */
 
-export default async function route({ request, reply, api, logger, connections }: RouteContext) {
+export default async function route({ request, reply, logger, connections }: RouteContext) {
   try {
     const url = new URL(request.url);
     const params = url.searchParams;
@@ -32,7 +32,10 @@ export default async function route({ request, reply, api, logger, connections }
     }
 
     // Fetch categories from BigCommerce (categories are like collections)
-    const response = await connections.bigcommerce.get(`/v3/catalog/categories?${bcParams.toString()}`);
+    const response = await connections.bigcommerce.request({
+      method: 'GET',
+      url: `/v3/catalog/categories?${bcParams.toString()}`
+    });
 
     if (!response || !response.data) {
       logger.error("Failed to fetch categories from BigCommerce", { response });
@@ -40,7 +43,7 @@ export default async function route({ request, reply, api, logger, connections }
     }
 
     // Transform categories to collections format
-    const collections = (response.data.data || []).map((category: any) => ({
+    const collections = ((response.data as any).data || []).map((category: any) => ({
       id: category.id,
       name: category.name,
       description: category.description,
@@ -58,12 +61,13 @@ export default async function route({ request, reply, api, logger, connections }
       .send({
         data: collections,
         meta: {
-          total: response.data.meta?.pagination?.total || collections.length
+          total: (response.data as any).meta?.pagination?.total || collections.length
         }
       });
 
-  } catch (error) {
-    logger.error("Error fetching collections", { error: error.message, stack: error.stack });
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error("Error fetching collections", { error: err.message, stack: err.stack });
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

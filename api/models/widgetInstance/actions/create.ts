@@ -1,6 +1,6 @@
 import { applyParams, save, ActionOptions } from "gadget-server";
 
-export const run: ActionRun = async ({ params, record, logger, api }) => {
+export const run: ActionRun = async ({ params, record, logger }) => {
   // Apply incoming parameters to the record
   applyParams(params, record);
 
@@ -25,18 +25,14 @@ export const run: ActionRun = async ({ params, record, logger, api }) => {
   }
 
   // Log widget creation
-  logger.info("Creating new widget instance", {
-    widgetId: record.widgetId,
-    widgetName: record.widgetName,
-    storeId: record.storeId
-  });
+  logger.info(`Creating new widget instance: ${record.widgetId}`);
 
   // Save the record
   await save(record);
 };
 
-export const onSuccess: ActionOnSuccess = async ({ params, record, logger, api }) => {
-  logger.info("Widget instance created successfully", { widgetId: record.widgetId });
+export const onSuccess: ActionOnSuccess = async ({ record, logger }) => {
+  logger.info(`Widget instance created successfully: ${record.widgetId}`);
 };
 
 export const options: ActionOptions = {

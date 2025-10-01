@@ -16,7 +16,7 @@ import type { RouteContext } from "gadget-server";
  * - sort: Sort field (name, price, newest, sku)
  */
 
-export default async function route({ request, reply, api, logger, connections }: RouteContext) {
+export default async function route({ request, reply, logger, connections }: RouteContext) {
   try {
     const url = new URL(request.url);
     const params = url.searchParams;
@@ -83,14 +83,17 @@ export default async function route({ request, reply, api, logger, connections }
     }
 
     // Fetch products from BigCommerce
-    const response = await connections.bigcommerce.get(`/v3/catalog/products?${bcParams.toString()}`);
+    const response = await connections.bigcommerce.request({
+      method: 'GET',
+      url: `/v3/catalog/products?${bcParams.toString()}`
+    });
 
     if (!response || !response.data) {
       logger.error("Failed to fetch products from BigCommerce", { response });
       return reply.code(500).send({ error: "Failed to fetch products" });
     }
 
-    const products = response.data;
+    const products = response.data as any;
 
     // TODO: Apply user-specific pricing based on customer group
     // This will be implemented when we have access to BigCommerce price lists
@@ -119,8 +122,9 @@ export default async function route({ request, reply, api, logger, connections }
       .header("Cache-Control", "public, max-age=300") // Cache for 5 minutes
       .send(result);
 
-  } catch (error) {
-    logger.error("Error fetching products", { error: error.message, stack: error.stack });
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error("Error fetching products", { error: err.message, stack: err.stack });
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

@@ -1,6 +1,6 @@
 import { applyParams, save, ActionOptions } from "gadget-server";
 
-export const run: ActionRun = async ({ params, record, logger, api }) => {
+export const run: ActionRun = async ({ params, record, logger }) => {
   // Apply incoming parameters to the record
   applyParams(params, record);
 
@@ -8,17 +8,14 @@ export const run: ActionRun = async ({ params, record, logger, api }) => {
   record.lastChecked = new Date();
 
   // Log widget update
-  logger.info("Updating widget instance", {
-    widgetId: record.widgetId,
-    widgetName: record.widgetName
-  });
+  logger.info(`Updating widget instance: ${record.widgetId}`);
 
   // Save the record
   await save(record);
 };
 
-export const onSuccess: ActionOnSuccess = async ({ params, record, logger, api }) => {
-  logger.info("Widget instance updated successfully", { widgetId: record.widgetId });
+export const onSuccess: ActionOnSuccess = async ({ record, logger }) => {
+  logger.info(`Widget instance updated successfully: ${record.widgetId}`);
 };
 
 export const options: ActionOptions = {

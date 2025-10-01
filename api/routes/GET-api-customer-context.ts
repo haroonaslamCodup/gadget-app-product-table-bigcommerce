@@ -10,7 +10,7 @@ import type { RouteContext } from "gadget-server";
  * - customerId: Customer ID from BigCommerce (optional, from session)
  */
 
-export default async function route({ request, reply, api, logger, connections }: RouteContext) {
+export default async function route({ request, reply, logger, connections }: RouteContext) {
   try {
     const url = new URL(request.url);
     const params = url.searchParams;
@@ -19,7 +19,16 @@ export default async function route({ request, reply, api, logger, connections }
 
     logger.info("Fetching customer context", { customerId });
 
-    let customerContext = {
+    let customerContext: {
+      customerId: string | null;
+      customerGroup: string;
+      customerGroupId: number | null;
+      customerTags: string[];
+      isLoggedIn: boolean;
+      isWholesale: boolean;
+      email: string | null;
+      name: string | null;
+    } = {
       customerId: null,
       customerGroup: "guest",
       customerGroupId: null,
@@ -33,10 +42,13 @@ export default async function route({ request, reply, api, logger, connections }
     // If customer ID is provided, fetch customer details
     if (customerId) {
       try {
-        const customerResponse = await connections.bigcommerce.get(`/v3/customers?id:in=${customerId}`);
+        const customerResponse = await connections.bigcommerce.request({
+          method: 'GET',
+          url: `/v3/customers?id:in=${customerId}`
+        });
 
-        if (customerResponse && customerResponse.data && customerResponse.data.data && customerResponse.data.data.length > 0) {
-          const customer = customerResponse.data.data[0];
+        if (customerResponse && customerResponse.data && (customerResponse.data as any).data && (customerResponse.data as any).data.length > 0) {
+          const customer = (customerResponse.data as any).data[0];
 
           customerContext = {
             customerId: customer.id,
@@ -52,27 +64,30 @@ export default async function route({ request, reply, api, logger, connections }
           // If customer has a group ID, fetch group details
           if (customer.customer_group_id) {
             try {
-              const groupResponse = await connections.bigcommerce.get(
-                `/v2/customer_groups/${customer.customer_group_id}`
-              );
+              const groupResponse = await connections.bigcommerce.request({
+                method: 'GET',
+                url: `/v2/customer_groups/${customer.customer_group_id}`
+              });
 
               if (groupResponse && groupResponse.data) {
-                const groupName = groupResponse.data.name.toLowerCase();
+                const groupName = (groupResponse.data as any).name.toLowerCase();
                 customerContext.customerGroup = groupName;
                 customerContext.isWholesale = groupName.includes("wholesale") || groupName.includes("b2b");
               }
-            } catch (groupError) {
+            } catch (groupError: unknown) {
+              const err = groupError as Error;
               logger.warn("Failed to fetch customer group details", {
                 customerGroupId: customer.customer_group_id,
-                error: groupError.message
+                error: err.message
               });
             }
           }
         }
-      } catch (customerError) {
+      } catch (customerError: unknown) {
+        const err = customerError as Error;
         logger.warn("Failed to fetch customer details", {
           customerId,
-          error: customerError.message
+          error: err.message
         });
       }
     }
@@ -85,8 +100,9 @@ export default async function route({ request, reply, api, logger, connections }
       .header("Cache-Control", "private, no-cache") // Don't cache customer data
       .send(customerContext);
 
-  } catch (error) {
-    logger.error("Error fetching customer context", { error: error.message, stack: error.stack });
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error("Error fetching customer context", { error: err.message, stack: err.stack });
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

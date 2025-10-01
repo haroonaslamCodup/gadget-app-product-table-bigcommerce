@@ -15,7 +15,7 @@ export const useWidgets = (storeId?: string): UseQueryResult<WidgetInstance[], E
       });
       
       // Transform GadgetRecord to WidgetInstance
-      return result.data.map(record => {
+      return result.map((record: any) => {
         const widget: WidgetInstance = {
           id: record.id,
           createdAt: record.createdAt.toISOString(),
@@ -66,10 +66,10 @@ export const useWidget = (widgetId?: string): UseQueryResult<WidgetInstance | nu
       const result = await api.widgetInstance.findFirst({
         filter: { widgetId: { equals: widgetId } }
       });
-      
-      if (!result?.data) return null;
-      
-      const record = result.data;
+
+      if (!result) return null;
+
+      const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
         createdAt: record.createdAt.toISOString(),
@@ -117,10 +117,10 @@ export const useWidgetById = (id?: string): UseQueryResult<WidgetInstance | null
       if (!id) return null;
       
       const result = await api.widgetInstance.findOne(id);
-      
-      if (!result?.data) return null;
-      
-      const record = result.data;
+
+      if (!result) return null;
+
+      const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
         createdAt: record.createdAt.toISOString(),
@@ -167,8 +167,8 @@ export const useCreateWidget = (): UseMutationResult<WidgetInstance, Error, Part
   return useMutation<WidgetInstance, Error, Partial<WidgetFormData>>({
     mutationFn: async (config: Partial<WidgetFormData>) => {
       const result = await api.widgetInstance.create(config);
-      
-      const record = result.data;
+
+      const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
         createdAt: record.createdAt.toISOString(),
@@ -226,8 +226,8 @@ export const useUpdateWidget = (): UseMutationResult<
   return useMutation<WidgetInstance, Error, { id: string; config: Partial<WidgetFormData> }>({
     mutationFn: async ({ id, config }: { id: string; config: Partial<WidgetFormData> }) => {
       const result = await api.widgetInstance.update(id, config);
-      
-      const record = result.data;
+
+      const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
         createdAt: record.createdAt.toISOString(),
@@ -277,10 +277,11 @@ export const useUpdateWidget = (): UseMutationResult<
       // Return context with the snapshot
       return { previousWidget };
     },
-    onError: (_err, variables, context: { previousWidget?: WidgetInstance }) => {
+    onError: (_err, variables, context) => {
       // Rollback on error
-      if (context?.previousWidget) {
-        queryClient.setQueryData(["widget", variables.id], context.previousWidget);
+      const ctx = context as { previousWidget?: WidgetInstance } | undefined;
+      if (ctx?.previousWidget) {
+        queryClient.setQueryData(["widget", variables.id], ctx.previousWidget);
       }
     },
     onSuccess: (data, _variables) => {
@@ -304,7 +305,7 @@ export const useDeleteWidget = (): UseMutationResult<void, Error, string> => {
     mutationFn: async (id: string) => {
       await api.widgetInstance.delete(id);
     },
-    onSuccess: (deletedId: string) => {
+    onSuccess: (_data, deletedId) => {
       // Invalidate widgets list
       queryClient.invalidateQueries({ queryKey: ["widgets"] });
       // Remove the deleted widget from cache
@@ -327,8 +328,8 @@ export const useDuplicateWidget = (): UseMutationResult<WidgetInstance, Error, W
       };
 
       const result = await api.widgetInstance.create(newConfig);
-      
-      const record = result.data;
+
+      const record = result as any;
       const widget: WidgetInstance = {
         id: record.id,
         createdAt: record.createdAt.toISOString(),
