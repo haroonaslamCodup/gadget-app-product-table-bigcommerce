@@ -79,7 +79,7 @@ export default async function route({ reply, logger, connections, request, api }
         <div
           id="product-table-{{widget_id}}"
           class="product-table-widget"
-          data-product-table-widget='{"widgetId":"{{widget_id}}","showSearch":{{#if show_search}}true{{else}}false{{/if}},"showViewSwitcher":{{#if show_view_switcher}}true{{else}}false{{/if}}}'
+          data-product-table-widget='{"widgetId":"{{widget_id}}","showSearch":"{{show_search}}","showViewSwitcher":"{{show_view_switcher}}"}'
         >
           <div class="loading">Loading products...</div>
         </div>
