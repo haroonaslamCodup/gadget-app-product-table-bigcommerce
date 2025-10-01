@@ -15,7 +15,7 @@ export const IndexPage = () => {
 
   const { data: connectionStatus } = useQuery({
     queryKey: ["connection-status"],
-    queryFn: () => fetch("/connection-status").then(res => res.json()),
+    queryFn: () => fetch("/api/connection-status").then(res => res.json()),
     refetchInterval: 30000, // Check every 30 seconds
   });
 

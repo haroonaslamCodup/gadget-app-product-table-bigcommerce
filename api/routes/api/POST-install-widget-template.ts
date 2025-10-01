@@ -19,15 +19,13 @@ export default async function route({ reply, logger, connections, request, api }
     if (!bigcommerceConnection) {
       logger.info("No current connection, attempting to get store from database");
       try {
-        const store = await api.bigcommerce.store.findFirst();
+        const store = await api.internal.bigcommerce.store.findFirst();
         if (store) {
           logger.info(`Found store in database: ${store.storeHash || store.id}`);
-          
-          // For Gadget's single-click connection, the connection should be available via the context
-          // The authentication is managed by Gadget, so if a store exists, we should have a connection
-          // Try the current connection again, which might be available now that we know a store exists
-          bigcommerceConnection = connections.bigcommerce?.current;
-          
+
+          // Create a connection scoped to the found store to ensure credentials are applied
+          bigcommerceConnection = connections.bigcommerce.forStore(store);
+
           if (bigcommerceConnection) {
             try {
               // Test the connection by making a simple API call
@@ -36,7 +34,7 @@ export default async function route({ reply, logger, connections, request, api }
             } catch (testError) {
               const errorMessage = (testError as Error).message;
               logger.warn(`Connection test failed: ${errorMessage}`);
-              
+
               // If the current connection exists but doesn't work, we'll handle it below
             }
           } else {

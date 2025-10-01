@@ -29,19 +29,27 @@ export default async function route({ reply, logger, connections, api }: RouteCo
             return reply.code(200).send(status);
         }
 
-        // Try to get store from database
+        // Try to get store from database (internal first, then public as a fallback)
         try {
-            const store = await api.internal.bigcommerce.store.findFirst();
+            let store = await api.internal.bigcommerce.store.findFirst();
+            if (!store) {
+                logger.warn("No store found via internal API; attempting public API read");
+                try {
+                    store = await (api as any).bigcommerce.store.findFirst();
+                } catch (publicError) {
+                    logger.warn(`Public store read also failed: ${(publicError as Error).message}`);
+                }
+            }
+
             if (store) {
                 status.storeFound = true;
-                status.storeHash = store.storeHash || null;
-                status.scopes = Array.isArray(store.scopes) ? store.scopes as string[] : [];
+                status.storeHash = (store as any).storeHash || null;
+                status.scopes = Array.isArray((store as any).scopes) ? (store as any).scopes as string[] : [];
 
-                // Try to create a connection and test it
+                // Prefer a store-scoped connection when a store is found
                 try {
-                    const testConnection = connections.bigcommerce.forStore(store);
+                    const testConnection = connections.bigcommerce.forStore(store as any);
                     if (testConnection) {
-                        // Test the connection with a simple API call
                         await testConnection.v2.get('/store' as any);
                         status.credentialsValid = true;
                         logger.info("BigCommerce connection is valid");
@@ -49,8 +57,6 @@ export default async function route({ reply, logger, connections, api }: RouteCo
                 } catch (connectionError) {
                     const errorMessage = (connectionError as Error).message;
                     logger.warn(`Connection test failed: ${errorMessage}`);
-
-                    // Only set error if it's not just about missing credentials (that's normal in some contexts)
                     if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
                         logger.warn("Connection test failed due to authentication issue");
                         status.error = `Authentication issue: ${errorMessage}`;
@@ -59,7 +65,25 @@ export default async function route({ reply, logger, connections, api }: RouteCo
                     }
                 }
             } else {
-                status.error = "No store found in database";
+                // If we can't find a store record but there is a current connection, use it for validation
+                if (connections.bigcommerce?.current) {
+                    status.storeFound = true; // Treat as present since connection exists
+                    try {
+                        await connections.bigcommerce.current.v2.get('/store' as any);
+                        status.credentialsValid = true;
+                        logger.info("BigCommerce connection valid via current connection");
+                    } catch (connectionError) {
+                        const errorMessage = (connectionError as Error).message;
+                        logger.warn(`Current connection test failed: ${errorMessage}`);
+                        if (errorMessage.includes('access token is required') || errorMessage.includes('Invalid credentials')) {
+                            status.error = `Authentication issue: ${errorMessage}`;
+                        } else {
+                            status.error = `Connection test failed: ${errorMessage}`;
+                        }
+                    }
+                } else {
+                    status.error = "No store found in database";
+                }
             }
         } catch (dbError) {
             status.error = `Database error: ${(dbError as Error).message}`;
