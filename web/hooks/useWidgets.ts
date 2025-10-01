@@ -317,14 +317,37 @@ export const useDeleteWidget = (): UseMutationResult<void, Error, string> => {
 /**
  * Hook to duplicate a widget
  */
-export const useDuplicateWidget = (): UseMutationResult<WidgetInstance, Error, WidgetInstance> => {
+export const useDuplicateWidget = (storeId?: string): UseMutationResult<WidgetInstance, Error, WidgetInstance> => {
   const queryClient = useQueryClient();
 
   return useMutation<WidgetInstance, Error, WidgetInstance>({
     mutationFn: async (sourceWidget: WidgetInstance) => {
-      const newConfig: Partial<WidgetFormData> = {
-        ...sourceWidget,
+      // Extract only the writable fields (exclude id, createdAt, updatedAt, widgetId)
+      const newConfig: any = {
         widgetName: `${sourceWidget.widgetName} (Copy)`,
+        displayFormat: sourceWidget.displayFormat,
+        columns: sourceWidget.columns,
+        columnsOrder: sourceWidget.columnsOrder,
+        productSource: sourceWidget.productSource,
+        selectedCollections: sourceWidget.selectedCollections,
+        selectedCategories: sourceWidget.selectedCategories,
+        targetAllCustomers: sourceWidget.targetAllCustomers,
+        targetRetailOnly: sourceWidget.targetRetailOnly,
+        targetWholesaleOnly: sourceWidget.targetWholesaleOnly,
+        targetLoggedInOnly: sourceWidget.targetLoggedInOnly,
+        targetCustomerTags: sourceWidget.targetCustomerTags,
+        allowViewSwitching: sourceWidget.allowViewSwitching,
+        defaultToTableView: sourceWidget.defaultToTableView,
+        enableCustomerSorting: sourceWidget.enableCustomerSorting,
+        defaultSort: sourceWidget.defaultSort,
+        itemsPerPage: sourceWidget.itemsPerPage,
+        placementLocation: sourceWidget.placementLocation,
+        isActive: sourceWidget.isActive,
+        notes: sourceWidget.notes,
+        version: sourceWidget.version,
+        store: {
+          _link: storeId
+        }
       };
 
       const result = await api.widgetInstance.create(newConfig);

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -31,7 +30,7 @@ export const WidgetsPage = () => {
 
   // Mutations
   const deleteWidget = useDeleteWidget();
-  const duplicateWidget = useDuplicateWidget();
+  const duplicateWidget = useDuplicateWidget(store?.id);
 
   const handleDelete = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
@@ -151,7 +150,7 @@ export const WidgetsPage = () => {
                     variant="subtle"
                     iconOnly={<DeleteIcon />}
                     onClick={() => handleDelete(widget.id, widget.widgetName || "Unnamed Widget")}
-                    isLoading={deleteWidget.isPending && selectedWidget === widget.id}
+                    isLoading={deleteWidget.isPending}
                     aria-label="Delete"
                   />
                 </Flex>

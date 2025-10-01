@@ -3,7 +3,10 @@
     "allow": [
       "Bash(cat:*)",
       "Bash(yarn add:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm info:*)",
+      "Bash(npx husky add:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": [],
     "ask": []

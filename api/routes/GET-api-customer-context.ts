@@ -17,7 +17,7 @@ export default async function route({ request, reply, logger, connections }: Rou
 
     const customerId = params.get("customerId");
 
-    logger.info("Fetching customer context", { customerId });
+    logger.info(`Fetching customer context: customerId=${customerId}`);
 
     let customerContext: {
       customerId: string | null;
@@ -40,15 +40,12 @@ export default async function route({ request, reply, logger, connections }: Rou
     };
 
     // If customer ID is provided, fetch customer details
-    if (customerId) {
+    if (customerId && connections.bigcommerce.current) {
       try {
-        const customerResponse = await connections.bigcommerce.request({
-          method: 'GET',
-          url: `/v3/customers?id:in=${customerId}`
-        });
+        const customerResponse = await connections.bigcommerce.current.v3.get<any>(`/customers?id:in=${customerId}`);
 
-        if (customerResponse && customerResponse.data && (customerResponse.data as any).data && (customerResponse.data as any).data.length > 0) {
-          const customer = (customerResponse.data as any).data[0];
+        if (customerResponse && Array.isArray(customerResponse) && customerResponse.length > 0) {
+          const customer = customerResponse[0];
 
           customerContext = {
             customerId: customer.id,
@@ -62,37 +59,28 @@ export default async function route({ request, reply, logger, connections }: Rou
           };
 
           // If customer has a group ID, fetch group details
-          if (customer.customer_group_id) {
+          if (customer.customer_group_id && connections.bigcommerce.current) {
             try {
-              const groupResponse = await connections.bigcommerce.request({
-                method: 'GET',
-                url: `/v2/customer_groups/${customer.customer_group_id}`
-              });
+              const groupResponse = await connections.bigcommerce.current.v2.get<any>(`/customer_groups/${customer.customer_group_id}`) as any;
 
-              if (groupResponse && groupResponse.data) {
-                const groupName = (groupResponse.data as any).name.toLowerCase();
+              if (groupResponse && groupResponse.name) {
+                const groupName = (groupResponse.name as string).toLowerCase();
                 customerContext.customerGroup = groupName;
                 customerContext.isWholesale = groupName.includes("wholesale") || groupName.includes("b2b");
               }
             } catch (groupError: unknown) {
               const err = groupError as Error;
-              logger.warn("Failed to fetch customer group details", {
-                customerGroupId: customer.customer_group_id,
-                error: err.message
-              });
+              logger.warn(`Failed to fetch customer group details: customerGroupId=${customer.customer_group_id}, error=${err.message}`);
             }
           }
         }
       } catch (customerError: unknown) {
         const err = customerError as Error;
-        logger.warn("Failed to fetch customer details", {
-          customerId,
-          error: err.message
-        });
+        logger.warn(`Failed to fetch customer details: customerId=${customerId}, error=${err.message}`);
       }
     }
 
-    logger.info("Customer context fetched successfully", { context: customerContext });
+    logger.info(`Customer context fetched successfully: ${JSON.stringify(customerContext)}`);
 
     return reply
       .code(200)
@@ -102,7 +90,7 @@ export default async function route({ request, reply, logger, connections }: Rou
 
   } catch (error: unknown) {
     const err = error as Error;
-    logger.error("Error fetching customer context", { error: err.message, stack: err.stack });
+    logger.error(`Error fetching customer context: ${err.message}, stack=${err.stack}`);
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

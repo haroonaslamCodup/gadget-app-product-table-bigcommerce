@@ -7,7 +7,7 @@ import type { RouteHandler } from "gadget-server";
  */
 const route: RouteHandler = async ({ reply, api, logger, params }) => {
   try {
-    const widgetId = params.widgetId;
+    const widgetId = (params as { widgetId: string }).widgetId;
 
     if (!widgetId) {
       return reply.code(400).send({

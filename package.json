@@ -7,7 +7,10 @@
   "scripts": {
     "build": "NODE_ENV=production vite build",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch"
+    "type-check:watch": "tsc --noEmit --watch",
+    "prebuild": "npm run type-check",
+    "prepare": "husky install",
+    "lint": "tsc --noEmit"
   },
   "resolutions": {
     "@types/react": "^19.1.1"
@@ -34,6 +37,7 @@
     "@types/react-dom": "^19.1.1",
     "@types/styled-components": "^5.1.34",
     "@vitejs/plugin-react-swc": "^3.8.0",
+    "husky": "^9.1.7",
     "typescript": "^5.8.3",
     "vite": "github:gadget-inc/vite#vite-v6.3.5-gitpkg-1f0e9a3d8"
   },

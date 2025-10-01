@@ -29,41 +29,34 @@ export default async function route({ request, reply, logger, connections }: Rou
       return reply.code(400).send({ error: "productId is required" });
     }
 
-    logger.info("Fetching pricing", {
-      productId,
-      variantId,
-      userGroup,
-      customerTags,
-      quantity
-    });
+    logger.info(`Fetching pricing: productId=${productId}, variantId=${variantId}, userGroup=${userGroup}, customerTags=${JSON.stringify(customerTags)}, quantity=${quantity}`);
 
     // Fetch base product pricing
-    const productResponse = await connections.bigcommerce.request({
-      method: 'GET',
-      url: `/v3/catalog/products/${productId}`
-    });
+    if (!connections.bigcommerce.current) {
+      logger.error("BigCommerce connection not initialized");
+      return reply.code(500).send({ error: "BigCommerce connection not available" });
+    }
 
-    if (!productResponse || !productResponse.data) {
+    const productResponse = await connections.bigcommerce.current.v3.get<any>(`/catalog/products/${productId}`) as any;
+
+    if (!productResponse) {
       return reply.code(404).send({ error: "Product not found" });
     }
 
-    const product = productResponse.data as any;
-    let basePrice = product.price;
-    let salePrice = product.sale_price;
-    let calculatedPrice = product.calculated_price;
+    const product = productResponse as any;
+    let basePrice = (product.price as number);
+    let salePrice = (product.sale_price as number);
+    let calculatedPrice = (product.calculated_price as number);
 
     // If variant is specified, get variant pricing
-    if (variantId) {
-      const variantResponse = await connections.bigcommerce.request({
-        method: 'GET',
-        url: `/v3/catalog/products/${productId}/variants/${variantId}`
-      });
+    if (variantId && connections.bigcommerce.current) {
+      const variantResponse = await connections.bigcommerce.current.v3.get<any>(`/catalog/products/${productId}/variants/${variantId}`) as any;
 
-      if (variantResponse && variantResponse.data) {
-        const variant = variantResponse.data as any;
-        basePrice = variant.price || basePrice;
-        salePrice = variant.sale_price || salePrice;
-        calculatedPrice = variant.calculated_price || calculatedPrice;
+      if (variantResponse) {
+        const variant = variantResponse as any;
+        basePrice = (variant.price as number) || basePrice;
+        salePrice = (variant.sale_price as number) || salePrice;
+        calculatedPrice = (variant.calculated_price as number) || calculatedPrice;
       }
     }
 
@@ -85,14 +78,14 @@ export default async function route({ request, reply, logger, connections }: Rou
         retail: calculatedPrice,
         wholesale: calculatedPrice, // TODO: Apply wholesale pricing
       },
-      currency: product.currency || "USD",
+      currency: (product.currency as string) || "USD",
       taxIncluded: false,
       quantityBreaks: [], // TODO: Fetch quantity breaks
-      minQuantity: product.order_quantity_minimum || 1,
-      maxQuantity: product.order_quantity_maximum || null,
+      minQuantity: (product.order_quantity_minimum as number) || 1,
+      maxQuantity: (product.order_quantity_maximum as number) || null,
     };
 
-    logger.info("Pricing fetched successfully", { productId, pricing });
+    logger.info(`Pricing fetched successfully: productId=${productId}, pricing=${JSON.stringify(pricing)}`);
 
     return reply
       .code(200)
@@ -102,7 +95,7 @@ export default async function route({ request, reply, logger, connections }: Rou
 
   } catch (error: unknown) {
     const err = error as Error;
-    logger.error("Error fetching pricing", { error: err.message, stack: err.stack });
+    logger.error(`Error fetching pricing: ${err.message}, stack=${err.stack}`);
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

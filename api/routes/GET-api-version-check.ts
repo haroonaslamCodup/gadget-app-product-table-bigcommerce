@@ -19,7 +19,7 @@ export default async function route({ request, reply, api, logger }: RouteContex
     const widgetId = params.get("widgetId");
     const currentVersion = params.get("currentVersion") || "0.0.0";
 
-    logger.info("Checking widget version", { widgetId, currentVersion });
+    logger.info(`Checking widget version: widgetId=${widgetId}, currentVersion=${currentVersion}`);
 
     // Define the latest version (this would typically come from a config or database)
     const LATEST_VERSION = "1.0.0";
@@ -60,14 +60,11 @@ export default async function route({ request, reply, api, logger }: RouteContex
         }
       } catch (updateError: unknown) {
         const err = updateError as Error;
-        logger.warn("Failed to update lastChecked timestamp", {
-          widgetId,
-          error: err.message
-        });
+        logger.warn(`Failed to update lastChecked timestamp: widgetId=${widgetId}, error=${err.message}`);
       }
     }
 
-    logger.info("Version check completed", { versionInfo });
+    logger.info(`Version check completed: ${JSON.stringify(versionInfo)}`);
 
     return reply
       .code(200)
@@ -77,7 +74,7 @@ export default async function route({ request, reply, api, logger }: RouteContex
 
   } catch (error: unknown) {
     const err = error as Error;
-    logger.error("Error checking version", { error: err.message, stack: err.stack });
+    logger.error(`Error checking version: ${err.message}, stack=${err.stack}`);
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

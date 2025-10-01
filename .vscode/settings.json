@@ -1,0 +1,48 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Enable TypeScript validation
+  "typescript.validate.enable": true,
+  "javascript.validate.enable": true,
+
+  // Show all TypeScript errors in Problems panel
+  "typescript.reportStyleChecksAsWarnings": false,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+
+  // Format on save
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  // TypeScript specific settings
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.formatOnSave": true
+  },
+
+  // Show inline type errors
+  "typescript.inlayHints.parameterNames.enabled": "all",
+  "typescript.inlayHints.parameterTypes.enabled": true,
+  "typescript.inlayHints.variableTypes.enabled": true,
+  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+
+  // Strict mode
+  "typescript.preferences.strictNullChecks": true,
+  "typescript.preferences.noImplicitAny": true,
+
+  // File watcher
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.gadget/**": true
+  }
+}

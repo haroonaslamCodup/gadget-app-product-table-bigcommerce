@@ -19,7 +19,7 @@ export default async function route({ request, reply, logger, connections }: Rou
     const search = params.get("search");
     const limit = Math.min(parseInt(params.get("limit") || "100", 10), 250);
 
-    logger.info("Fetching collections", { search, limit });
+    logger.info(`Fetching collections: search=${search}, limit=${limit}`);
 
     // Build BigCommerce API query
     const bcParams = new URLSearchParams({
@@ -32,18 +32,20 @@ export default async function route({ request, reply, logger, connections }: Rou
     }
 
     // Fetch categories from BigCommerce (categories are like collections)
-    const response = await connections.bigcommerce.request({
-      method: 'GET',
-      url: `/v3/catalog/categories?${bcParams.toString()}`
-    });
+    if (!connections.bigcommerce.current) {
+      logger.error("BigCommerce connection not initialized");
+      return reply.code(500).send({ error: "BigCommerce connection not available" });
+    }
+
+    const response = await connections.bigcommerce.current.v3.get<any>(`/catalog/categories?${bcParams.toString()}`) as any;
 
     if (!response || !response.data) {
-      logger.error("Failed to fetch categories from BigCommerce", { response });
+      logger.error(`Failed to fetch categories from BigCommerce: ${JSON.stringify({ response })}`);
       return reply.code(500).send({ error: "Failed to fetch collections" });
     }
 
     // Transform categories to collections format
-    const collections = ((response.data as any).data || []).map((category: any) => ({
+    const collections = ((response.data as any) || []).map((category: any) => ({
       id: category.id,
       name: category.name,
       description: category.description,
@@ -52,7 +54,7 @@ export default async function route({ request, reply, logger, connections }: Rou
       parentId: category.parent_id,
     }));
 
-    logger.info("Collections fetched successfully", { count: collections.length });
+    logger.info(`Collections fetched successfully: count=${collections.length}`);
 
     return reply
       .code(200)
@@ -61,13 +63,13 @@ export default async function route({ request, reply, logger, connections }: Rou
       .send({
         data: collections,
         meta: {
-          total: (response.data as any).meta?.pagination?.total || collections.length
+          total: ((response as any)?.meta?.pagination?.total) || collections.length
         }
       });
 
   } catch (error: unknown) {
     const err = error as Error;
-    logger.error("Error fetching collections", { error: err.message, stack: err.stack });
+    logger.error(`Error fetching collections: ${err.message}, stack=${err.stack}`);
     return reply.code(500).send({ error: "Internal server error" });
   }
 }

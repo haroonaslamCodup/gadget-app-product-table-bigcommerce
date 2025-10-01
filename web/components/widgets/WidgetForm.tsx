@@ -103,7 +103,9 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
     try {
       const widgetData = {
         ...formData,
-        storeId: store?.id,
+        store: {
+          _link: store?.id
+        },
         version: "1.0.0",
       };
 
@@ -230,10 +232,10 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
             <Select
               label="Select Collections"
               options={collections.map((c: Collection) => ({ value: c.id.toString(), content: c.name }))}
-              value={formData.selectedCollections?.[0]?.toString() || ""}
+              value={formData.selectedCollections[0] || ""}
               onOptionChange={(value) => setFormData({
                 ...formData,
-                selectedCollections: [value]
+                selectedCollections: value ? [value] : []
               })}
               placeholder="Choose collections..."
             />
@@ -325,8 +327,8 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
               { value: "50", content: "50" },
               { value: "100", content: "100" },
             ]}
-            value={formData.itemsPerPage?.toString() || "25"}
-            onOptionChange={(value) => setFormData({ ...formData, itemsPerPage: parseInt(value, 10) })}
+            value={(formData.itemsPerPage || 25).toString()}
+            onOptionChange={(value) => setFormData({ ...formData, itemsPerPage: value ? parseInt(value, 10) : 25 })}
           />
         </FormGroup>
 

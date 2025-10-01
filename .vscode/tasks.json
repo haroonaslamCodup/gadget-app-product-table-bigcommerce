@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "TypeScript: Check All",
+      "type": "shell",
+      "command": "npx tsc --noEmit",
+      "problemMatcher": [
+        "$tsc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "TypeScript: Watch",
+      "type": "shell",
+      "command": "npx tsc --noEmit --watch",
+      "problemMatcher": [
+        "$tsc-watch"
+      ],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ]
+}

@@ -29,15 +29,7 @@ export default async function route({ request, reply, logger, connections }: Rou
     const limit = Math.min(parseInt(params.get("limit") || "25", 10), 250);
     const sort = params.get("sort") || "name";
 
-    logger.info("Fetching products", {
-      category,
-      collection,
-      userGroup,
-      search,
-      page,
-      limit,
-      sort
-    });
+    logger.info(`Fetching products: category=${category}, collection=${collection}, userGroup=${userGroup}, search=${search}, page=${page}, limit=${limit}, sort=${sort}`);
 
     // Build BigCommerce API query parameters
     const bcParams = new URLSearchParams({
@@ -83,38 +75,37 @@ export default async function route({ request, reply, logger, connections }: Rou
     }
 
     // Fetch products from BigCommerce
-    const response = await connections.bigcommerce.request({
-      method: 'GET',
-      url: `/v3/catalog/products?${bcParams.toString()}`
-    });
+    if (!connections.bigcommerce.current) {
+      logger.error("BigCommerce connection not initialized");
+      return reply.code(500).send({ error: "BigCommerce connection not available" });
+    }
 
-    if (!response || !response.data) {
-      logger.error("Failed to fetch products from BigCommerce", { response });
+    const response = await connections.bigcommerce.current.v3.get<any>(`/catalog/products?${bcParams.toString()}`) as any;
+
+    if (!response) {
+      logger.error(`Failed to fetch products from BigCommerce: ${JSON.stringify({ response })}`);
       return reply.code(500).send({ error: "Failed to fetch products" });
     }
 
-    const products = response.data as any;
+    const products = response as any;
 
     // TODO: Apply user-specific pricing based on customer group
     // This will be implemented when we have access to BigCommerce price lists
     // For now, return products with default pricing
 
     const result = {
-      data: products.data || [],
-      meta: products.meta || {},
+      data: (products.data as any) || [],
+      meta: (products.meta as any) || {},
       pagination: {
-        total: products.meta?.pagination?.total || 0,
-        count: products.meta?.pagination?.count || 0,
-        per_page: products.meta?.pagination?.per_page || limit,
-        current_page: products.meta?.pagination?.current_page || page,
-        total_pages: products.meta?.pagination?.total_pages || 1,
+        total: ((products.meta as any)?.pagination?.total as number) || 0,
+        count: ((products.meta as any)?.pagination?.count as number) || 0,
+        per_page: ((products.meta as any)?.pagination?.per_page as number) || limit,
+        current_page: ((products.meta as any)?.pagination?.current_page as number) || page,
+        total_pages: ((products.meta as any)?.pagination?.total_pages as number) || 1,
       }
     };
 
-    logger.info("Products fetched successfully", {
-      count: result.data.length,
-      total: result.pagination.total
-    });
+    logger.info(`Products fetched successfully: count=${result.data.length}, total=${result.pagination.total}`);
 
     return reply
       .code(200)
@@ -124,7 +115,7 @@ export default async function route({ request, reply, logger, connections }: Rou
 
   } catch (error: unknown) {
     const err = error as Error;
-    logger.error("Error fetching products", { error: err.message, stack: err.stack });
+    logger.error(`Error fetching products: ${err.message}, stack=${err.stack}`);
     return reply.code(500).send({ error: "Internal server error" });
   }
 }
