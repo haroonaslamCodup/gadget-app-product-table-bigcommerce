@@ -16,7 +16,7 @@ import type { RouteContext } from "gadget-server";
  * - sort: Sort field (name, price, newest, sku)
  */
 
-export default async function route({ request, reply, logger, connections }: RouteContext) {
+export default async function route({ request, reply, logger, connections, api }: RouteContext) {
   try {
     const url = new URL(request.url);
     const params = url.searchParams;
@@ -74,13 +74,23 @@ export default async function route({ request, reply, logger, connections }: Rou
         bcParams.append("sort", "name");
     }
 
-    // Fetch products from BigCommerce
-    if (!connections.bigcommerce.current) {
+    // Build a scoped BigCommerce connection using the internal store record
+    let bigcommerceConnection = connections.bigcommerce?.current;
+    try {
+      const store = await api.internal.bigcommerce.store.findFirst();
+      if (store) {
+        bigcommerceConnection = connections.bigcommerce.forStore(store);
+      }
+    } catch (e) {
+      logger.warn(`Could not read store for products route: ${(e as Error).message}`);
+    }
+
+    if (!bigcommerceConnection) {
       logger.error("BigCommerce connection not initialized");
       return reply.code(500).send({ error: "BigCommerce connection not available" });
     }
 
-    const response = await connections.bigcommerce.current.v3.get<any>(`/catalog/products?${bcParams.toString()}`) as any;
+    const response = await bigcommerceConnection.v3.get<any>(`/catalog/products?${bcParams.toString()}`) as any;
 
     if (!response) {
       logger.error(`Failed to fetch products from BigCommerce: ${JSON.stringify({ response })}`);
@@ -94,6 +104,8 @@ export default async function route({ request, reply, logger, connections }: Rou
     // For now, return products with default pricing
 
     const result = {
+      // Frontend expects `products` alongside `meta`
+      products: (products.data as any) || [],
       data: (products.data as any) || [],
       meta: (products.meta as any) || {},
       pagination: {
