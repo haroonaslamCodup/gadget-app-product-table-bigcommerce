@@ -43,9 +43,9 @@ export const initProductTableWidget = (config: WidgetConfig) => {
 
   // Get page context from the DOM
   const pageContext = {
-    categoryId: document.querySelector('[data-category-id]')?.getAttribute('data-category-id'),
-    productId: document.querySelector('[data-product-id]')?.getAttribute('data-product-id'),
-    pageType: document.querySelector('[data-page-type]')?.getAttribute('data-page-type'),
+    categoryId: document.querySelector('[data-category-id]')?.getAttribute('data-category-id') || undefined,
+    productId: document.querySelector('[data-product-id]')?.getAttribute('data-product-id') || undefined,
+    pageType: document.querySelector('[data-page-type]')?.getAttribute('data-page-type') || undefined,
   };
 
   // Create React root and render the widget

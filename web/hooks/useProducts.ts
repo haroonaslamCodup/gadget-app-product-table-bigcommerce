@@ -1,22 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-
-export interface ProductFilters {
-  category?: string;
-  collection?: string;
-  userGroup?: string;
-  search?: string;
-  page?: number;
-  limit?: number;
-  sort?: string;
-}
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import type { ProductFilters, ProductsResponse } from "../types";
 
 /**
  * Hook to fetch products with filters
  */
-export const useProducts = (filters: ProductFilters) => {
+export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsResponse, Error> => {
   const { category, collection, userGroup, search, page = 1, limit = 25, sort = "name" } = filters;
 
-  return useQuery({
+  return useQuery<ProductsResponse, Error>({
     queryKey: ["products", filters],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -43,11 +34,13 @@ export const useProducts = (filters: ProductFilters) => {
   });
 };
 
+import type { PricingInfo, Collection, ApiResponse } from "../types";
+
 /**
  * Hook to fetch pricing for a specific product
  */
-export const useProductPricing = (productId?: string, variantId?: string, userGroup?: string) => {
-  return useQuery({
+export const useProductPricing = (productId?: string, variantId?: string, userGroup?: string): UseQueryResult<PricingInfo | null, Error> => {
+  return useQuery<PricingInfo | null, Error>({
     queryKey: ["pricing", productId, variantId, userGroup],
     queryFn: async () => {
       if (!productId) return null;
@@ -75,8 +68,8 @@ export const useProductPricing = (productId?: string, variantId?: string, userGr
 /**
  * Hook to fetch available collections
  */
-export const useCollections = (search?: string) => {
-  return useQuery({
+export const useCollections = (search?: string): UseQueryResult<Collection[], Error> => {
+  return useQuery<Collection[], Error>({
     queryKey: ["collections", search],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -98,8 +91,8 @@ export const useCollections = (search?: string) => {
 /**
  * Hook to check for widget version updates
  */
-export const useVersionCheck = (widgetId?: string, currentVersion?: string) => {
-  return useQuery({
+export const useVersionCheck = (widgetId?: string, currentVersion?: string): UseQueryResult<ApiResponse<any> | null, Error> => {
+  return useQuery<ApiResponse<any> | null, Error>({
     queryKey: ["version-check", widgetId, currentVersion],
     queryFn: async () => {
       if (!widgetId || !currentVersion) return null;

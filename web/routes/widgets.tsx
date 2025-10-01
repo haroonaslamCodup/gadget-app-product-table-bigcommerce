@@ -15,6 +15,7 @@ import {
 import { AddIcon, EditIcon, DeleteIcon, FileCopyIcon } from "@bigcommerce/big-design-icons";
 import { api } from "../api";
 import { useWidgets, useDeleteWidget, useDuplicateWidget } from "../hooks/useWidgets";
+import type { WidgetInstance } from "../types";
 
 export const WidgetsPage = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export const WidgetsPage = () => {
     }
   };
 
-  const handleDuplicate = async (widget: any) => {
+  const handleDuplicate = async (widget: WidgetInstance) => {
     try {
       const newWidget = await duplicateWidget.mutateAsync(widget);
       if (newWidget) {
@@ -73,7 +74,7 @@ export const WidgetsPage = () => {
   }
 
   // Ensure widgets is always an array
-  const widgetData = Array.isArray(widgets) ? widgets : [];
+  const widgetData: WidgetInstance[] = Array.isArray(widgets) ? widgets : [];
 
   return (
     <Box>
@@ -105,7 +106,7 @@ export const WidgetsPage = () => {
       ) : (
         <Panel>
           <Box padding="medium">
-            {widgetData.map((widget: any) => (
+            {widgetData.map((widget: WidgetInstance) => (
               <Flex
                 key={widget.id}
                 justifyContent="space-between"
@@ -117,24 +118,27 @@ export const WidgetsPage = () => {
                   <Link onClick={() => navigate(`/widgets/${widget.id}/edit`)}>
                     <Text bold>{widget.widgetName || "Unnamed Widget"}</Text>
                   </Link>
-                  <Text fontSize="small" color="secondary60">
+                  <Text color="secondary60">
                     {widget.widgetId}
                   </Text>
                 </Box>
-                <Flex gap="small" alignItems="center">
+                <Flex alignItems="center">
                   <Badge
                     label={widget.placementLocation || "Not Set"}
                     variant={widget.placementLocation ? "secondary" : "warning"}
+                    marginRight="small"
                   />
                   <Badge
                     label={widget.isActive ? "Active" : "Inactive"}
                     variant={widget.isActive ? "success" : "secondary"}
+                    marginRight="small"
                   />
                   <Button
                     variant="subtle"
                     iconOnly={<EditIcon />}
                     onClick={() => navigate(`/widgets/${widget.id}/edit`)}
                     aria-label="Edit"
+                    marginRight="xSmall"
                   />
                   <Button
                     variant="subtle"
@@ -142,11 +146,12 @@ export const WidgetsPage = () => {
                     onClick={() => handleDuplicate(widget)}
                     isLoading={duplicateWidget.isPending}
                     aria-label="Duplicate"
+                    marginRight="xSmall"
                   />
                   <Button
                     variant="subtle"
                     iconOnly={<DeleteIcon />}
-                    onClick={() => handleDelete(widget.id, widget.widgetName)}
+                    onClick={() => handleDelete(widget.id, widget.widgetName || "Unnamed Widget")}
                     isLoading={deleteWidget.isPending && selectedWidget === widget.id}
                     aria-label="Delete"
                   />
@@ -158,7 +163,7 @@ export const WidgetsPage = () => {
       )}
 
       <Box marginTop="medium">
-        <Text color="secondary60" fontSize="small">
+        <Text color="secondary60">
           Total widgets: {widgetData.length}
         </Text>
       </Box>

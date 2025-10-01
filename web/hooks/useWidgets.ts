@@ -13,7 +13,42 @@ export const useWidgets = (storeId?: string): UseQueryResult<WidgetInstance[], E
         filter: storeId ? { store: { id: { equals: storeId } } } : undefined,
         sort: { createdAt: "Descending" }
       });
-      return result as unknown as WidgetInstance[];
+      
+      // Transform GadgetRecord to WidgetInstance
+      return result.data.map(record => {
+        const widget: WidgetInstance = {
+          id: record.id,
+          createdAt: record.createdAt.toISOString(),
+          updatedAt: record.updatedAt.toISOString(),
+          widgetId: record.widgetId || '',
+          widgetName: record.widgetName || undefined,
+          displayFormat: record.displayFormat as any,
+          columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
+          columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+          productSource: record.productSource as any,
+          selectedCollections: record.selectedCollections ? JSON.parse(JSON.stringify(record.selectedCollections)) : undefined,
+          selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
+          targetAllCustomers: record.targetAllCustomers ?? true,
+          targetRetailOnly: record.targetRetailOnly ?? false,
+          targetWholesaleOnly: record.targetWholesaleOnly ?? false,
+          targetLoggedInOnly: record.targetLoggedInOnly ?? false,
+          targetCustomerTags: record.targetCustomerTags ? JSON.parse(JSON.stringify(record.targetCustomerTags)) : [],
+          allowViewSwitching: record.allowViewSwitching ?? true,
+          defaultToTableView: record.defaultToTableView ?? false,
+          enableCustomerSorting: record.enableCustomerSorting ?? true,
+          defaultSort: record.defaultSort as any,
+          itemsPerPage: record.itemsPerPage ?? 25,
+          isActive: record.isActive ?? true,
+          placementLocation: record.placementLocation as any,
+          version: record.version || '1.0.0',
+          notes: record.notes || '',
+          createdBy: record.createdBy || undefined,
+          lastChecked: record.lastChecked || undefined,
+          pageBuilderId: record.pageBuilderId || undefined,
+          pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+        };
+        return widget;
+      });
     },
     enabled: !!storeId,
   });
@@ -31,7 +66,42 @@ export const useWidget = (widgetId?: string): UseQueryResult<WidgetInstance | nu
       const result = await api.widgetInstance.findFirst({
         filter: { widgetId: { equals: widgetId } }
       });
-      return result as unknown as WidgetInstance | null;
+      
+      if (!result?.data) return null;
+      
+      const record = result.data;
+      const widget: WidgetInstance = {
+        id: record.id,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+        widgetId: record.widgetId || '',
+        widgetName: record.widgetName || undefined,
+        displayFormat: record.displayFormat as any,
+        columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
+        columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        productSource: record.productSource as any,
+        selectedCollections: record.selectedCollections ? JSON.parse(JSON.stringify(record.selectedCollections)) : undefined,
+        selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
+        targetAllCustomers: record.targetAllCustomers ?? true,
+        targetRetailOnly: record.targetRetailOnly ?? false,
+        targetWholesaleOnly: record.targetWholesaleOnly ?? false,
+        targetLoggedInOnly: record.targetLoggedInOnly ?? false,
+        targetCustomerTags: record.targetCustomerTags ? JSON.parse(JSON.stringify(record.targetCustomerTags)) : [],
+        allowViewSwitching: record.allowViewSwitching ?? true,
+        defaultToTableView: record.defaultToTableView ?? false,
+        enableCustomerSorting: record.enableCustomerSorting ?? true,
+        defaultSort: record.defaultSort as any,
+        itemsPerPage: record.itemsPerPage ?? 25,
+        isActive: record.isActive ?? true,
+        placementLocation: record.placementLocation as any,
+        version: record.version || '1.0.0',
+        notes: record.notes || '',
+        createdBy: record.createdBy || undefined,
+        lastChecked: record.lastChecked || undefined,
+        pageBuilderId: record.pageBuilderId || undefined,
+        pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+      };
+      return widget;
     },
     enabled: !!widgetId,
   });
@@ -45,8 +115,44 @@ export const useWidgetById = (id?: string): UseQueryResult<WidgetInstance | null
     queryKey: ["widget", "id", id],
     queryFn: async () => {
       if (!id) return null;
+      
       const result = await api.widgetInstance.findOne(id);
-      return result as unknown as WidgetInstance | null;
+      
+      if (!result?.data) return null;
+      
+      const record = result.data;
+      const widget: WidgetInstance = {
+        id: record.id,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+        widgetId: record.widgetId || '',
+        widgetName: record.widgetName || undefined,
+        displayFormat: record.displayFormat as any,
+        columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
+        columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        productSource: record.productSource as any,
+        selectedCollections: record.selectedCollections ? JSON.parse(JSON.stringify(record.selectedCollections)) : undefined,
+        selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
+        targetAllCustomers: record.targetAllCustomers ?? true,
+        targetRetailOnly: record.targetRetailOnly ?? false,
+        targetWholesaleOnly: record.targetWholesaleOnly ?? false,
+        targetLoggedInOnly: record.targetLoggedInOnly ?? false,
+        targetCustomerTags: record.targetCustomerTags ? JSON.parse(JSON.stringify(record.targetCustomerTags)) : [],
+        allowViewSwitching: record.allowViewSwitching ?? true,
+        defaultToTableView: record.defaultToTableView ?? false,
+        enableCustomerSorting: record.enableCustomerSorting ?? true,
+        defaultSort: record.defaultSort as any,
+        itemsPerPage: record.itemsPerPage ?? 25,
+        isActive: record.isActive ?? true,
+        placementLocation: record.placementLocation as any,
+        version: record.version || '1.0.0',
+        notes: record.notes || '',
+        createdBy: record.createdBy || undefined,
+        lastChecked: record.lastChecked || undefined,
+        pageBuilderId: record.pageBuilderId || undefined,
+        pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+      };
+      return widget;
     },
     enabled: !!id,
   });
@@ -61,7 +167,40 @@ export const useCreateWidget = (): UseMutationResult<WidgetInstance, Error, Part
   return useMutation<WidgetInstance, Error, Partial<WidgetFormData>>({
     mutationFn: async (config: Partial<WidgetFormData>) => {
       const result = await api.widgetInstance.create(config);
-      return result as unknown as WidgetInstance;
+      
+      const record = result.data;
+      const widget: WidgetInstance = {
+        id: record.id,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+        widgetId: record.widgetId || '',
+        widgetName: record.widgetName || undefined,
+        displayFormat: record.displayFormat as any,
+        columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
+        columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        productSource: record.productSource as any,
+        selectedCollections: record.selectedCollections ? JSON.parse(JSON.stringify(record.selectedCollections)) : undefined,
+        selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
+        targetAllCustomers: record.targetAllCustomers ?? true,
+        targetRetailOnly: record.targetRetailOnly ?? false,
+        targetWholesaleOnly: record.targetWholesaleOnly ?? false,
+        targetLoggedInOnly: record.targetLoggedInOnly ?? false,
+        targetCustomerTags: record.targetCustomerTags ? JSON.parse(JSON.stringify(record.targetCustomerTags)) : [],
+        allowViewSwitching: record.allowViewSwitching ?? true,
+        defaultToTableView: record.defaultToTableView ?? false,
+        enableCustomerSorting: record.enableCustomerSorting ?? true,
+        defaultSort: record.defaultSort as any,
+        itemsPerPage: record.itemsPerPage ?? 25,
+        isActive: record.isActive ?? true,
+        placementLocation: record.placementLocation as any,
+        version: record.version || '1.0.0',
+        notes: record.notes || '',
+        createdBy: record.createdBy || undefined,
+        lastChecked: record.lastChecked || undefined,
+        pageBuilderId: record.pageBuilderId || undefined,
+        pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+      };
+      return widget;
     },
     onSuccess: (data: WidgetInstance) => {
       // Invalidate and refetch widgets list
@@ -87,7 +226,40 @@ export const useUpdateWidget = (): UseMutationResult<
   return useMutation<WidgetInstance, Error, { id: string; config: Partial<WidgetFormData> }>({
     mutationFn: async ({ id, config }: { id: string; config: Partial<WidgetFormData> }) => {
       const result = await api.widgetInstance.update(id, config);
-      return result as unknown as WidgetInstance;
+      
+      const record = result.data;
+      const widget: WidgetInstance = {
+        id: record.id,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+        widgetId: record.widgetId || '',
+        widgetName: record.widgetName || undefined,
+        displayFormat: record.displayFormat as any,
+        columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
+        columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        productSource: record.productSource as any,
+        selectedCollections: record.selectedCollections ? JSON.parse(JSON.stringify(record.selectedCollections)) : undefined,
+        selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
+        targetAllCustomers: record.targetAllCustomers ?? true,
+        targetRetailOnly: record.targetRetailOnly ?? false,
+        targetWholesaleOnly: record.targetWholesaleOnly ?? false,
+        targetLoggedInOnly: record.targetLoggedInOnly ?? false,
+        targetCustomerTags: record.targetCustomerTags ? JSON.parse(JSON.stringify(record.targetCustomerTags)) : [],
+        allowViewSwitching: record.allowViewSwitching ?? true,
+        defaultToTableView: record.defaultToTableView ?? false,
+        enableCustomerSorting: record.enableCustomerSorting ?? true,
+        defaultSort: record.defaultSort as any,
+        itemsPerPage: record.itemsPerPage ?? 25,
+        isActive: record.isActive ?? true,
+        placementLocation: record.placementLocation as any,
+        version: record.version || '1.0.0',
+        notes: record.notes || '',
+        createdBy: record.createdBy || undefined,
+        lastChecked: record.lastChecked || undefined,
+        pageBuilderId: record.pageBuilderId || undefined,
+        pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+      };
+      return widget;
     },
     onMutate: async ({ id, config }) => {
       // Cancel outgoing refetches
@@ -105,7 +277,7 @@ export const useUpdateWidget = (): UseMutationResult<
       // Return context with the snapshot
       return { previousWidget };
     },
-    onError: (_err, variables, context) => {
+    onError: (_err, variables, context: { previousWidget?: WidgetInstance }) => {
       // Rollback on error
       if (context?.previousWidget) {
         queryClient.setQueryData(["widget", variables.id], context.previousWidget);
@@ -125,13 +297,12 @@ export const useUpdateWidget = (): UseMutationResult<
 /**
  * Hook to delete a widget
  */
-export const useDeleteWidget = (): UseMutationResult<string, Error, string> => {
+export const useDeleteWidget = (): UseMutationResult<void, Error, string> => {
   const queryClient = useQueryClient();
 
-  return useMutation<string, Error, string>({
+  return useMutation<void, Error, string>({
     mutationFn: async (id: string) => {
       await api.widgetInstance.delete(id);
-      return id;
     },
     onSuccess: (deletedId: string) => {
       // Invalidate widgets list
@@ -156,7 +327,40 @@ export const useDuplicateWidget = (): UseMutationResult<WidgetInstance, Error, W
       };
 
       const result = await api.widgetInstance.create(newConfig);
-      return result as unknown as WidgetInstance;
+      
+      const record = result.data;
+      const widget: WidgetInstance = {
+        id: record.id,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+        widgetId: record.widgetId || '',
+        widgetName: record.widgetName || undefined,
+        displayFormat: record.displayFormat as any,
+        columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
+        columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        productSource: record.productSource as any,
+        selectedCollections: record.selectedCollections ? JSON.parse(JSON.stringify(record.selectedCollections)) : undefined,
+        selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
+        targetAllCustomers: record.targetAllCustomers ?? true,
+        targetRetailOnly: record.targetRetailOnly ?? false,
+        targetWholesaleOnly: record.targetWholesaleOnly ?? false,
+        targetLoggedInOnly: record.targetLoggedInOnly ?? false,
+        targetCustomerTags: record.targetCustomerTags ? JSON.parse(JSON.stringify(record.targetCustomerTags)) : [],
+        allowViewSwitching: record.allowViewSwitching ?? true,
+        defaultToTableView: record.defaultToTableView ?? false,
+        enableCustomerSorting: record.enableCustomerSorting ?? true,
+        defaultSort: record.defaultSort as any,
+        itemsPerPage: record.itemsPerPage ?? 25,
+        isActive: record.isActive ?? true,
+        placementLocation: record.placementLocation as any,
+        version: record.version || '1.0.0',
+        notes: record.notes || '',
+        createdBy: record.createdBy || undefined,
+        lastChecked: record.lastChecked || undefined,
+        pageBuilderId: record.pageBuilderId || undefined,
+        pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+      };
+      return widget;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["widgets"] });

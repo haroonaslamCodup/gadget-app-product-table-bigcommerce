@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { Box, H1, Link, Panel, ProgressCircle, Text } from "@bigcommerce/big-design"
+import { Box, Link, Panel, ProgressCircle, Text } from "@bigcommerce/big-design"
 import { Provider as GadgetProvider, useGadget } from "@gadgetinc/react-bigcommerce";
 import {
   Outlet,
@@ -7,8 +6,6 @@ import {
   RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
-  useLocation,
-  useNavigate,
 } from "react-router";
 import { api } from "../api";
 import { IndexPage } from "../routes/index";

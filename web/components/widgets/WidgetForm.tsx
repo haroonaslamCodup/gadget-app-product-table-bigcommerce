@@ -14,7 +14,6 @@ import {
   Select,
   Textarea,
   Text,
-  Toggle,
 } from "@bigcommerce/big-design";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../api";
@@ -22,9 +21,11 @@ import { useCreateWidget, useUpdateWidget } from "../../hooks/useWidgets";
 import { useCollections } from "../../hooks/useProducts";
 import { ColumnManager } from "./ColumnManager";
 
+import type { WidgetInstance, Collection, WidgetFormData } from "../../types";
+
 interface WidgetFormProps {
   widgetId?: string;
-  initialData?: any;
+  initialData?: WidgetInstance;
 }
 
 export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
@@ -45,7 +46,7 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
   const updateWidget = useUpdateWidget();
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<WidgetFormData>({
     widgetName: "",
     placementLocation: "homepage",
     displayFormat: "folded",
@@ -119,7 +120,7 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
     }
   };
 
-  const collections = collectionsData?.data || [];
+  const collections: Collection[] = collectionsData || [];
 
   return (
     <Form onSubmit={handleSubmit}>
@@ -228,8 +229,8 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
           <FormGroup>
             <Select
               label="Select Collections"
-              options={collections.map((c: any) => ({ value: c.id, content: c.name }))}
-              value={formData.selectedCollections[0]}
+              options={collections.map((c: Collection) => ({ value: c.id, content: c.name }))}
+              value={formData.selectedCollections[0] || ""}
               onOptionChange={(value) => setFormData({
                 ...formData,
                 selectedCollections: [value]
@@ -269,7 +270,7 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
           <Input
             label="Customer Tags (comma-separated)"
             placeholder="e.g., vip, wholesale, preferred"
-            value={formData.targetCustomerTags.join(", ")}
+            value={formData.targetCustomerTags?.join(", ") || ""}
             onChange={(e) => setFormData({
               ...formData,
               targetCustomerTags: e.target.value.split(",").map(t => t.trim()).filter(Boolean)
@@ -281,7 +282,7 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
       {/* View Options */}
       <Panel header="View Options" marginBottom="medium">
         <FormGroup>
-          <Toggle
+          <Checkbox
             label="Allow View Switching (Grid ↔ Table)"
             checked={formData.allowViewSwitching}
             onChange={(e) => setFormData({ ...formData, allowViewSwitching: e.target.checked })}
@@ -289,11 +290,11 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
         </FormGroup>
 
         <FormGroup>
-          <Toggle
-            label="Default to Table View"
-            checked={formData.defaultToTableView}
-            onChange={(e) => setFormData({ ...formData, defaultToTableView: e.target.checked })}
-          />
+          <Checkbox
+          label="Default to Table View"
+          checked={formData.defaultToTableView}
+          onChange={(e) => setFormData({ ...formData, defaultToTableView: e.target.checked })}
+        />
         </FormGroup>
       </Panel>
 
@@ -310,7 +311,7 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
               { value: "oldest", content: "Oldest First" },
               { value: "sku", content: "SKU" },
             ]}
-            value={formData.defaultSort}
+            value={formData.defaultSort || "name"}
             onOptionChange={(value) => setFormData({ ...formData, defaultSort: value })}
           />
         </FormGroup>
@@ -330,22 +331,22 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
         </FormGroup>
 
         <FormGroup>
-          <Toggle
-            label="Enable Customer Sorting"
-            checked={formData.enableCustomerSorting}
-            onChange={(e) => setFormData({ ...formData, enableCustomerSorting: e.target.checked })}
-          />
+          <Checkbox
+          label="Enable Customer Sorting"
+          checked={formData.enableCustomerSorting}
+          onChange={(e) => setFormData({ ...formData, enableCustomerSorting: e.target.checked })}
+        />
         </FormGroup>
       </Panel>
 
       {/* Status & Notes */}
       <Panel header="Status & Notes" marginBottom="medium">
         <FormGroup>
-          <Toggle
-            label="Widget Active"
-            checked={formData.isActive}
-            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-          />
+          <Checkbox
+          label="Widget Active"
+          checked={formData.isActive}
+          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+        />
         </FormGroup>
 
         <FormGroup>
@@ -360,7 +361,7 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
       </Panel>
 
       {/* Actions */}
-      <Flex justifyContent="flex-end" gap="medium">
+      <Flex justifyContent="flex-end">
         <Button
           variant="subtle"
           onClick={() => navigate("/widgets")}

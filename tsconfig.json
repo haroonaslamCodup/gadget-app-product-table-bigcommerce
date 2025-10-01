@@ -5,6 +5,9 @@
     "allowJs": true,
     "checkJs": true,
     "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitOverride": true,
     "noEmit": true,
     "sourceMap": true,
     "experimentalDecorators": true,
@@ -19,7 +22,10 @@
     "jsx": "react-jsx",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "exclude": [
     "node_modules",

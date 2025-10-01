@@ -73,7 +73,7 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
 
   return (
     <Box>
-      <Text color="secondary60" fontSize="small" marginBottom="xSmall">
+      <Text color="secondary60" marginBottom="xSmall">
         Check to enable columns. Drag to reorder.
       </Text>
 
@@ -106,7 +106,7 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
               }}
             >
               <Flex alignItems="center" justifyContent="space-between">
-                <Flex alignItems="center" gap="small">
+                <Flex alignItems="center" marginLeft="xSmall" marginRight="xSmall">
                   <Checkbox
                     checked={isEnabled}
                     onChange={(e) => handleToggleColumn(column.id, e.target.checked)}
@@ -115,11 +115,11 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
                 </Flex>
 
                 {isEnabled && (
-                  <Flex alignItems="center" gap="small">
-                    <Text color="secondary60" fontSize="small">
+                  <Flex alignItems="center" marginLeft="xSmall" marginRight="xSmall">
+                    <Text color="secondary60">
                       Position: {orderIndex + 1}
                     </Text>
-                    <Text color="secondary60" fontSize="small">
+                    <Text color="secondary60">
                       ⋮⋮
                     </Text>
                   </Flex>
@@ -132,7 +132,7 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
 
       {columns.length > 0 && (
         <Box marginTop="small">
-          <Text fontSize="small" color="secondary60">
+          <Text color="secondary60">
             Column order: {columnsOrder.map((id) => {
               const col = AVAILABLE_COLUMNS.find((c) => c.id === id);
               return col?.label;

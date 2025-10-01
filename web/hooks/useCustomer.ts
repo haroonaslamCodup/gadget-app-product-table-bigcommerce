@@ -1,22 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-
-export interface CustomerContext {
-  customerId: string | null;
-  customerGroup: string;
-  customerGroupId: number | null;
-  customerTags: string[];
-  isLoggedIn: boolean;
-  isWholesale: boolean;
-  email: string | null;
-  name: string | null;
-}
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import type { CustomerContext } from "../types";
 
 /**
  * Hook to fetch customer context
  * Determines customer group, tags, logged-in status for pricing and visibility
  */
-export const useCustomerContext = (customerId?: string) => {
-  return useQuery<CustomerContext>({
+export const useCustomerContext = (customerId?: string): UseQueryResult<CustomerContext, Error> => {
+  return useQuery<CustomerContext, Error>({
     queryKey: ["customer-context", customerId],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -40,7 +30,13 @@ export const useCustomerContext = (customerId?: string) => {
  * Hook to get customer context from BigCommerce window object
  * This reads from window.BCData which is provided by BigCommerce storefront
  */
-export const useBigCommerceContext = () => {
+export const useBigCommerceContext = (): UseQueryResult<{
+  customerId: string | null;
+  isLoggedIn: boolean;
+  cartId: string | null;
+  storeHash: string | null;
+  currency?: string;
+}, Error> => {
   return useQuery({
     queryKey: ["bc-context"],
     queryFn: async () => {

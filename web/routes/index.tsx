@@ -31,10 +31,10 @@ export const IndexPage = () => {
         header="Welcome!"
         marginBottom="medium"
       >
-        <Flex flexDirection="column" gap="medium">
-          <Flex gap="small" alignItems="center">
+        <Flex flexDirection="column">
+          <Flex alignItems="center" marginBottom="small">
             <CheckIcon color="success" />
-            <Text>Successfully connected to BigCommerce</Text>
+            <Text marginLeft="xSmall">Successfully connected to BigCommerce</Text>
           </Flex>
 
           <Box>
@@ -56,11 +56,11 @@ export const IndexPage = () => {
             </ul>
           </Box>
 
-          <Flex gap="medium">
+          <Flex>
             <Button onClick={() => navigate("/widgets/new")}>
               Create Your First Widget
             </Button>
-            <Button variant="subtle" onClick={() => navigate("/widgets")}>
+            <Button variant="subtle" onClick={() => navigate("/widgets")} marginLeft="small">
               View All Widgets
             </Button>
           </Flex>
@@ -72,10 +72,10 @@ export const IndexPage = () => {
         marginBottom="medium"
       >
         <Box border="box" padding="medium">
-          <Flex gap="medium" flexDirection="column">
-            <Flex gap="small" alignItems="center">
+          <Flex flexDirection="column">
+            <Flex alignItems="center" marginBottom="small">
               <StoreIcon color="secondary60" />
-              <Text color="secondary60">
+              <Text color="secondary60" marginLeft="xSmall">
                 {store?.storeHash ? `store-${store.storeHash}.mybigcommerce.com` : "Loading..."}
               </Text>
             </Flex>
@@ -94,17 +94,17 @@ export const IndexPage = () => {
       </Panel>
 
       <Panel header="Next Steps">
-        <Flex flexDirection="column" gap="small">
+        <Flex flexDirection="column">
           <Text>
             1. <Link onClick={() => navigate("/widgets/new")}>Create a new widget</Link> with your desired configuration
           </Text>
-          <Text>
+          <Text marginTop="xSmall">
             2. Configure display format, columns, and customer targeting
           </Text>
-          <Text>
+          <Text marginTop="xSmall">
             3. Use BigCommerce Page Builder to place your widget on any page
           </Text>
-          <Text>
+          <Text marginTop="xSmall">
             4. Customers will see personalized pricing based on their group
           </Text>
         </Flex>
