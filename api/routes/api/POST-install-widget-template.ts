@@ -79,7 +79,7 @@ export default async function route({ reply, logger, connections, request, api }
         <div
           id="product-table-{{widget_id}}"
           class="product-table-widget"
-          data-product-table-widget='{"widgetId":"{{widget_id}}","showSearch":{{show_search}},"showViewSwitcher":{{show_view_switcher}}}'
+          data-product-table-widget='{"widgetId":"{{widget_id}}","showSearch":{{#if show_search}}true{{else}}false{{/if}},"showViewSwitcher":{{#if show_view_switcher}}true{{else}}false{{/if}}}'
         >
           <div class="loading">Loading products...</div>
         </div>
@@ -101,10 +101,7 @@ export default async function route({ reply, logger, connections, request, api }
                   type: "text",
                   label: "Widget ID",
                   id: "widget_id",
-                  default: "",
-                  typeMeta: {
-                    placeholder: "Enter widget ID from admin panel"
-                  }
+                  default: ""
                 }
               ]
             },
@@ -135,10 +132,11 @@ export default async function route({ reply, logger, connections, request, api }
               label: "Custom Styling",
               settings: [
                 {
-                  type: "text",
+                  type: "code",
                   label: "Custom CSS",
                   id: "custom_css",
-                  default: ""
+                  default: "",
+                  // Some stores may not support "code"; if not, it will render as a textarea
                 }
               ]
             }
