@@ -12,6 +12,7 @@ import { IndexPage } from "../routes/index";
 import { WidgetsPage } from "../routes/widgets";
 import { WidgetNewPage } from "../routes/widget-new";
 import { WidgetEditPage } from "../routes/widget-edit";
+import { SetupPage } from "../routes/setup";
 import { Navigation } from "./Navigation";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="widgets" element={<WidgetsPage />} />
         <Route path="widgets/new" element={<WidgetNewPage />} />
         <Route path="widgets/:id/edit" element={<WidgetEditPage />} />
+        <Route path="setup" element={<SetupPage />} />
         <Route path="*" element={<Error404 />} />
       </Route>
     )
