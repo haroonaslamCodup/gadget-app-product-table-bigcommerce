@@ -4,10 +4,13 @@ import { useState } from "react";
 
 export const SetupPage = () => {
   const [isInstalling, setIsInstalling] = useState(false);
+  const [isCleaning, setIsCleaning] = useState(false);
   const [widgetTemplateInstalled, setWidgetTemplateInstalled] = useState(false);
   const [scriptInstalled, setScriptInstalled] = useState(false);
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
   const [manualInstructions, setManualInstructions] = useState<string[] | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   const installWidgetTemplate = async () => {
     setIsInstalling(true);
@@ -114,6 +117,117 @@ export const SetupPage = () => {
   const installBoth = async () => {
     await installWidgetTemplate();
     await installWidgetScript();
+  };
+
+  const cleanupWidgetTemplates = async () => {
+    setIsCleaning(true);
+    try {
+      const response = await fetch("/api/cleanup-widget-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      const data = await response.json();
+      console.log("Cleanup templates response:", data);
+
+      if (data.success) {
+        setAlertMessage({
+          type: "success",
+          text: data.message || `Deleted ${data.deletedCount} widget template(s).`
+        });
+        setWidgetTemplateInstalled(false);
+
+        // Show detailed results if available
+        if (data.results && data.results.length > 0) {
+          console.log("Deleted templates:", data.results);
+        }
+      } else {
+        setAlertMessage({
+          type: "error",
+          text: `Failed to cleanup templates: ${data.error || data.message}`
+        });
+      }
+    } catch (error) {
+      setAlertMessage({
+        type: "error",
+        text: `Error: ${(error as Error).message}`
+      });
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
+  const cleanupWidgetScripts = async () => {
+    setIsCleaning(true);
+    try {
+      const response = await fetch("/api/cleanup-widget-scripts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      const data = await response.json();
+      console.log("Cleanup scripts response:", data);
+
+      if (data.success) {
+        const msgType = data.deletedCount === 0 ? "warning" : "success";
+        const msgText = data.totalFound === 0
+          ? "No Product Table Widget scripts found to delete"
+          : `Found ${data.totalFound} script(s). Deleted ${data.deletedCount}. ${data.failedCount > 0 ? `Failed: ${data.failedCount}.` : ''}`;
+
+        setAlertMessage({
+          type: msgType,
+          text: msgText
+        });
+
+        if (data.deletedCount > 0) {
+          setScriptInstalled(false);
+        }
+
+        // Show detailed results if available
+        if (data.results && data.results.length > 0) {
+          console.log("Script deletion results:", data.results);
+        }
+        if (data.allScripts) {
+          console.log("All scripts found:", data.allScripts);
+        }
+      } else {
+        console.error("Cleanup failed:", data);
+        setAlertMessage({
+          type: "error",
+          text: `Failed to cleanup scripts: ${data.error || data.message}`
+        });
+      }
+    } catch (error) {
+      console.error("Cleanup error:", error);
+      setAlertMessage({
+        type: "error",
+        text: `Error: ${(error as Error).message}`
+      });
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
+  const cleanupAll = async () => {
+    await cleanupWidgetTemplates();
+    await cleanupWidgetScripts();
+  };
+
+  const loadDebugInfo = async () => {
+    try {
+      const response = await fetch("/api/list-widgets", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setDebugInfo(data.data);
+        setShowDebug(true);
+      }
+    } catch (error) {
+      console.error("Failed to load debug info:", error);
+    }
   };
 
   return (
@@ -239,6 +353,88 @@ export const SetupPage = () => {
           </Box>
         </Panel>
       )}
+
+      {/* Cleanup Section */}
+      <Panel header="Cleanup Old Widgets" marginBottom="large">
+        <Box marginBottom="medium">
+          <Text marginBottom="medium">
+            If you have old or duplicate widget templates and scripts from previous installations,
+            you can clean them up here before reinstalling.
+          </Text>
+
+          <Flex marginBottom="medium">
+            <Button
+              variant="secondary"
+              actionType="destructive"
+              onClick={cleanupWidgetTemplates}
+              isLoading={isCleaning}
+              marginRight="medium"
+            >
+              Clean Up Widget Templates
+            </Button>
+
+            <Button
+              variant="secondary"
+              actionType="destructive"
+              onClick={cleanupWidgetScripts}
+              isLoading={isCleaning}
+              marginRight="medium"
+            >
+              Clean Up Widget Scripts
+            </Button>
+
+            <Button
+              variant="secondary"
+              actionType="destructive"
+              onClick={cleanupAll}
+              isLoading={isCleaning}
+              marginRight="medium"
+            >
+              Clean Up All
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={loadDebugInfo}
+            >
+              Show What's Installed
+            </Button>
+          </Flex>
+
+          <Message
+            type="warning"
+            messages={[{
+              text: "This will delete all Product Table Widget templates and scripts from BigCommerce. You'll need to reinstall them after cleanup."
+            }]}
+          />
+
+          {showDebug && debugInfo && (
+            <Box marginTop="medium" padding="medium" backgroundColor="secondary10">
+              <H2 marginBottom="medium">Installed Widgets Debug Info</H2>
+
+              <Text bold>Widget Templates ({debugInfo.templates?.length || 0}):</Text>
+              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+                {JSON.stringify(debugInfo.templates, null, 2)}
+              </pre>
+
+              <Text bold marginTop="medium">Scripts ({debugInfo.scripts?.length || 0}):</Text>
+              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+                {JSON.stringify(debugInfo.scripts, null, 2)}
+              </pre>
+
+              <Text bold marginTop="medium">Widget Placements ({debugInfo.placements?.length || 0}):</Text>
+              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+                {JSON.stringify(debugInfo.placements, null, 2)}
+              </pre>
+
+              <Text bold marginTop="medium">Widgets ({debugInfo.widgets?.length || 0}):</Text>
+              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+                {JSON.stringify(debugInfo.widgets, null, 2)}
+              </pre>
+            </Box>
+          )}
+        </Box>
+      </Panel>
 
       {/* Troubleshooting */}
       <Panel header="Troubleshooting">

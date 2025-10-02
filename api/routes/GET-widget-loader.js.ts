@@ -1,33 +1,32 @@
 import type { RouteContext } from "gadget-server";
+import { readFile } from "fs/promises";
+import { join } from "path";
 
 /**
  * GET /widget-loader.js
  *
- * Serves an ES module that initializes the storefront widget loader.
- * In dev, this imports the TSX module through Vite; in prod, Vite bundles it.
+ * Serves the compiled widget bundle that BigCommerce can load.
  */
 export default async function route({ reply }: RouteContext) {
-    reply
-        .type("application/javascript; charset=utf-8")
-        .header("Access-Control-Allow-Origin", "*")
-        .header("Cross-Origin-Resource-Policy", "cross-origin")
-        .header("X-Content-Type-Options", "nosniff")
-        .header("Cache-Control", "public, max-age=300")
-        .send([
-            "// Classic entry that works with BigCommerce Script Manager (non-module)",
-            "(function(){",
-            "  if (window.__ProductTableWidgetLoaderInjected) return;",
-            "  window.__ProductTableWidgetLoaderInjected = true;",
-            "  try {",
-            "    var s = document.createElement('script');",
-            "    s.type = 'module';",
-            "    s.src = '/web/storefront/widget-loader.tsx';",
-            "    document.head.appendChild(s);",
-            "  } catch (e) {",
-            "    console.error('Failed to inject widget loader module', e);",
-            "  }",
-            "})();",
-        ].join("\n"));
+    try {
+        // Read the compiled widget bundle
+        const widgetPath = join(process.cwd(), "web/dist/widget/widget-loader.js");
+        const widgetCode = await readFile(widgetPath, "utf-8");
+
+        reply
+            .type("application/javascript; charset=utf-8")
+            .header("Access-Control-Allow-Origin", "*")
+            .header("Cross-Origin-Resource-Policy", "cross-origin")
+            .header("X-Content-Type-Options", "nosniff")
+            .header("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+            .send(widgetCode);
+    } catch (error) {
+        console.error("Failed to load widget bundle:", error);
+        reply
+            .code(500)
+            .type("application/javascript")
+            .send("console.error('Widget bundle not found. Please run: npm run build:widget');");
+    }
 }
 
 
