@@ -10,12 +10,35 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ProductTable } from "../components/storefront/ProductTable";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 
-// Get the Gadget app URL from the script tag or use environment variable
-const scriptTag = document.currentScript as HTMLScriptElement;
-const gadgetAppUrl = scriptTag?.src ? new URL(scriptTag.src).origin : window.location.origin;
+// Get the Gadget app URL from the script tag
+// Look for the script tag that loaded widget-loader.js
+const getGadgetAppUrl = () => {
+  const scripts = document.querySelectorAll('script[src*="widget-loader.js"]');
+  if (scripts.length > 0) {
+    const scriptSrc = (scripts[0] as HTMLScriptElement).src;
+    const url = new URL(scriptSrc);
+    console.log('[Widget Loader] Found Gadget app URL:', url.origin);
+    return url.origin;
+  }
+
+  // Fallback: try to detect from current script during initial execution
+  const currentScript = document.currentScript as HTMLScriptElement;
+  if (currentScript?.src) {
+    const url = new URL(currentScript.src);
+    console.log('[Widget Loader] Using currentScript URL:', url.origin);
+    return url.origin;
+  }
+
+  // Last resort: use window location (this will fail on storefront)
+  console.warn('[Widget Loader] Could not detect Gadget app URL, using window.location.origin');
+  return window.location.origin;
+};
+
+const gadgetAppUrl = getGadgetAppUrl();
 
 // Store API base URL globally so hooks can access it
 (window as any).__GADGET_API_URL__ = gadgetAppUrl;
+console.log('[Widget Loader] Set global __GADGET_API_URL__ to:', gadgetAppUrl);
 
 // Initialize Query Client for storefront
 const queryClient = new QueryClient({

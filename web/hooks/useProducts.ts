@@ -4,8 +4,11 @@ import type { ProductFilters, ProductsResponse } from "../types";
 // Get API base URL - use Gadget app URL on storefront, local URL in admin
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined' && (window as any).__GADGET_API_URL__) {
-    return (window as any).__GADGET_API_URL__;
+    const url = (window as any).__GADGET_API_URL__;
+    console.log('[useProducts] Using Gadget API URL:', url);
+    return url;
   }
+  console.log('[useProducts] Using relative URLs (admin mode)');
   return ''; // Use relative URLs in admin
 };
 
@@ -29,13 +32,19 @@ export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsRes
       params.set("sort", sort);
 
       const baseUrl = getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/api/products?${params.toString()}`);
+      const url = `${baseUrl}/api/products?${params.toString()}`;
+      console.log('[useProducts] Fetching products from:', url);
+
+      const response = await fetch(url);
 
       if (!response.ok) {
+        console.error('[useProducts] Fetch failed:', response.status, response.statusText);
         throw new Error("Failed to fetch products");
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('[useProducts] Fetched products:', data);
+      return data;
     },
     enabled: !!(category || collection || search || page),
     staleTime: 1000 * 60 * 5, // 5 minutes
