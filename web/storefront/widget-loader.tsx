@@ -108,34 +108,59 @@ export const initProductTableWidget = (config: WidgetConfig) => {
 /**
  * Auto-initialize widgets from data attributes
  */
-export const autoInitWidgets = () => {
+export const autoInitWidgets = async () => {
   console.log('[Widget Loader] Auto-initializing widgets...');
   const widgets = document.querySelectorAll('[data-product-table-widget]');
   console.log('[Widget Loader] Found', widgets.length, 'widget elements');
 
-  widgets.forEach((element, index) => {
+  for (let index = 0; index < widgets.length; index++) {
+    const element = widgets[index];
     try {
       console.log(`[Widget Loader] Initializing widget ${index + 1}/${widgets.length}`);
-      const configData = element.getAttribute('data-product-table-widget');
-      console.log('[Widget Loader] Config data:', configData);
 
-      if (configData) {
-        const config = JSON.parse(configData);
-        console.log('[Widget Loader] Parsed config:', config);
+      // Get widgetId from data attribute (just the ID, not full config)
+      const widgetId = element.getAttribute('data-product-table-widget') ||
+                       element.getAttribute('data-widget-id');
 
-        initProductTableWidget({
-          ...config,
-          containerId: element.id || undefined,
-        });
+      console.log('[Widget Loader] Widget ID:', widgetId);
 
-        console.log(`[Widget Loader] Widget ${config.widgetId} initialized successfully`);
-      } else {
-        console.warn('[Widget Loader] No config data found for widget element:', element);
+      if (!widgetId) {
+        console.warn('[Widget Loader] No widget ID found for element:', element);
+        continue;
       }
+
+      // Fetch widget configuration from API
+      const baseUrl = (window as any).__GADGET_API_URL__ || '';
+      const configUrl = `${baseUrl}/api/widgets/${widgetId}`;
+
+      console.log('[Widget Loader] Fetching config from:', configUrl);
+
+      const response = await fetch(configUrl);
+
+      if (!response.ok) {
+        console.error('[Widget Loader] Failed to fetch widget config:', response.status, response.statusText);
+        continue;
+      }
+
+      const { success, widget: config, error } = await response.json();
+
+      if (!success || !config) {
+        console.error('[Widget Loader] Widget config fetch failed:', error);
+        continue;
+      }
+
+      console.log('[Widget Loader] Fetched config:', config);
+
+      initProductTableWidget({
+        ...config,
+        containerId: element.id || undefined,
+      });
+
+      console.log(`[Widget Loader] Widget ${widgetId} initialized successfully`);
     } catch (error) {
       console.error('[Widget Loader] Failed to initialize product table widget:', error, 'Element:', element);
     }
-  });
+  }
 
   console.log('[Widget Loader] Auto-initialization complete');
 };
