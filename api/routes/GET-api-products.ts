@@ -17,16 +17,6 @@ import type { RouteContext } from "gadget-server";
  */
 
 export default async function route({ request, reply, logger, connections, api }: RouteContext) {
-  // Handle CORS preflight
-  if (request.method === 'OPTIONS') {
-    return reply
-      .code(204)
-      .header("Access-Control-Allow-Origin", "*")
-      .header("Access-Control-Allow-Methods", "GET, OPTIONS")
-      .header("Access-Control-Allow-Headers", "Content-Type")
-      .send();
-  }
-
   try {
     const url = new URL(request.url);
     const params = url.searchParams;
@@ -133,9 +123,6 @@ export default async function route({ request, reply, logger, connections, api }
       .code(200)
       .header("Content-Type", "application/json")
       .header("Cache-Control", "public, max-age=300") // Cache for 5 minutes
-      .header("Access-Control-Allow-Origin", "*")
-      .header("Access-Control-Allow-Methods", "GET, OPTIONS")
-      .header("Access-Control-Allow-Headers", "Content-Type")
       .send(result);
 
   } catch (error: unknown) {
@@ -143,7 +130,6 @@ export default async function route({ request, reply, logger, connections, api }
     logger.error(`Error fetching products: ${err.message}, stack=${err.stack}`);
     return reply
       .code(500)
-      .header("Access-Control-Allow-Origin", "*")
       .send({ error: "Internal server error" });
   }
 }

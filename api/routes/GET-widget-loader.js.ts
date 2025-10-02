@@ -1,15 +1,15 @@
-import type { RouteContext } from "gadget-server";
 import { readFile, stat } from "fs/promises";
+import type { RouteContext } from "gadget-server";
 import { join } from "path";
 
 // Widget version - increment this when you rebuild the widget to bust cache
-const WIDGET_VERSION = "1.0.7";
+const WIDGET_VERSION = "1.0.8";
 
 /**
  * GET /widget-loader.js
  *
  * Serves the compiled widget bundle that BigCommerce can load.
- * Supports cache busting via version query parameter (?v=1.0.5)
+ * Supports cache busting via version query parameter (?v=1.0.8)
  */
 export default async function route({ reply }: RouteContext) {
     try {
@@ -24,7 +24,6 @@ export default async function route({ reply }: RouteContext) {
 
         reply
             .type("application/javascript; charset=utf-8")
-            .header("Access-Control-Allow-Origin", "*")
             .header("Cross-Origin-Resource-Policy", "cross-origin")
             .header("X-Content-Type-Options", "nosniff")
             .header("Cache-Control", "public, max-age=86400, must-revalidate") // Cache for 24 hours but revalidate
