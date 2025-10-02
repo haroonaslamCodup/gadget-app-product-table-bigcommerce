@@ -16,14 +16,14 @@ import type { RouteContext } from "gadget-server";
 
 export default async function route({ request, reply, logger, connections }: RouteContext) {
   try {
-    const url = new URL(request.url);
-    const params = url.searchParams;
+    // Use request.query instead of parsing URL (Fastify provides parsed query params)
+    const params = request.query as Record<string, string>;
 
-    const productId = params.get("productId");
-    const variantId = params.get("variantId");
-    const userGroup = params.get("userGroup") || "guest";
-    const customerTags = params.get("customerTags")?.split(",") || [];
-    const quantity = parseInt(params.get("quantity") || "1", 10);
+    const productId = params.productId;
+    const variantId = params.variantId;
+    const userGroup = params.userGroup || "guest";
+    const customerTags = params.customerTags?.split(",") || [];
+    const quantity = parseInt(params.quantity || "1", 10);
 
     if (!productId) {
       return reply.code(400).send({ error: "productId is required" });

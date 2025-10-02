@@ -13,11 +13,11 @@ import type { RouteContext } from "gadget-server";
 
 export default async function route({ request, reply, api, logger }: RouteContext) {
   try {
-    const url = new URL(request.url);
-    const params = url.searchParams;
+    // Use request.query instead of parsing URL (Fastify provides parsed query params)
+    const params = request.query as Record<string, string>;
 
-    const widgetId = params.get("widgetId");
-    const currentVersion = params.get("currentVersion") || "0.0.0";
+    const widgetId = params.widgetId;
+    const currentVersion = params.currentVersion || "0.0.0";
 
     logger.info(`Checking widget version: widgetId=${widgetId}, currentVersion=${currentVersion}`);
 

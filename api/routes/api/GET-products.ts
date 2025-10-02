@@ -35,8 +35,8 @@ export default async function route({ request, reply, logger, connections, api }
     const bcParams = new URLSearchParams({
       limit: limit.toString(),
       page: page.toString(),
-      include: "variants,images,custom_fields",
-      is_visible: "true"
+      include: "variants,images,custom_fields"
+      // Removed is_visible filter - let's fetch all products first to debug
     });
 
     // Add category filter
@@ -90,34 +90,38 @@ export default async function route({ request, reply, logger, connections, api }
       return reply.code(500).send({ error: "BigCommerce connection not available" });
     }
 
-    const response = await bigcommerceConnection.v3.get<any>(`/catalog/products?${bcParams.toString()}`) as any;
+    const apiUrl = `/catalog/products?${bcParams.toString()}`;
+    logger.info(`Calling BigCommerce API: ${apiUrl}`);
+
+    const response = await bigcommerceConnection.v3.get<any>(apiUrl) as any;
 
     if (!response) {
-      logger.error(`Failed to fetch products from BigCommerce: ${JSON.stringify({ response })}`);
+      logger.error(`Failed to fetch products from BigCommerce`);
       return reply.code(500).send({ error: "Failed to fetch products" });
     }
 
-    const products = response as any;
+    // The @space48/bigcommerce-api package returns the data directly as an array
+    // not wrapped in a { data, meta } structure
+    const productsArray = Array.isArray(response) ? response : [];
+
+    logger.info(`BigCommerce returned ${productsArray.length} products`);
 
     // TODO: Apply user-specific pricing based on customer group
     // This will be implemented when we have access to BigCommerce price lists
     // For now, return products with default pricing
 
     const result = {
-      // Frontend expects `products` alongside `meta`
-      products: (products.data as any) || [],
-      data: (products.data as any) || [],
-      meta: (products.meta as any) || {},
+      products: productsArray,
       pagination: {
-        total: ((products.meta as any)?.pagination?.total as number) || 0,
-        count: ((products.meta as any)?.pagination?.count as number) || 0,
-        per_page: ((products.meta as any)?.pagination?.per_page as number) || limit,
-        current_page: ((products.meta as any)?.pagination?.current_page as number) || page,
-        total_pages: ((products.meta as any)?.pagination?.total_pages as number) || 1,
+        total: productsArray.length,
+        count: productsArray.length,
+        per_page: limit,
+        current_page: page,
+        total_pages: Math.ceil(productsArray.length / limit),
       }
     };
 
-    logger.info(`Products fetched successfully: count=${result.data.length}, total=${result.pagination.total}`);
+    logger.info(`Products fetched successfully: count=${result.products.length}, total=${result.pagination.total}`);
 
     return reply
       .code(200)

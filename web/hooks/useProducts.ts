@@ -46,7 +46,7 @@ export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsRes
       console.log('[useProducts] Fetched products:', data);
       return data;
     },
-    enabled: !!(category || collection || search || page),
+    enabled: true, // Always enabled - fetch all products if no filters
     staleTime: 1000 * 60 * 5, // 5 minutes
     placeholderData: (previousData) => previousData, // Keep previous data while loading
   });
