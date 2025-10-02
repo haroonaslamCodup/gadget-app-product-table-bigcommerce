@@ -63,13 +63,20 @@ interface WidgetConfig {
  * Initialize a product table widget
  */
 export const initProductTableWidget = (config: WidgetConfig) => {
+  console.log('[initProductTableWidget] Initializing with config:', config);
   const containerId = config.containerId || `product-table-${config.widgetId}`;
+  console.log('[initProductTableWidget] Looking for container:', containerId);
   const container = document.getElementById(containerId);
 
   if (!container) {
-    console.error(`Product Table Widget: Container #${containerId} not found`);
+    console.error(`[initProductTableWidget] Container #${containerId} not found`);
+    console.log('[initProductTableWidget] Available element IDs:',
+      Array.from(document.querySelectorAll('[id]')).map(el => el.id).filter(id => id.includes('product')).slice(0, 10)
+    );
     return;
   }
+
+  console.log('[initProductTableWidget] Found container:', container);
 
   // Get page context from the DOM
   const pageContext = {
@@ -102,22 +109,35 @@ export const initProductTableWidget = (config: WidgetConfig) => {
  * Auto-initialize widgets from data attributes
  */
 export const autoInitWidgets = () => {
+  console.log('[Widget Loader] Auto-initializing widgets...');
   const widgets = document.querySelectorAll('[data-product-table-widget]');
+  console.log('[Widget Loader] Found', widgets.length, 'widget elements');
 
-  widgets.forEach((element) => {
+  widgets.forEach((element, index) => {
     try {
+      console.log(`[Widget Loader] Initializing widget ${index + 1}/${widgets.length}`);
       const configData = element.getAttribute('data-product-table-widget');
+      console.log('[Widget Loader] Config data:', configData);
+
       if (configData) {
         const config = JSON.parse(configData);
+        console.log('[Widget Loader] Parsed config:', config);
+
         initProductTableWidget({
           ...config,
           containerId: element.id || undefined,
         });
+
+        console.log(`[Widget Loader] Widget ${config.widgetId} initialized successfully`);
+      } else {
+        console.warn('[Widget Loader] No config data found for widget element:', element);
       }
     } catch (error) {
-      console.error('Failed to initialize product table widget:', error);
+      console.error('[Widget Loader] Failed to initialize product table widget:', error, 'Element:', element);
     }
   });
+
+  console.log('[Widget Loader] Auto-initialization complete');
 };
 
 /**

@@ -3,7 +3,7 @@ import { readFile, stat } from "fs/promises";
 import { join } from "path";
 
 // Widget version - increment this when you rebuild the widget to bust cache
-const WIDGET_VERSION = "1.0.6";
+const WIDGET_VERSION = "1.0.7";
 
 /**
  * GET /widget-loader.js

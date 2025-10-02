@@ -27,7 +27,7 @@ export default async function route({ reply, logger, connections, request, api }
     // Normalize URL to avoid double slashes
     const gadgetAppUrl = rawGadgetAppUrl.replace(/\/+$/, "");
     // Add version parameter for cache busting - increment this when widget is updated
-    const widgetVersion = "1.0.6";
+    const widgetVersion = "1.0.7";
     const scriptSrc = `${gadgetAppUrl}/widget-loader.js?v=${widgetVersion}`;
 
     // Try to get BigCommerce connection
