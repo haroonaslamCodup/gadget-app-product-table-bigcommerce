@@ -1,6 +1,14 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import type { CustomerContext } from "../types";
 
+// Get API base URL - use Gadget app URL on storefront, local URL in admin
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window as any).__GADGET_API_URL__) {
+    return (window as any).__GADGET_API_URL__;
+  }
+  return ''; // Use relative URLs in admin
+};
+
 /**
  * Hook to fetch customer context
  * Determines customer group, tags, logged-in status for pricing and visibility
@@ -13,7 +21,8 @@ export const useCustomerContext = (customerId?: string): UseQueryResult<Customer
 
       if (customerId) params.set("customerId", customerId);
 
-      const response = await fetch(`/api/customer-context?${params.toString()}`);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/customer-context?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch customer context");

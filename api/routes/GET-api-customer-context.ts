@@ -11,6 +11,16 @@ import type { RouteContext } from "gadget-server";
  */
 
 export default async function route({ request, reply, logger, connections }: RouteContext) {
+  // Handle CORS preflight
+  if (request.method === 'OPTIONS') {
+    return reply
+      .code(204)
+      .header("Access-Control-Allow-Origin", "*")
+      .header("Access-Control-Allow-Methods", "GET, OPTIONS")
+      .header("Access-Control-Allow-Headers", "Content-Type")
+      .send();
+  }
+
   try {
     const url = new URL(request.url);
     const params = url.searchParams;
@@ -86,11 +96,17 @@ export default async function route({ request, reply, logger, connections }: Rou
       .code(200)
       .header("Content-Type", "application/json")
       .header("Cache-Control", "private, no-cache") // Don't cache customer data
+      .header("Access-Control-Allow-Origin", "*")
+      .header("Access-Control-Allow-Methods", "GET, OPTIONS")
+      .header("Access-Control-Allow-Headers", "Content-Type")
       .send(customerContext);
 
   } catch (error: unknown) {
     const err = error as Error;
     logger.error(`Error fetching customer context: ${err.message}, stack=${err.stack}`);
-    return reply.code(500).send({ error: "Internal server error" });
+    return reply
+      .code(500)
+      .header("Access-Control-Allow-Origin", "*")
+      .send({ error: "Internal server error" });
   }
 }

@@ -10,6 +10,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ProductTable } from "../components/storefront/ProductTable";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 
+// Get the Gadget app URL from the script tag or use environment variable
+const scriptTag = document.currentScript as HTMLScriptElement;
+const gadgetAppUrl = scriptTag?.src ? new URL(scriptTag.src).origin : window.location.origin;
+
+// Store API base URL globally so hooks can access it
+(window as any).__GADGET_API_URL__ = gadgetAppUrl;
+
 // Initialize Query Client for storefront
 const queryClient = new QueryClient({
   defaultOptions: {

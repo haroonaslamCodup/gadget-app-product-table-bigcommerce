@@ -1,6 +1,14 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import type { ProductFilters, ProductsResponse } from "../types";
 
+// Get API base URL - use Gadget app URL on storefront, local URL in admin
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window as any).__GADGET_API_URL__) {
+    return (window as any).__GADGET_API_URL__;
+  }
+  return ''; // Use relative URLs in admin
+};
+
 /**
  * Hook to fetch products with filters
  */
@@ -20,7 +28,8 @@ export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsRes
       params.set("limit", limit.toString());
       params.set("sort", sort);
 
-      const response = await fetch(`/api/products?${params.toString()}`);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/products?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch products");
@@ -52,7 +61,8 @@ export const useProductPricing = (productId?: string, variantId?: string, userGr
       if (variantId) params.set("variantId", variantId);
       if (userGroup) params.set("userGroup", userGroup);
 
-      const response = await fetch(`/api/pricing?${params.toString()}`);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/pricing?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch pricing");
@@ -76,7 +86,8 @@ export const useCollections = (search?: string): UseQueryResult<Collection[], Er
 
       if (search) params.set("search", search);
 
-      const response = await fetch(`/api/collections?${params.toString()}`);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/collections?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch collections");
@@ -102,7 +113,8 @@ export const useVersionCheck = (widgetId?: string, currentVersion?: string): Use
         currentVersion,
       });
 
-      const response = await fetch(`/api/version-check?${params.toString()}`);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/version-check?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error("Failed to check version");
