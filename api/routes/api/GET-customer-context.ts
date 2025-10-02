@@ -12,10 +12,10 @@ import type { RouteContext } from "gadget-server";
 
 export default async function route({ request, reply, logger, connections }: RouteContext) {
   try {
-    const url = new URL(request.url);
-    const params = url.searchParams;
+    // Use request.query instead of parsing URL (Fastify provides parsed query params)
+    const params = request.query as Record<string, string>;
 
-    const customerId = params.get("customerId");
+    const customerId = params.customerId;
 
     logger.info(`Fetching customer context: customerId=${customerId}`);
 

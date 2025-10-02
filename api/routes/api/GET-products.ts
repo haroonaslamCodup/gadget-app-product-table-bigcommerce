@@ -18,16 +18,16 @@ import type { RouteContext } from "gadget-server";
 
 export default async function route({ request, reply, logger, connections, api }: RouteContext) {
   try {
-    const url = new URL(request.url);
-    const params = url.searchParams;
+    // Use request.query instead of parsing URL (Fastify provides parsed query params)
+    const params = request.query as Record<string, string>;
 
-    const category = params.get("category");
-    const collection = params.get("collection");
-    const userGroup = params.get("userGroup") || "guest";
-    const search = params.get("search");
-    const page = parseInt(params.get("page") || "1", 10);
-    const limit = Math.min(parseInt(params.get("limit") || "25", 10), 250);
-    const sort = params.get("sort") || "name";
+    const category = params.category;
+    const collection = params.collection;
+    const userGroup = params.userGroup || "guest";
+    const search = params.search;
+    const page = parseInt(params.page || "1", 10);
+    const limit = Math.min(parseInt(params.limit || "25", 10), 250);
+    const sort = params.sort || "name";
 
     logger.info(`Fetching products: category=${category}, collection=${collection}, userGroup=${userGroup}, search=${search}, page=${page}, limit=${limit}, sort=${sort}`);
 
