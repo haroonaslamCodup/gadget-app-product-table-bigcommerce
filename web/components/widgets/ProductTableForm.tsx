@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
 import {
   Box,
   Button,
@@ -12,16 +10,18 @@ import {
   Panel,
   Radio,
   Select,
-  Textarea,
   Text,
+  Textarea,
 } from "@bigcommerce/big-design";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { api } from "../../api";
 import { useCreateProductTable, useUpdateProductTable } from "../../hooks/useProductTables";
 import { useCollections } from "../../hooks/useProducts";
 import { ColumnManager } from "./ColumnManager";
 
-import type { WidgetInstance, Collection, WidgetFormData } from "../../types";
+import type { Collection, WidgetFormData, WidgetInstance } from "../../types";
 
 interface ProductTableFormProps {
   widgetId?: string;
@@ -126,7 +126,7 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
 
   return (
     <Form onSubmit={handleSubmit}>
-      <Box marginBottom="large">
+      <Box marginBottom="xLarge">
         <H2>{isEdit ? "Edit Product Table" : "Create New Product Table"}</H2>
       </Box>
 
@@ -144,26 +144,36 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
 
         <FormGroup>
           <Text bold marginBottom="xSmall">Placement Location</Text>
-          <Radio
-            label="Home Page"
-            checked={formData.placementLocation === "homepage"}
-            onChange={() => setFormData({ ...formData, placementLocation: "homepage" })}
-          />
-          <Radio
-            label="Product Detail Page (PDP)"
-            checked={formData.placementLocation === "pdp"}
-            onChange={() => setFormData({ ...formData, placementLocation: "pdp" })}
-          />
-          <Radio
-            label="Category Page"
-            checked={formData.placementLocation === "category"}
-            onChange={() => setFormData({ ...formData, placementLocation: "category" })}
-          />
-          <Radio
-            label="Custom Page"
-            checked={formData.placementLocation === "custom"}
-            onChange={() => setFormData({ ...formData, placementLocation: "custom" })}
-          />
+          <Box>
+            <Box marginBottom="xSmall">
+              <Radio
+                label="Home Page"
+                checked={formData.placementLocation === "homepage"}
+                onChange={() => setFormData({ ...formData, placementLocation: "homepage" })}
+              />
+            </Box>
+            <Box marginBottom="xSmall">
+              <Radio
+                label="Product Detail Page (PDP)"
+                checked={formData.placementLocation === "pdp"}
+                onChange={() => setFormData({ ...formData, placementLocation: "pdp" })}
+              />
+            </Box>
+            <Box marginBottom="xSmall">
+              <Radio
+                label="Category Page"
+                checked={formData.placementLocation === "category"}
+                onChange={() => setFormData({ ...formData, placementLocation: "category" })}
+              />
+            </Box>
+            <Box>
+              <Radio
+                label="Custom Page"
+                checked={formData.placementLocation === "custom"}
+                onChange={() => setFormData({ ...formData, placementLocation: "custom" })}
+              />
+            </Box>
+          </Box>
         </FormGroup>
       </Panel>
 
@@ -171,30 +181,42 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
       <Panel header="Display Settings" marginBottom="medium">
         <FormGroup>
           <Text bold marginBottom="xSmall">Display Format</Text>
-          <Radio
-            label="Folded (Collapsed View)"
-            checked={formData.displayFormat === "folded"}
-            onChange={() => setFormData({ ...formData, displayFormat: "folded" })}
-          />
-          <Radio
-            label="Grouped by Variants"
-            checked={formData.displayFormat === "grouped-variants"}
-            onChange={() => setFormData({ ...formData, displayFormat: "grouped-variants" })}
-          />
-          <Radio
-            label="Grouped by Category"
-            checked={formData.displayFormat === "grouped-category"}
-            onChange={() => setFormData({ ...formData, displayFormat: "grouped-category" })}
-          />
-          <Radio
-            label="Grouped by Collection"
-            checked={formData.displayFormat === "grouped-collection"}
-            onChange={() => setFormData({ ...formData, displayFormat: "grouped-collection" })}
-          />
+          <Box>
+            <Box marginBottom="xSmall">
+              <Radio
+                label="Folded (Collapsed View)"
+                checked={formData.displayFormat === "folded"}
+                onChange={() => setFormData({ ...formData, displayFormat: "folded" })}
+              />
+            </Box>
+            <Box marginBottom="xSmall">
+              <Radio
+                label="Grouped by Variants"
+                checked={formData.displayFormat === "grouped-variants"}
+                onChange={() => setFormData({ ...formData, displayFormat: "grouped-variants" })}
+              />
+            </Box>
+            <Box marginBottom="xSmall">
+              <Radio
+                label="Grouped by Category"
+                checked={formData.displayFormat === "grouped-category"}
+                onChange={() => setFormData({ ...formData, displayFormat: "grouped-category" })}
+              />
+            </Box>
+            <Box>
+              <Radio
+                label="Grouped by Collection"
+                checked={formData.displayFormat === "grouped-collection"}
+                onChange={() => setFormData({ ...formData, displayFormat: "grouped-collection" })}
+              />
+            </Box>
+          </Box>
         </FormGroup>
 
         <FormGroup>
-          <Text bold marginBottom="small">Table Columns</Text>
+          <Box marginBottom="xSmall">
+            <Text bold>Table Columns</Text>
+          </Box>
           <ColumnManager
             columns={formData.columns}
             columnsOrder={formData.columnsOrder}
@@ -246,26 +268,36 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
       {/* Customer Targeting */}
       <Panel header="Customer Targeting" marginBottom="medium">
         <FormGroup>
-          <Checkbox
-            label="Show to All Customers"
-            checked={formData.targetAllCustomers}
-            onChange={(e) => setFormData({ ...formData, targetAllCustomers: e.target.checked })}
-          />
-          <Checkbox
-            label="Retail Customers Only"
-            checked={formData.targetRetailOnly}
-            onChange={(e) => setFormData({ ...formData, targetRetailOnly: e.target.checked })}
-          />
-          <Checkbox
-            label="Wholesale Customers Only"
-            checked={formData.targetWholesaleOnly}
-            onChange={(e) => setFormData({ ...formData, targetWholesaleOnly: e.target.checked })}
-          />
-          <Checkbox
-            label="Logged-in Users Only"
-            checked={formData.targetLoggedInOnly}
-            onChange={(e) => setFormData({ ...formData, targetLoggedInOnly: e.target.checked })}
-          />
+          <Box>
+            <Box marginBottom="xSmall">
+              <Checkbox
+                label="Show to All Customers"
+                checked={formData.targetAllCustomers}
+                onChange={(e) => setFormData({ ...formData, targetAllCustomers: e.target.checked })}
+              />
+            </Box>
+            <Box marginBottom="xSmall">
+              <Checkbox
+                label="Retail Customers Only"
+                checked={formData.targetRetailOnly}
+                onChange={(e) => setFormData({ ...formData, targetRetailOnly: e.target.checked })}
+              />
+            </Box>
+            <Box marginBottom="xSmall">
+              <Checkbox
+                label="Wholesale Customers Only"
+                checked={formData.targetWholesaleOnly}
+                onChange={(e) => setFormData({ ...formData, targetWholesaleOnly: e.target.checked })}
+              />
+            </Box>
+            <Box>
+              <Checkbox
+                label="Logged-in Users Only"
+                checked={formData.targetLoggedInOnly}
+                onChange={(e) => setFormData({ ...formData, targetLoggedInOnly: e.target.checked })}
+              />
+            </Box>
+          </Box>
         </FormGroup>
 
         <FormGroup>
@@ -293,10 +325,10 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
 
         <FormGroup>
           <Checkbox
-          label="Default to Table View"
-          checked={formData.defaultToTableView}
-          onChange={(e) => setFormData({ ...formData, defaultToTableView: e.target.checked })}
-        />
+            label="Default to Table View"
+            checked={formData.defaultToTableView}
+            onChange={(e) => setFormData({ ...formData, defaultToTableView: e.target.checked })}
+          />
         </FormGroup>
       </Panel>
 
@@ -334,10 +366,10 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
 
         <FormGroup>
           <Checkbox
-          label="Enable Customer Sorting"
-          checked={formData.enableCustomerSorting}
-          onChange={(e) => setFormData({ ...formData, enableCustomerSorting: e.target.checked })}
-        />
+            label="Enable Customer Sorting"
+            checked={formData.enableCustomerSorting}
+            onChange={(e) => setFormData({ ...formData, enableCustomerSorting: e.target.checked })}
+          />
         </FormGroup>
       </Panel>
 
@@ -345,10 +377,10 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
       <Panel header="Status & Notes" marginBottom="medium">
         <FormGroup>
           <Checkbox
-          label="Product Table Active"
-          checked={formData.isActive}
-          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-        />
+            label="Product Table Active"
+            checked={formData.isActive}
+            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+          />
         </FormGroup>
 
         <FormGroup>
@@ -357,21 +389,23 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
             placeholder="Add any notes about this widget configuration..."
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            rows={3}
+            rows={4}
           />
         </FormGroup>
       </Panel>
 
       {/* Actions */}
-      <Flex justifyContent="flex-end">
+      <Flex justifyContent="flex-end" marginTop="large">
         <Button
-          variant="subtle"
+          variant="secondary"
           onClick={() => navigate("/product-tables")}
           type="button"
+          marginRight="xSmall"
         >
           Cancel
         </Button>
         <Button
+          variant="primary"
           type="submit"
           isLoading={createProductTable.isPending || updateProductTable.isPending}
         >
