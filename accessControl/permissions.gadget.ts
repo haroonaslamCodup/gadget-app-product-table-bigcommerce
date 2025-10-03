@@ -23,9 +23,9 @@ export const permissions: GadgetPermissions = {
             uninstall: true,
           },
         },
-        widgetInstance: {
+        productTable: {
           read: {
-            filter: "accessControl/filters/widgetInstance.gelly",
+            filter: "accessControl/filters/productTable.gelly",
           },
           actions: {
             create: true,

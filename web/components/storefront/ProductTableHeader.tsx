@@ -74,25 +74,26 @@ export const ProductTableHeader = ({
 };
 
 const TableHead = styled.thead`
-  background: #f5f5f5;
-  border-bottom: 2px solid #ddd;
+  background: var(--color-greyLightest, var(--table-header-backgroundColor, #f5f5f5));
+  border-bottom: 2px solid var(--color-greyLight, var(--container-border-global-color-base, #ddd));
 `;
 
 const Th = styled.th<{ $sortable?: boolean; $isImage?: boolean }>`
-  padding: 1rem;
+  padding: var(--spacing-md, 1rem);
   text-align: left;
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: var(--fontWeight-semiBold, 600);
+  font-size: var(--fontSize-small, 0.875rem);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #333;
+  color: var(--color-textBase, var(--body-font-color, #333));
   white-space: nowrap;
   cursor: ${(props) => (props.$sortable ? "pointer" : "default")};
   user-select: none;
   width: ${(props) => (props.$isImage ? "80px" : "auto")};
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
 
   &:hover {
-    background: ${(props) => (props.$sortable ? "#ebebeb" : "transparent")};
+    background: ${(props) => (props.$sortable ? "var(--color-greyLighter, #ebebeb)" : "transparent")};
   }
 
   @media (max-width: 768px) {
@@ -105,4 +106,5 @@ const SortIcon = styled.span`
   margin-left: 0.5rem;
   opacity: 0.5;
   font-size: 0.875rem;
+  color: inherit;
 `;

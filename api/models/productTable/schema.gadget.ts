@@ -1,6 +1,6 @@
 import type { GadgetModel } from "gadget-server";
 
-// This file describes the schema for the "widgetInstance" model, go to https://extend-commerce-product-table-test.gadget.app/edit to view/edit your model in Gadget
+// This file describes the schema for the "productTable" model, go to https://extend-commerce-product-table-test.gadget.app/edit to view/edit your model in Gadget
 // For more information on how to update this file http://docs.gadget.dev
 
 export const schema: GadgetModel = {
@@ -87,6 +87,12 @@ export const schema: GadgetModel = {
       ],
       storageKey: "productSource",
     },
+    productTableId: {
+      type: "string",
+      validations: { unique: true },
+      storageKey: "widgetId",
+    },
+    productTableName: { type: "string", storageKey: "widgetName" },
     selectedCategories: {
       type: "json",
       storageKey: "selectedCategories",
@@ -125,11 +131,5 @@ export const schema: GadgetModel = {
       storageKey: "targetWholesaleOnly",
     },
     version: { type: "string", storageKey: "version" },
-    widgetId: {
-      type: "string",
-      validations: { unique: true },
-      storageKey: "widgetId",
-    },
-    widgetName: { type: "string", storageKey: "widgetName" },
   },
 };

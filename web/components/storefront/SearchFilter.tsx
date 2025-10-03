@@ -65,8 +65,8 @@ const SearchIcon = () => (
 
 const IconWrapper = styled.div`
   position: absolute;
-  left: 1rem;
-  color: #666;
+  left: var(--spacing-md, 1rem);
+  color: var(--color-textSecondary, #666);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -74,35 +74,38 @@ const IconWrapper = styled.div`
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 3rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.875rem;
+  padding: var(--spacing-sm, 0.75rem) var(--spacing-md, 1rem) var(--spacing-sm, 0.75rem) 3rem;
+  border: 1px solid var(--color-greyLight, var(--input-border-color, #ddd));
+  border-radius: var(--borderRadius-base, 4px);
+  font-size: var(--fontSize-small, 0.875rem);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
+  color: var(--color-textBase, var(--input-font-color, #333));
+  background: var(--color-white, var(--input-bg-color, white));
   transition: all 0.2s;
 
   &:focus {
     outline: none;
-    border-color: #1a73e8;
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    border-color: var(--color-primary, var(--input-border-color-active, #1a73e8));
+    box-shadow: 0 0 0 3px var(--color-primaryLight, rgba(26, 115, 232, 0.1));
   }
 
   &::placeholder {
-    color: #999;
+    color: var(--color-textSecondary, #999);
   }
 
   @media (max-width: 768px) {
-    font-size: 1rem;
+    font-size: var(--fontSize-root, 1rem);
   }
 `;
 
 const ClearButton = styled.button`
   position: absolute;
-  right: 0.75rem;
+  right: var(--spacing-sm, 0.75rem);
   width: 24px;
   height: 24px;
   border: none;
-  background: #e0e0e0;
-  color: #666;
+  background: var(--color-greyLight, #e0e0e0);
+  color: var(--color-textSecondary, #666);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -113,7 +116,7 @@ const ClearButton = styled.button`
   transition: all 0.2s;
 
   &:hover {
-    background: #d0d0d0;
-    color: #333;
+    background: var(--color-grey, #d0d0d0);
+    color: var(--color-textBase, #333);
   }
 `;

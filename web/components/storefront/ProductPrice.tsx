@@ -42,34 +42,38 @@ export const ProductPrice = ({
 const PriceContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm, 0.5rem);
   flex-wrap: wrap;
 `;
 
 const CurrentPrice = styled.span`
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #333;
+  font-size: var(--fontSize-large, 1.125rem);
+  font-weight: var(--fontWeight-semiBold, 600);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
+  color: var(--color-textBase, var(--price-font-color, #333));
 `;
 
 const SalePrice = styled.span`
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #d32f2f;
+  font-size: var(--fontSize-large, 1.125rem);
+  font-weight: var(--fontWeight-semiBold, 600);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
+  color: var(--color-error, var(--price-sale-font-color, #d32f2f));
 `;
 
 const OriginalPrice = styled.span`
-  font-size: 0.875rem;
-  color: #999;
+  font-size: var(--fontSize-small, 0.875rem);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
+  color: var(--color-textSecondary, var(--price-non-sale-font-color, #999));
   text-decoration: line-through;
 `;
 
 const CustomerGroupBadge = styled.span`
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  background: #e3f2fd;
-  color: #1976d2;
-  border-radius: 4px;
+  font-size: var(--fontSize-smallest, 0.75rem);
+  padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+  background: var(--color-infoLight, #e3f2fd);
+  color: var(--color-info, #1976d2);
+  border-radius: var(--borderRadius-base, 4px);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
   text-transform: uppercase;
-  font-weight: 500;
+  font-weight: var(--fontWeight-medium, 500);
 `;

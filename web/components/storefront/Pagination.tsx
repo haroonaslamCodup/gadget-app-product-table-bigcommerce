@@ -83,38 +83,39 @@ const PaginationContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: var(--spacing-md, 1rem);
+  margin-top: var(--spacing-lg, 2rem);
   flex-wrap: wrap;
 `;
 
 const PageNumbers = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-sm, 0.5rem);
   align-items: center;
   flex-wrap: wrap;
 `;
 
 const PaginationButton = styled.button`
-  padding: 0.5rem 1rem;
-  background: white;
-  color: #1a73e8;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  background: var(--color-white, var(--button-default-backgroundColor, white));
+  color: var(--color-primary, var(--button-default-color, #1a73e8));
+  border: 1px solid var(--color-greyLight, var(--button-default-borderColor, #ddd));
+  border-radius: var(--borderRadius-base, 4px);
+  font-size: var(--fontSize-small, 0.875rem);
+  font-weight: var(--fontWeight-medium, 500);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    background: #f5f5f5;
-    border-color: #1a73e8;
+    background: var(--color-greyLightest, #f5f5f5);
+    border-color: var(--color-primary, #1a73e8);
   }
 
   &:disabled {
-    color: #ccc;
+    color: var(--color-grey, #ccc);
     cursor: not-allowed;
-    border-color: #e0e0e0;
+    border-color: var(--color-greyLight, #e0e0e0);
   }
 
   @media (max-width: 768px) {
@@ -126,19 +127,20 @@ const PaginationButton = styled.button`
 const PageButton = styled.button<{ $active?: boolean }>`
   min-width: 40px;
   height: 40px;
-  padding: 0.5rem;
-  background: ${(props) => (props.$active ? "#1a73e8" : "white")};
-  color: ${(props) => (props.$active ? "white" : "#333")};
-  border: 1px solid ${(props) => (props.$active ? "#1a73e8" : "#ddd")};
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: ${(props) => (props.$active ? "600" : "400")};
+  padding: var(--spacing-sm, 0.5rem);
+  background: ${(props) => (props.$active ? "var(--color-primary, var(--button-primary-backgroundColor, #1a73e8))" : "var(--color-white, var(--button-default-backgroundColor, white))")};
+  color: ${(props) => (props.$active ? "var(--button-primary-color, white)" : "var(--color-textBase, #333)")};
+  border: 1px solid ${(props) => (props.$active ? "var(--color-primary, #1a73e8)" : "var(--color-greyLight, var(--button-default-borderColor, #ddd))")};
+  border-radius: var(--borderRadius-base, 4px);
+  font-size: var(--fontSize-small, 0.875rem);
+  font-weight: ${(props) => (props.$active ? "var(--fontWeight-semiBold, 600)" : "var(--fontWeight-normal, 400)")};
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background: ${(props) => (props.$active ? "#1557b0" : "#f5f5f5")};
-    border-color: #1a73e8;
+    background: ${(props) => (props.$active ? "var(--color-primaryHover, var(--button-primary-backgroundColorHover, #1557b0))" : "var(--color-greyLightest, #f5f5f5)")};
+    border-color: var(--color-primary, #1a73e8);
   }
 
   @media (max-width: 768px) {
@@ -149,7 +151,7 @@ const PageButton = styled.button<{ $active?: boolean }>`
 `;
 
 const Ellipsis = styled.span`
-  padding: 0.5rem;
-  color: #666;
+  padding: var(--spacing-sm, 0.5rem);
+  color: var(--color-textSecondary, #666);
   user-select: none;
 `;

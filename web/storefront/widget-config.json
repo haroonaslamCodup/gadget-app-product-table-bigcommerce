@@ -1,38 +1,44 @@
 {
-  "name": "Product Table Widget",
+  "name": "Product Table",
   "description": "Display products in customizable table format with customer group-specific pricing",
   "schema": [
     {
       "type": "tab",
-      "label": "Widget Selection",
+      "label": "Product Table Selection",
       "sections": [
         {
-          "label": "Widget Configuration",
+          "label": "Product Table Configuration",
           "settings": [
             {
-              "type": "select",
-              "label": "Select Widget",
-              "id": "widgetId",
+              "type": "text",
+              "label": "Product Table ID",
+              "id": "productTableId",
               "required": true,
-              "helpText": "Choose the product table widget to display",
-              "options": []
+              "default": "",
+              "helpText": "Enter the Product Table ID from your Gadget admin panel. Example: product-table-1759330856855-hqlbdgy"
+            },
+            {
+              "type": "paragraph",
+              "content": "<strong>How to get your Product Table ID:</strong><br>1. Go to your Gadget admin panel<br>2. Navigate to the Product Tables page<br>3. Click the 'Copy Product Table ID' button next to your product table<br>4. Paste the ID into the field above"
             }
           ]
         },
         {
-          "label": "Display Options",
+          "label": "Display Options (Optional Overrides)",
           "settings": [
             {
               "type": "boolean",
-              "label": "Show Search Filter",
+              "label": "Override: Show Search Filter",
               "id": "showSearch",
-              "default": true
+              "default": false,
+              "helpText": "Override the widget's search filter setting"
             },
             {
               "type": "boolean",
-              "label": "Show View Switcher",
+              "label": "Override: Show View Switcher",
               "id": "showViewSwitcher",
-              "default": true
+              "default": false,
+              "helpText": "Override the widget's view switcher setting"
             }
           ]
         }

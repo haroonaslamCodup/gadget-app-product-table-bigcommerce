@@ -3,7 +3,7 @@ import { AddIcon, CheckIcon, ErrorIcon, StoreIcon, WarningIcon } from '@bigcomme
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { api } from "../api";
-import { useWidgets } from "../hooks/useWidgets";
+import { useProductTables } from "../hooks/useProductTables";
 
 export const IndexPage = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export const IndexPage = () => {
     refetchInterval: 30000, // Check every 30 seconds
   });
 
-  const { data: widgets } = useWidgets(store?.id);
+  const { data: widgets } = useProductTables(store?.id);
 
   return (
     <>
@@ -135,7 +135,7 @@ export const IndexPage = () => {
 
             <Box>
               <Text bold>App Version:</Text>
-              <Text>1.0.0</Text>
+              <Text>1.0.30</Text>
             </Box>
           </Flex>
         </Box>

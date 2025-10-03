@@ -102,17 +102,20 @@ export const ProductTableRow = ({
 };
 
 const TableRow = styled.tr`
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-greyLight, var(--container-border-global-color-base, #e0e0e0));
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #f9f9f9;
+    background-color: var(--color-greyLightest, #f9f9f9);
   }
 `;
 
 const Td = styled.td<{ $isImage?: boolean }>`
-  padding: ${(props) => (props.$isImage ? "0.5rem" : "1rem")};
+  padding: ${(props) => (props.$isImage ? "0.5rem" : "var(--spacing-md, 1rem)")};
   vertical-align: middle;
+  color: var(--color-textBase, var(--body-font-color, #333));
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
+  font-size: var(--fontSize-root, 1rem);
 
   @media (max-width: 768px) {
     padding: ${(props) => (props.$isImage ? "0.5rem" : "0.75rem 0.5rem")};
@@ -120,52 +123,55 @@ const Td = styled.td<{ $isImage?: boolean }>`
 `;
 
 const ProductLink = styled.a`
-  color: #1a73e8;
+  color: var(--color-textLink, var(--color-primary, #1a73e8));
   text-decoration: none;
-  font-weight: 500;
+  font-weight: var(--fontWeight-medium, 500);
 
   &:hover {
     text-decoration: underline;
+    color: var(--color-textLink-hover, var(--color-primaryHover, #0d47a1));
   }
 `;
 
 const Description = styled.span`
-  font-size: 0.875rem;
-  color: #666;
+  font-size: var(--fontSize-small, 0.875rem);
+  color: var(--color-textSecondary, #666);
   display: block;
   max-width: 300px;
 `;
 
 const GridCard = styled.div`
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid var(--color-greyLight, var(--container-border-global-color-base, #e0e0e0));
+  border-radius: var(--borderRadius-base, 8px);
   overflow: hidden;
-  background: white;
+  background: var(--color-white, var(--container-fill-base, white));
   transition: box-shadow 0.2s, transform 0.2s;
+  box-shadow: var(--elevation-100, 0 2px 4px rgba(0,0,0,0.1));
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--elevation-200, 0 4px 12px rgba(0, 0, 0, 0.15));
     transform: translateY(-2px);
   }
 `;
 
 const CardContent = styled.div`
-  padding: 1rem;
+  padding: var(--spacing-md, 1rem);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-sm, 0.5rem);
 `;
 
 const ProductName = styled.h3`
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--fontSize-root, 1rem);
+  font-weight: var(--fontWeight-semiBold, 600);
   margin: 0;
-  color: #333;
+  color: var(--color-textBase, var(--body-font-color, #333));
   line-height: 1.4;
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
 `;
 
 const ProductSKU = styled.p`
-  font-size: 0.75rem;
-  color: #666;
+  font-size: var(--fontSize-smallest, 0.75rem);
+  color: var(--color-textSecondary, #666);
   margin: 0;
 `;

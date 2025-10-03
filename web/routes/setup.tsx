@@ -15,7 +15,7 @@ export const SetupPage = () => {
   const installWidgetTemplate = async () => {
     setIsInstalling(true);
     try {
-      const response = await fetch("/api/install-widget-template", {
+      const response = await fetch("/api/install-product-table-template", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // Include session cookies

@@ -13,7 +13,7 @@ import { IndexPage } from "../routes/index";
 import { SetupPage } from "../routes/setup";
 import { WidgetEditPage } from "../routes/widget-edit";
 import { WidgetNewPage } from "../routes/widget-new";
-import { WidgetsPage } from "../routes/widgets";
+import { ProductTablesPage } from "../routes/product-tables";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Navigation } from "./Navigation";
 
@@ -32,9 +32,9 @@ function App() {
     createRoutesFromElements(
       <Route path="/" element={<Layout />}>
         <Route index element={<IndexPage />} />
-        <Route path="widgets" element={<WidgetsPage />} />
-        <Route path="widgets/new" element={<WidgetNewPage />} />
-        <Route path="widgets/:id/edit" element={<WidgetEditPage />} />
+        <Route path="product-tables" element={<ProductTablesPage />} />
+        <Route path="product-tables/new" element={<WidgetNewPage />} />
+        <Route path="product-tables/:id/edit" element={<WidgetEditPage />} />
         <Route path="setup" element={<SetupPage />} />
         <Route path="*" element={<Error404 />} />
       </Route>

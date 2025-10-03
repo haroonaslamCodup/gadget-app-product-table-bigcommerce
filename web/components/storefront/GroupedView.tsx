@@ -137,20 +137,21 @@ export const GroupedView = ({
 const GroupedContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--spacing-md, 1rem);
 `;
 
 const GroupCard = styled.div`
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
+  border: 1px solid var(--color-greyLight, var(--container-border-global-color-base, #e0e0e0));
+  border-radius: var(--borderRadius-base, 8px);
+  background: var(--color-white, var(--container-fill-base, white));
   overflow: hidden;
+  box-shadow: var(--elevation-100, 0 2px 4px rgba(0,0,0,0.1));
 `;
 
 const GroupHeader = styled.div`
-  padding: 1rem 1.5rem;
-  background: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
+  padding: var(--spacing-md, 1rem) var(--spacing-lg, 1.5rem);
+  background: var(--color-greyLightest, var(--table-header-backgroundColor, #f5f5f5));
+  border-bottom: 1px solid var(--color-greyLight, var(--container-border-global-color-base, #e0e0e0));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -159,35 +160,38 @@ const GroupHeader = styled.div`
   transition: background 0.2s;
 
   &:hover {
-    background: #ebebeb;
+    background: var(--color-greyLighter, #ebebeb);
   }
 `;
 
 const GroupTitle = styled.h3`
   margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #333;
+  font-size: var(--fontSize-large, 1.125rem);
+  font-weight: var(--fontWeight-semiBold, 600);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
+  color: var(--color-textBase, var(--body-font-color, #333));
 `;
 
 const GroupMeta = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--spacing-md, 1rem);
 `;
 
 const VariantCount = styled.span`
-  font-size: 0.875rem;
-  color: #666;
-  padding: 0.25rem 0.75rem;
-  background: white;
-  border-radius: 4px;
+  font-size: var(--fontSize-small, 0.875rem);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
+  color: var(--color-textSecondary, #666);
+  padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.75rem);
+  background: var(--color-white, white);
+  border-radius: var(--borderRadius-base, 4px);
+  border: 1px solid var(--color-greyLight, #e0e0e0);
 `;
 
 const ExpandIcon = styled.span<{ $expanded: boolean }>`
   font-size: 1.5rem;
-  font-weight: 300;
-  color: #666;
+  font-weight: var(--fontWeight-light, 300);
+  color: var(--color-textSecondary, #666);
   line-height: 1;
   transition: transform 0.2s;
   transform: ${(props) => (props.$expanded ? "rotate(0deg)" : "rotate(0deg)")};
@@ -206,7 +210,7 @@ const Table = styled.table`
   border-collapse: collapse;
 
   tr {
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--color-greyLightest, #f0f0f0);
 
     &:last-child {
       border-bottom: none;
@@ -214,7 +218,7 @@ const Table = styled.table`
   }
 
   td {
-    padding: 1rem;
+    padding: var(--spacing-md, 1rem);
   }
 `;
 
@@ -224,6 +228,7 @@ const LoadingContainer = styled.div`
 `;
 
 const LoadingText = styled.p`
-  color: #666;
-  font-size: 1rem;
+  color: var(--color-textSecondary, #666);
+  font-size: var(--fontSize-root, 1rem);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
 `;

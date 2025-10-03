@@ -31,35 +31,36 @@ export const ProductStock = ({ inventory, inventoryTracking }: ProductStockProps
 
 const StockBadge = styled.span<{ $status: string }>`
   display: inline-block;
-  padding: 0.375rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 0.375rem var(--spacing-sm, 0.75rem);
+  border-radius: var(--borderRadius-base, 4px);
+  font-size: var(--fontSize-small, 0.875rem);
+  font-weight: var(--fontWeight-medium, 500);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
   white-space: nowrap;
 
   background: ${(props) => {
     switch (props.$status) {
       case "in-stock":
-        return "#e8f5e9";
+        return "var(--color-successLight, #e8f5e9)";
       case "low-stock":
-        return "#fff3e0";
+        return "var(--color-warningLight, #fff3e0)";
       case "out-of-stock":
-        return "#ffebee";
+        return "var(--color-errorLight, #ffebee)";
       default:
-        return "#f5f5f5";
+        return "var(--color-greyLighter, #f5f5f5)";
     }
   }};
 
   color: ${(props) => {
     switch (props.$status) {
       case "in-stock":
-        return "#2e7d32";
+        return "var(--color-successDark, #2e7d32)";
       case "low-stock":
-        return "#f57c00";
+        return "var(--color-warningDark, #f57c00)";
       case "out-of-stock":
-        return "#c62828";
+        return "var(--color-errorDark, #c62828)";
       default:
-        return "#666";
+        return "var(--color-textSecondary, #666)";
     }
   }};
 `;

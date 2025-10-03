@@ -1,13 +1,13 @@
 import { useParams } from "react-router";
 import { Box, ProgressCircle, Flex, Text, Panel } from "@bigcommerce/big-design";
-import { WidgetForm } from "../components/widgets/WidgetForm";
-import { useWidgetById } from "../hooks/useWidgets";
+import { ProductTableForm } from "../components/widgets/ProductTableForm";
+import { useProductTableById } from "../hooks/useProductTables";
 import type { WidgetInstance } from "../types";
 
 export const WidgetEditPage = () => {
   const { id } = useParams<{ id: string }>();
 
-  const { data: widget, isLoading, error } = useWidgetById(id);
+  const { data: widget, isLoading, error } = useProductTableById(id);
 
   if (isLoading) {
     return (
@@ -35,7 +35,7 @@ export const WidgetEditPage = () => {
 
   return (
     <Box>
-      <WidgetForm widgetId={id} initialData={widget as WidgetInstance} />
+      <ProductTableForm widgetId={id} initialData={widget as WidgetInstance} />
     </Box>
   );
 };

@@ -25,8 +25,8 @@ const ImageContainer = styled.div<{ $size: string }>`
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: ${(props) => (props.$size === "large" ? "8px 8px 0 0" : "4px")};
-  background: #f5f5f5;
+  border-radius: ${(props) => (props.$size === "large" ? "var(--borderRadius-base, 8px) var(--borderRadius-base, 8px) 0 0" : "var(--borderRadius-base, 4px)")};
+  background: var(--color-greyLightest, var(--productView-imageCarousel-backgroundColor, #f5f5f5));
 `;
 
 const Image = styled.img`

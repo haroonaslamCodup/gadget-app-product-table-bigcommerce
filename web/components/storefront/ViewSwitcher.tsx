@@ -30,19 +30,19 @@ export const ViewSwitcher = ({ mode, onChange }: ViewSwitcherProps) => {
 
 const Container = styled.div`
   display: flex;
-  gap: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.25rem;
-  background: white;
+  gap: var(--spacing-xs, 0.5rem);
+  border: 1px solid var(--color-greyLight, var(--container-border-global-color-base, #ddd));
+  border-radius: var(--borderRadius-base, 4px);
+  padding: var(--spacing-xs, 0.25rem);
+  background: var(--color-white, var(--container-fill-base, white));
 `;
 
 const Button = styled.button<{ $active: boolean }>`
-  padding: 0.5rem;
-  background: ${(props) => (props.$active ? "#1a73e8" : "transparent")};
-  color: ${(props) => (props.$active ? "white" : "#666")};
+  padding: var(--spacing-sm, 0.5rem);
+  background: ${(props) => (props.$active ? "var(--color-primary, var(--button-primary-backgroundColor, #1a73e8))" : "transparent")};
+  color: ${(props) => (props.$active ? "var(--button-primary-color, white)" : "var(--color-textSecondary, #666)")};
   border: none;
-  border-radius: 4px;
+  border-radius: var(--borderRadius-base, 4px);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -50,7 +50,7 @@ const Button = styled.button<{ $active: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    background: ${(props) => (props.$active ? "#1557b0" : "#f5f5f5")};
+    background: ${(props) => (props.$active ? "var(--color-primaryHover, var(--button-primary-backgroundColorHover, #1557b0))" : "var(--color-greyLightest, #f5f5f5)")};
   }
 
   svg {

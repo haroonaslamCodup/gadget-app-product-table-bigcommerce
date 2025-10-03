@@ -3,12 +3,12 @@ import type { RouteContext } from "gadget-server";
 /**
  * Route: GET /api/version-check
  *
- * Compares widget instance version with latest available version
+ * Compares product table version with latest available version
  * Returns update availability and changelog information
  *
  * Query params:
- * - widgetId: Widget instance ID
- * - currentVersion: Current version of the widget
+ * - productTableId: Product table ID
+ * - currentVersion: Current version of the product table
  */
 
 export default async function route({ request, reply, api, logger }: RouteContext) {
@@ -16,17 +16,24 @@ export default async function route({ request, reply, api, logger }: RouteContex
     // Use request.query instead of parsing URL (Fastify provides parsed query params)
     const params = request.query as Record<string, string>;
 
-    const widgetId = params.widgetId;
+    const productTableId = params.productTableId;
     const currentVersion = params.currentVersion || "0.0.0";
 
-    logger.info(`Checking widget version: widgetId=${widgetId}, currentVersion=${currentVersion}`);
+    logger.info(`Checking product table version: productTableId=${productTableId}, currentVersion=${currentVersion}`);
 
     // Define the latest version (this would typically come from a config or database)
-    const LATEST_VERSION = "1.0.0";
+    const LATEST_VERSION = "1.0.30";
     const CHANGELOG = {
+      "1.0.30": [
+        "Added product table dropdown selector in Page Builder",
+        "Enhanced admin UI with embed code generator",
+        "Improved product table configuration flow",
+        "BigCommerce theme integration with CSS variables",
+        "Dynamic product table loading from database"
+      ],
       "1.0.0": [
         "Initial release",
-        "Product table widget with customer group pricing",
+        "Product table with customer group pricing",
         "Multi-location placement support",
         "Customizable columns and display formats"
       ]
@@ -36,7 +43,7 @@ export default async function route({ request, reply, api, logger }: RouteContex
     const updateAvailable = compareVersions(currentVersion, LATEST_VERSION) < 0;
 
     const versionInfo = {
-      widgetId,
+      productTableId,
       currentVersion,
       latestVersion: LATEST_VERSION,
       updateAvailable,
@@ -46,21 +53,21 @@ export default async function route({ request, reply, api, logger }: RouteContex
       requiredUpdate: false,
     };
 
-    // If widget ID is provided, update lastChecked timestamp
-    if (widgetId) {
+    // If product table ID is provided, update lastChecked timestamp
+    if (productTableId) {
       try {
-        const widget = await api.widgetInstance.findFirst({
-          filter: { widgetId: { equals: widgetId } }
+        const productTable = await api.productTable.findFirst({
+          filter: { productTableId: { equals: productTableId } }
         });
 
-        if (widget) {
-          await api.widgetInstance.update(widget.id, {
+        if (productTable) {
+          await api.productTable.update(productTable.id, {
             lastChecked: new Date(),
           });
         }
       } catch (updateError: unknown) {
         const err = updateError as Error;
-        logger.warn(`Failed to update lastChecked timestamp: widgetId=${widgetId}, error=${err.message}`);
+        logger.warn(`Failed to update lastChecked timestamp: productTableId=${productTableId}, error=${err.message}`);
       }
     }
 

@@ -8,14 +8,14 @@ export const run: ActionRun = async ({ params, record, logger }) => {
   record.lastChecked = new Date();
 
   // Log widget update
-  logger.info(`Updating widget instance: ${record.widgetId}`);
+  logger.info(`Updating product table: ${record.productTableId}`);
 
   // Save the record
   await save(record);
 };
 
 export const onSuccess: ActionOnSuccess = async ({ record, logger }) => {
-  logger.info(`Widget instance updated successfully: ${record.widgetId}`);
+  logger.info(`Widget instance updated successfully: ${record.productTableId}`);
 };
 
 export const options: ActionOptions = {

@@ -1,0 +1,58 @@
+<!--
+  BigCommerce Page Builder Widget Template
+  This template renders the Product Table Widget
+  The widget ID comes from Page Builder settings
+-->
+
+<div id="product-table-{{widgetId}}" data-product-table-widget="{{widgetId}}" {{#if customCSS}} style="{{customCSS}}"
+  {{/if}}>
+  <!-- Widget will be initialized by widget-loader.js -->
+  <div style="padding: 2rem; text-align: center; color: #666;">
+    <div style="
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    "></div>
+    <p style="margin-top: 1rem;">Loading product table...</p>
+  </div>
+</div>
+
+<style>
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
+<!-- Load widget script from Gadget app -->
+<script>
+  (function () {
+    // Extract Gadget app URL from current script or use default
+    var gadgetAppUrl = '{{settings.gadget_app_url}}' || window.__GADGET_APP_URL__;
+
+    if (!gadgetAppUrl) {
+      console.error('[Product Table Widget] Gadget app URL not configured');
+      return;
+    }
+
+    // Check if widget loader script is already loaded
+    if (!window.ProductTableWidget) {
+      var script = document.createElement('script');
+      script.src = gadgetAppUrl + '/widget-loader.js';
+      script.async = true;
+      script.onerror = function () {
+        console.error('[Product Table Widget] Failed to load widget-loader.js from:', gadgetAppUrl);
+      };
+      document.body.appendChild(script);
+    }
+  })();
+</script>

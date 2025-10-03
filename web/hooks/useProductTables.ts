@@ -8,25 +8,25 @@ const safeToISOString = (date: any): string => {
 };
 
 /**
- * Hook to fetch all widgets for a specific store
+ * Hook to fetch all product tables for a specific store
  */
-export const useWidgets = (storeId?: string): UseQueryResult<WidgetInstance[], Error> => {
+export const useProductTables = (storeId?: string): UseQueryResult<WidgetInstance[], Error> => {
   return useQuery<WidgetInstance[], Error>({
-    queryKey: ["widgets", storeId],
+    queryKey: ["productTables", storeId],
     queryFn: async () => {
-      const result = await api.widgetInstance.findMany({
+      const result = await api.productTable.findMany({
         filter: storeId ? { store: { id: { equals: storeId } } } : undefined,
         sort: { createdAt: "Descending" }
       });
 
       // Transform GadgetRecord to WidgetInstance
       return result.map((record: any) => {
-        const widget: WidgetInstance = {
+        const productTable: WidgetInstance = {
           id: record.id,
           createdAt: safeToISOString(record.createdAt),
           updatedAt: safeToISOString(record.updatedAt),
-          widgetId: record.widgetId || '',
-          widgetName: record.widgetName || undefined,
+          productTableId: record.productTableId || '',
+          productTableName: record.productTableName || undefined,
           displayFormat: record.displayFormat as any,
           columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
           columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -52,7 +52,7 @@ export const useWidgets = (storeId?: string): UseQueryResult<WidgetInstance[], E
           pageBuilderId: record.pageBuilderId || undefined,
           pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
         };
-        return widget;
+        return productTable;
       });
     },
     enabled: !!storeId,
@@ -60,27 +60,27 @@ export const useWidgets = (storeId?: string): UseQueryResult<WidgetInstance[], E
 };
 
 /**
- * Hook to fetch a single widget by ID
+ * Hook to fetch a single product table by ID
  */
-export const useWidget = (widgetId?: string): UseQueryResult<WidgetInstance | null, Error> => {
+export const useProductTable = (productTableId?: string): UseQueryResult<WidgetInstance | null, Error> => {
   return useQuery<WidgetInstance | null, Error>({
-    queryKey: ["widget", widgetId],
+    queryKey: ["productTable", productTableId],
     queryFn: async () => {
-      if (!widgetId) return null;
+      if (!productTableId) return null;
 
-      const result = await api.widgetInstance.findFirst({
-        filter: { widgetId: { equals: widgetId } }
+      const result = await api.productTable.findFirst({
+        filter: { productTableId: { equals: productTableId } }
       });
 
       if (!result) return null;
 
       const record = result as any;
-      const widget: WidgetInstance = {
+      const productTable: WidgetInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        widgetId: record.widgetId || '',
-        widgetName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -106,32 +106,32 @@ export const useWidget = (widgetId?: string): UseQueryResult<WidgetInstance | nu
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
       };
-      return widget;
+      return productTable;
     },
-    enabled: !!widgetId,
+    enabled: !!productTableId,
   });
 };
 
 /**
- * Hook to fetch a widget by database ID
+ * Hook to fetch a product table by database ID
  */
-export const useWidgetById = (id?: string): UseQueryResult<WidgetInstance | null, Error> => {
+export const useProductTableById = (id?: string): UseQueryResult<WidgetInstance | null, Error> => {
   return useQuery<WidgetInstance | null, Error>({
-    queryKey: ["widget", "id", id],
+    queryKey: ["productTable", "id", id],
     queryFn: async () => {
       if (!id) return null;
 
-      const result = await api.widgetInstance.findOne(id);
+      const result = await api.productTable.findOne(id);
 
       if (!result) return null;
 
       const record = result as any;
-      const widget: WidgetInstance = {
+      const productTable: WidgetInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        widgetId: record.widgetId || '',
-        widgetName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -157,29 +157,29 @@ export const useWidgetById = (id?: string): UseQueryResult<WidgetInstance | null
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
       };
-      return widget;
+      return productTable;
     },
     enabled: !!id,
   });
 };
 
 /**
- * Hook to create a new widget
+ * Hook to create a new product table
  */
-export const useCreateWidget = (): UseMutationResult<WidgetInstance, Error, Partial<WidgetFormData>> => {
+export const useCreateProductTable = (): UseMutationResult<WidgetInstance, Error, Partial<WidgetFormData>> => {
   const queryClient = useQueryClient();
 
   return useMutation<WidgetInstance, Error, Partial<WidgetFormData>>({
     mutationFn: async (config: Partial<WidgetFormData>) => {
-      const result = await api.widgetInstance.create(config);
+      const result = await api.productTable.create(config);
 
       const record = result as any;
-      const widget: WidgetInstance = {
+      const productTable: WidgetInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        widgetId: record.widgetId || '',
-        widgetName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -205,23 +205,23 @@ export const useCreateWidget = (): UseMutationResult<WidgetInstance, Error, Part
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
       };
-      return widget;
+      return productTable;
     },
     onSuccess: (data: WidgetInstance) => {
-      // Invalidate and refetch widgets list
-      queryClient.invalidateQueries({ queryKey: ["widgets"] });
-      // Set the newly created widget in cache
-      if (data?.widgetId) {
-        queryClient.setQueryData(["widget", data.widgetId], data);
+      // Invalidate and refetch product tables list
+      queryClient.invalidateQueries({ queryKey: ["productTables"] });
+      // Set the newly created product table in cache
+      if (data?.productTableId) {
+        queryClient.setQueryData(["productTable", data.productTableId], data);
       }
     },
   });
 };
 
 /**
- * Hook to update an existing widget
+ * Hook to update an existing product table
  */
-export const useUpdateWidget = (): UseMutationResult<
+export const useUpdateProductTable = (): UseMutationResult<
   WidgetInstance,
   Error,
   { id: string; config: Partial<WidgetFormData> }
@@ -230,15 +230,15 @@ export const useUpdateWidget = (): UseMutationResult<
 
   return useMutation<WidgetInstance, Error, { id: string; config: Partial<WidgetFormData> }>({
     mutationFn: async ({ id, config }: { id: string; config: Partial<WidgetFormData> }) => {
-      const result = await api.widgetInstance.update(id, config);
+      const result = await api.productTable.update(id, config);
 
       const record = result as any;
-      const widget: WidgetInstance = {
+      const productTable: WidgetInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        widgetId: record.widgetId || '',
-        widgetName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -264,106 +264,106 @@ export const useUpdateWidget = (): UseMutationResult<
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
       };
-      return widget;
+      return productTable;
     },
     onMutate: async ({ id, config }) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["widget", id] });
+      await queryClient.cancelQueries({ queryKey: ["productTable", id] });
 
       // Snapshot previous value
-      const previousWidget = queryClient.getQueryData<WidgetInstance>(["widget", id]);
+      const previousProductTable = queryClient.getQueryData<WidgetInstance>(["productTable", id]);
 
       // Optimistically update to the new value
-      queryClient.setQueryData<WidgetInstance>(["widget", id], (old) => ({
+      queryClient.setQueryData<WidgetInstance>(["productTable", id], (old) => ({
         ...old!,
         ...config,
       }));
 
       // Return context with the snapshot
-      return { previousWidget };
+      return { previousProductTable };
     },
     onError: (_err, variables, context) => {
       // Rollback on error
-      const ctx = context as { previousWidget?: WidgetInstance } | undefined;
-      if (ctx?.previousWidget) {
-        queryClient.setQueryData(["widget", variables.id], ctx.previousWidget);
+      const ctx = context as { previousProductTable?: WidgetInstance } | undefined;
+      if (ctx?.previousProductTable) {
+        queryClient.setQueryData(["productTable", variables.id], ctx.previousProductTable);
       }
     },
     onSuccess: (data, _variables) => {
-      // Invalidate widgets list
-      queryClient.invalidateQueries({ queryKey: ["widgets"] });
-      // Update the specific widget cache
-      if (data?.widgetId) {
-        queryClient.setQueryData(["widget", data.widgetId], data);
+      // Invalidate product tables list
+      queryClient.invalidateQueries({ queryKey: ["productTables"] });
+      // Update the specific product table cache
+      if (data?.productTableId) {
+        queryClient.setQueryData(["productTable", data.productTableId], data);
       }
     },
   });
 };
 
 /**
- * Hook to delete a widget
+ * Hook to delete a product table
  */
-export const useDeleteWidget = (): UseMutationResult<void, Error, string> => {
+export const useDeleteProductTable = (): UseMutationResult<void, Error, string> => {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, string>({
     mutationFn: async (id: string) => {
-      await api.widgetInstance.delete(id);
+      await api.productTable.delete(id);
     },
     onSuccess: (_data, deletedId) => {
-      // Invalidate widgets list
-      queryClient.invalidateQueries({ queryKey: ["widgets"] });
-      // Remove the deleted widget from cache
-      queryClient.removeQueries({ queryKey: ["widget", deletedId] });
+      // Invalidate product tables list
+      queryClient.invalidateQueries({ queryKey: ["productTables"] });
+      // Remove the deleted product table from cache
+      queryClient.removeQueries({ queryKey: ["productTable", deletedId] });
     },
   });
 };
 
 /**
- * Hook to duplicate a widget
+ * Hook to duplicate a product table
  */
-export const useDuplicateWidget = (storeId?: string): UseMutationResult<WidgetInstance, Error, WidgetInstance> => {
+export const useDuplicateProductTable = (storeId?: string): UseMutationResult<WidgetInstance, Error, WidgetInstance> => {
   const queryClient = useQueryClient();
 
   return useMutation<WidgetInstance, Error, WidgetInstance>({
-    mutationFn: async (sourceWidget: WidgetInstance) => {
-      // Extract only the writable fields (exclude id, createdAt, updatedAt, widgetId)
+    mutationFn: async (sourceProductTable: WidgetInstance) => {
+      // Extract only the writable fields (exclude id, createdAt, updatedAt, productTableId)
       const newConfig: any = {
-        widgetName: `${sourceWidget.widgetName} (Copy)`,
-        displayFormat: sourceWidget.displayFormat,
-        columns: sourceWidget.columns,
-        columnsOrder: sourceWidget.columnsOrder,
-        productSource: sourceWidget.productSource,
-        selectedCollections: sourceWidget.selectedCollections,
-        selectedCategories: sourceWidget.selectedCategories,
-        targetAllCustomers: sourceWidget.targetAllCustomers,
-        targetRetailOnly: sourceWidget.targetRetailOnly,
-        targetWholesaleOnly: sourceWidget.targetWholesaleOnly,
-        targetLoggedInOnly: sourceWidget.targetLoggedInOnly,
-        targetCustomerTags: sourceWidget.targetCustomerTags,
-        allowViewSwitching: sourceWidget.allowViewSwitching,
-        defaultToTableView: sourceWidget.defaultToTableView,
-        enableCustomerSorting: sourceWidget.enableCustomerSorting,
-        defaultSort: sourceWidget.defaultSort,
-        itemsPerPage: sourceWidget.itemsPerPage,
-        placementLocation: sourceWidget.placementLocation,
-        isActive: sourceWidget.isActive,
-        notes: sourceWidget.notes,
-        version: sourceWidget.version,
+        productTableName: `${sourceProductTable.productTableName} (Copy)`,
+        displayFormat: sourceProductTable.displayFormat,
+        columns: sourceProductTable.columns,
+        columnsOrder: sourceProductTable.columnsOrder,
+        productSource: sourceProductTable.productSource,
+        selectedCollections: sourceProductTable.selectedCollections,
+        selectedCategories: sourceProductTable.selectedCategories,
+        targetAllCustomers: sourceProductTable.targetAllCustomers,
+        targetRetailOnly: sourceProductTable.targetRetailOnly,
+        targetWholesaleOnly: sourceProductTable.targetWholesaleOnly,
+        targetLoggedInOnly: sourceProductTable.targetLoggedInOnly,
+        targetCustomerTags: sourceProductTable.targetCustomerTags,
+        allowViewSwitching: sourceProductTable.allowViewSwitching,
+        defaultToTableView: sourceProductTable.defaultToTableView,
+        enableCustomerSorting: sourceProductTable.enableCustomerSorting,
+        defaultSort: sourceProductTable.defaultSort,
+        itemsPerPage: sourceProductTable.itemsPerPage,
+        placementLocation: sourceProductTable.placementLocation,
+        isActive: sourceProductTable.isActive,
+        notes: sourceProductTable.notes,
+        version: sourceProductTable.version,
         store: {
           _link: storeId
         }
       };
 
-      const result = await api.widgetInstance.create(newConfig);
+      const result = await api.productTable.create(newConfig);
 
       const record = result as any;
-      const widget: WidgetInstance = {
+      const productTable: WidgetInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        widgetId: record.widgetId || '',
-        widgetName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -389,10 +389,10 @@ export const useDuplicateWidget = (storeId?: string): UseMutationResult<WidgetIn
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
       };
-      return widget;
+      return productTable;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["widgets"] });
+      queryClient.invalidateQueries({ queryKey: ["productTables"] });
     },
   });
 };

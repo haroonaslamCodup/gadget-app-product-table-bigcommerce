@@ -4,8 +4,8 @@
 
 // Widget Configuration Types
 export interface WidgetConfig {
-  widgetId: string;
-  widgetName?: string;
+  productTableId: string;
+  productTableName?: string;
   displayFormat?: "folded" | "grouped-variants" | "grouped-category" | "grouped-collection";
   columns?: string[];
   columnsOrder?: string[];
@@ -205,7 +205,7 @@ export interface ColumnDefinition {
 
 // Form Types
 export interface WidgetFormData {
-  widgetName: string;
+  productTableName: string;
   placementLocation: "homepage" | "pdp" | "category" | "custom";
   displayFormat: "folded" | "grouped-variants" | "grouped-category" | "grouped-collection";
   columns: string[];

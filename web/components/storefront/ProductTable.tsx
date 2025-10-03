@@ -10,8 +10,8 @@ import { ViewSwitcher } from "./ViewSwitcher";
 import { GroupedView } from "./GroupedView";
 
 export interface WidgetConfig {
-  widgetId: string;
-  widgetName?: string;
+  productTableId: string;
+  productTableName?: string;
   displayFormat?: "folded" | "grouped-variants" | "grouped-category" | "grouped-collection";
   columns?: string[];
   columnsOrder?: string[];

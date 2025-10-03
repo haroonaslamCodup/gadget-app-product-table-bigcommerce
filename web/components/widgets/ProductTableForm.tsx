@@ -17,18 +17,18 @@ import {
 } from "@bigcommerce/big-design";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../api";
-import { useCreateWidget, useUpdateWidget } from "../../hooks/useWidgets";
+import { useCreateProductTable, useUpdateProductTable } from "../../hooks/useProductTables";
 import { useCollections } from "../../hooks/useProducts";
 import { ColumnManager } from "./ColumnManager";
 
 import type { WidgetInstance, Collection, WidgetFormData } from "../../types";
 
-interface WidgetFormProps {
+interface ProductTableFormProps {
   widgetId?: string;
   initialData?: WidgetInstance;
 }
 
-export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
+export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProps) => {
   const navigate = useNavigate();
   const isEdit = !!widgetId;
 
@@ -42,12 +42,12 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
   const { data: collectionsData } = useCollections();
 
   // Mutations
-  const createWidget = useCreateWidget();
-  const updateWidget = useUpdateWidget();
+  const createProductTable = useCreateProductTable();
+  const updateProductTable = useUpdateProductTable();
 
   // Form state
   const [formData, setFormData] = useState<WidgetFormData>({
-    widgetName: "",
+    productTableName: "",
     placementLocation: "homepage",
     displayFormat: "folded",
     columns: ["image", "sku", "name", "price", "stock", "addToCart"],
@@ -73,7 +73,7 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
   useEffect(() => {
     if (initialData) {
       setFormData({
-        widgetName: initialData.widgetName || "",
+        productTableName: initialData.productTableName || "",
         placementLocation: initialData.placementLocation || "homepage",
         displayFormat: initialData.displayFormat || "folded",
         columns: initialData.columns || ["image", "sku", "name", "price", "stock", "addToCart"],
@@ -110,12 +110,12 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
       };
 
       if (isEdit && widgetId) {
-        await updateWidget.mutateAsync({ id: widgetId, config: widgetData });
+        await updateProductTable.mutateAsync({ id: widgetId, config: widgetData });
       } else {
-        await createWidget.mutateAsync(widgetData);
+        await createProductTable.mutateAsync(widgetData);
       }
 
-      navigate("/widgets");
+      navigate("/product-tables");
     } catch (error) {
       console.error("Failed to save widget:", error);
       alert("Failed to save widget");
@@ -127,17 +127,17 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
   return (
     <Form onSubmit={handleSubmit}>
       <Box marginBottom="large">
-        <H2>{isEdit ? "Edit Widget" : "Create New Widget"}</H2>
+        <H2>{isEdit ? "Edit Product Table" : "Create New Product Table"}</H2>
       </Box>
 
       {/* Basic Information */}
       <Panel header="Basic Information" marginBottom="medium">
         <FormGroup>
           <Input
-            label="Widget Name"
+            label="Product Table Name"
             placeholder="e.g., Homepage Featured Products"
-            value={formData.widgetName}
-            onChange={(e) => setFormData({ ...formData, widgetName: e.target.value })}
+            value={formData.productTableName}
+            onChange={(e) => setFormData({ ...formData, productTableName: e.target.value })}
             required
           />
         </FormGroup>
@@ -345,7 +345,7 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
       <Panel header="Status & Notes" marginBottom="medium">
         <FormGroup>
           <Checkbox
-          label="Widget Active"
+          label="Product Table Active"
           checked={formData.isActive}
           onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
         />
@@ -366,16 +366,16 @@ export const WidgetForm = ({ widgetId, initialData }: WidgetFormProps) => {
       <Flex justifyContent="flex-end">
         <Button
           variant="subtle"
-          onClick={() => navigate("/widgets")}
+          onClick={() => navigate("/product-tables")}
           type="button"
         >
           Cancel
         </Button>
         <Button
           type="submit"
-          isLoading={createWidget.isPending || updateWidget.isPending}
+          isLoading={createProductTable.isPending || updateProductTable.isPending}
         >
-          {isEdit ? "Update Widget" : "Create Widget"}
+          {isEdit ? "Update Product Table" : "Create Product Table"}
         </Button>
       </Flex>
     </Form>

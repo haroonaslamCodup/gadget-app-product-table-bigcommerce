@@ -77,45 +77,50 @@ export const AddToCartButton = ({
 
 const Container = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-sm, 0.5rem);
   align-items: center;
 `;
 
 const QuantityInput = styled.input`
   width: 60px;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.875rem;
+  padding: var(--spacing-sm, 0.5rem);
+  border: 1px solid var(--color-greyLight, var(--input-border-color, #ddd));
+  border-radius: var(--borderRadius-base, 4px);
+  font-size: var(--fontSize-small, 0.875rem);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
+  color: var(--color-textBase, var(--input-font-color, #333));
+  background: var(--color-white, var(--input-bg-color, white));
   text-align: center;
 
   &:focus {
     outline: none;
-    border-color: #1a73e8;
+    border-color: var(--color-primary, var(--input-border-color-active, #1a73e8));
+    box-shadow: 0 0 0 3px var(--color-primaryLight, rgba(26, 115, 232, 0.1));
   }
 
   &:disabled {
-    background: #f5f5f5;
+    background: var(--color-greyLighter, #f5f5f5);
     cursor: not-allowed;
   }
 `;
 
 const Button = styled.button<{ $isAdded?: boolean }>`
   padding: 0.625rem 1.25rem;
-  background: ${(props) => (props.$isAdded ? "#4caf50" : "#1a73e8")};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  background: ${(props) => (props.$isAdded ? "var(--color-success, #4caf50)" : "var(--button-primary-backgroundColor, var(--color-primary, #1a73e8))")};
+  color: var(--button-primary-color, white);
+  border: 1px solid ${(props) => (props.$isAdded ? "var(--color-success, #4caf50)" : "var(--button-primary-borderColor, transparent)")};
+  border-radius: var(--borderRadius-base, 4px);
+  font-size: var(--fontSize-small, 0.875rem);
+  font-weight: var(--fontWeight-medium, 500);
+  font-family: var(--fontFamily-sans, var(--body-font-family, inherit));
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 
   &:hover:not(:disabled) {
-    background: ${(props) => (props.$isAdded ? "#45a049" : "#1557b0")};
+    background: ${(props) => (props.$isAdded ? "var(--color-successDark, #45a049)" : "var(--button-primary-backgroundColorHover, var(--color-primaryHover, #1557b0))")};
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--elevation-200, 0 2px 4px rgba(0, 0, 0, 0.2));
   }
 
   &:active:not(:disabled) {
@@ -123,7 +128,8 @@ const Button = styled.button<{ $isAdded?: boolean }>`
   }
 
   &:disabled {
-    background: #ccc;
+    background: var(--color-grey, #ccc);
+    border-color: var(--color-grey, #ccc);
     cursor: not-allowed;
     transform: none;
   }

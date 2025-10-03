@@ -7,14 +7,14 @@ export const Navigation = () => {
 
   const getActiveTab = () => {
     if (location.pathname === "/") return "dashboard";
-    if (location.pathname.startsWith("/widgets")) return "widgets";
+    if (location.pathname.startsWith("/product-tables")) return "product-tables";
     if (location.pathname.startsWith("/setup")) return "setup";
     return "dashboard";
   };
 
   const tabs = [
     { id: "dashboard", title: "Dashboard" },
-    { id: "widgets", title: "Widgets" },
+    { id: "product-tables", title: "Product Tables" },
     { id: "setup", title: "Setup" },
   ];
 
@@ -25,7 +25,7 @@ export const Navigation = () => {
         items={tabs}
         onTabClick={(tabId) => {
           if (tabId === "dashboard") navigate("/");
-          if (tabId === "widgets") navigate("/widgets");
+          if (tabId === "product-tables") navigate("/product-tables");
           if (tabId === "setup") navigate("/setup");
         }}
       />
