@@ -397,10 +397,10 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
       {/* Actions */}
       <Flex justifyContent="flex-end" marginTop="large">
         <Button
-          variant="secondary"
+          variant="subtle"
           onClick={() => navigate("/product-tables")}
           type="button"
-          marginRight="xSmall"
+          marginRight="small"
         >
           Cancel
         </Button>

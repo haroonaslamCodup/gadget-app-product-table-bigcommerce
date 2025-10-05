@@ -25,8 +25,8 @@ export const useProductTables = (storeId?: string): UseQueryResult<WidgetInstanc
           id: record.id,
           createdAt: safeToISOString(record.createdAt),
           updatedAt: safeToISOString(record.updatedAt),
-          productTableId: record.widgetId || '',
-          productTableName: record.widgetName || undefined,
+          productTableId: record.productTableId || '',
+          productTableName: record.productTableName || undefined,
           displayFormat: record.displayFormat as any,
           columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
           columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -79,8 +79,8 @@ export const useProductTable = (productTableId?: string): UseQueryResult<WidgetI
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        productTableId: record.widgetId || '',
-        productTableName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -126,12 +126,18 @@ export const useProductTableById = (id?: string): UseQueryResult<WidgetInstance 
       if (!result) return null;
 
       const record = result as any;
+
+      // Debug logging
+      console.log('[useProductTableById] Raw record from API:', record);
+      console.log('[useProductTableById] productTableId:', record.productTableId);
+      console.log('[useProductTableById] productTableName:', record.productTableName);
+
       const productTable: WidgetInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        productTableId: record.widgetId || '',
-        productTableName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -178,8 +184,8 @@ export const useCreateProductTable = (): UseMutationResult<WidgetInstance, Error
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        productTableId: record.widgetId || '',
-        productTableName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
@@ -237,8 +243,8 @@ export const useUpdateProductTable = (): UseMutationResult<
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
-        productTableId: record.widgetId || '',
-        productTableName: record.widgetName || undefined,
+        productTableId: record.productTableId || '',
+        productTableName: record.productTableName || undefined,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,

@@ -35,7 +35,7 @@ export default async function route({ request, reply, logger, connections, api }
     const bcParams = new URLSearchParams({
       limit: limit.toString(),
       page: page.toString(),
-      include: "variants,images,custom_fields"
+      include: "variants,images,custom_fields",
       // Removed is_visible filter - let's fetch all products first to debug
     });
 
@@ -90,6 +90,16 @@ export default async function route({ request, reply, logger, connections, api }
       return reply.code(500).send({ error: "BigCommerce connection not available" });
     }
 
+    // First, let's get the TRUE total count of all products (for diagnostic)
+    try {
+      const countUrl = `/catalog/products?limit=1&page=1&is_visible=true`;
+      const countResponse = await bigcommerceConnection.v3.get<any>(countUrl) as any;
+      const trueTotal = countResponse?.meta?.pagination?.total || countResponse?.length || 0;
+      logger.info(`TRUE TOTAL VISIBLE PRODUCTS IN STORE: ${trueTotal}`);
+    } catch (e) {
+      logger.warn(`Could not get true product count: ${(e as Error).message}`);
+    }
+
     const apiUrl = `/catalog/products?${bcParams.toString()}`;
     logger.info(`Calling BigCommerce API: ${apiUrl}`);
 
@@ -100,28 +110,67 @@ export default async function route({ request, reply, logger, connections, api }
       return reply.code(500).send({ error: "Failed to fetch products" });
     }
 
-    // The @space48/bigcommerce-api package returns the data directly as an array
-    // not wrapped in a { data, meta } structure
-    const productsArray = Array.isArray(response) ? response : [];
+    logger.info(`Raw BigCommerce response structure: isArray=${Array.isArray(response)}, hasData=${!!response.data}, hasMeta=${!!response.meta}, metaKeys=${response.meta ? Object.keys(response.meta).join(',') : 'none'}, paginationData=${JSON.stringify(response.meta?.pagination || null)}`);
 
-    logger.info(`BigCommerce returned ${productsArray.length} products`);
+    // Extract products and pagination meta from response
+    // BigCommerce API returns { data: [...], meta: { pagination: {...} } }
+    // but @space48/bigcommerce-api may simplify to just the array
+    let productsArray: any[] = [];
+    let paginationMeta: any = null;
 
-    // TODO: Apply user-specific pricing based on customer group
-    // This will be implemented when we have access to BigCommerce price lists
-    // For now, return products with default pricing
+    if (Array.isArray(response)) {
+      // Simplified response (just array)
+      productsArray = response;
+      logger.info(`BigCommerce returned ${productsArray.length} products (array response)`);
 
+      // For array responses, we need to make a count query to get total
+      // Use the same filters but with limit=0 to get just the count
+      const countParams = new URLSearchParams(bcParams);
+      countParams.set("limit", "1");
+      countParams.set("page", "1");
+
+      try {
+        const countResponse = await bigcommerceConnection.v3.get<any>(`/catalog/products?${countParams.toString()}`) as any;
+        if (countResponse?.meta?.pagination) {
+          paginationMeta = {
+            ...countResponse.meta.pagination,
+            count: productsArray.length,
+            per_page: limit,
+            current_page: page,
+          };
+          logger.info(`Got total count from separate query:`, paginationMeta);
+        }
+      } catch (e) {
+        logger.warn(`Failed to get product count: ${(e as Error).message}`);
+      }
+    } else if (response.data && Array.isArray(response.data)) {
+      // Full response with data and meta
+      productsArray = response.data;
+      paginationMeta = response.meta?.pagination;
+      logger.info(`BigCommerce returned ${productsArray.length} products with pagination meta:`, paginationMeta);
+    } else {
+      logger.error(`Unexpected BigCommerce response format:`, response);
+      productsArray = [];
+    }
+
+    // Use pagination meta if available, otherwise calculate from product count
     const result = {
       products: productsArray,
-      pagination: {
+      pagination: paginationMeta || {
         total: productsArray.length,
         count: productsArray.length,
         per_page: limit,
         current_page: page,
-        total_pages: Math.ceil(productsArray.length / limit),
+        total_pages: 1, // Unknown without proper total
       }
     };
 
-    logger.info(`Products fetched successfully: count=${result.products.length}, total=${result.pagination.total}`);
+    logger.info(`Products fetched successfully: productsCount=${result.products.length}, paginationTotal=${result.pagination.total}, paginationTotalPages=${result.pagination.total_pages}, paginationCurrentPage=${result.pagination.current_page}, paginationPerPage=${result.pagination.per_page}, usedMeta=${!!paginationMeta}`);
+
+    logger.info(`Sending response body: ${JSON.stringify({
+      productsCount: result.products.length,
+      pagination: result.pagination,
+    })}`);
 
     return reply
       .code(200)

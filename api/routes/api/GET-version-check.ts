@@ -22,9 +22,9 @@ export default async function route({ request, reply, api, logger }: RouteContex
     logger.info(`Checking product table version: productTableId=${productTableId}, currentVersion=${currentVersion}`);
 
     // Define the latest version (this would typically come from a config or database)
-    const LATEST_VERSION = "1.0.30";
+    const LATEST_VERSION = "1.0.32";
     const CHANGELOG = {
-      "1.0.30": [
+      "1.0.32": [
         "Added product table dropdown selector in Page Builder",
         "Enhanced admin UI with embed code generator",
         "Improved product table configuration flow",

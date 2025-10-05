@@ -1,5 +1,5 @@
-import { Box, Button, Flex, H1, H2, Link, Message, Panel, Text } from "@bigcommerce/big-design";
-import { AddIcon, CheckIcon, ErrorIcon, StoreIcon, WarningIcon } from '@bigcommerce/big-design-icons';
+import { Box, Button, Flex, H1, H2, Message, Panel, Text } from "@bigcommerce/big-design";
+import { CheckIcon, ErrorIcon, StoreIcon, WarningIcon } from '@bigcommerce/big-design-icons';
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { api } from "../api";
@@ -23,7 +23,7 @@ export const IndexPage = () => {
 
   return (
     <>
-      <Flex justifyContent="space-between" alignItems="center" marginBottom="large">
+      <Flex justifyContent="space-between" alignItems="center" >
         <H1>Product Table Widget</H1>
         <Flex>
           {connectionStatus && !connectionStatus.credentialsValid && (
@@ -35,13 +35,6 @@ export const IndexPage = () => {
               Setup Required
             </Button>
           )}
-          <Button
-            iconLeft={<AddIcon />}
-            onClick={() => navigate("/widgets/new")}
-            disabled={connectionStatus && !connectionStatus.credentialsValid}
-          >
-            Create Widget
-          </Button>
         </Flex>
       </Flex>
 
@@ -63,7 +56,7 @@ export const IndexPage = () => {
 
       <Panel
         header="Welcome!"
-        marginBottom="medium"
+
       >
         <Flex flexDirection="column">
           <Flex alignItems="center" marginBottom="small">
@@ -93,7 +86,7 @@ export const IndexPage = () => {
           </Box>
 
           <Box>
-            <Text bold marginBottom="xSmall">Features:</Text>
+            <Text bold >Features:</Text>
             <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
               <li>Customer group-specific pricing (retail, wholesale, etc.)</li>
               <li>Customizable columns and display formats</li>
@@ -103,21 +96,12 @@ export const IndexPage = () => {
               <li>Multiple placement locations</li>
             </ul>
           </Box>
-
-          <Flex>
-            <Button onClick={() => navigate("/widgets/new")}>
-              Create Your First Widget
-            </Button>
-            <Button variant="subtle" onClick={() => navigate("/widgets")} marginLeft="small">
-              View All Widgets
-            </Button>
-          </Flex>
         </Flex>
       </Panel>
 
       <Panel
         header="Store Information"
-        marginBottom="medium"
+        marginBottom="xLarge"
       >
         <Box border="box" padding="medium">
           <Flex flexDirection="column">
@@ -128,34 +112,17 @@ export const IndexPage = () => {
               </Text>
             </Flex>
 
-            <Box>
+            <Flex flexGap={"large"} >
               <Text bold>Widgets Created:</Text>
               <Text>{widgets?.length || 0}</Text>
-            </Box>
+            </Flex>
 
-            <Box>
+            <Flex flexGap={"medium"} >
               <Text bold>App Version:</Text>
-              <Text>1.0.30</Text>
-            </Box>
+              <Text>1.0.32</Text>
+            </Flex>
           </Flex>
         </Box>
-      </Panel>
-
-      <Panel header="Next Steps">
-        <Flex flexDirection="column">
-          <Text>
-            1. <Link onClick={() => navigate("/widgets/new")}>Create a new widget</Link> with your desired configuration
-          </Text>
-          <Text marginTop="xSmall">
-            2. Configure display format, columns, and customer targeting
-          </Text>
-          <Text marginTop="xSmall">
-            3. Use BigCommerce Page Builder to place your widget on any page
-          </Text>
-          <Text marginTop="xSmall">
-            4. Customers will see personalized pricing based on their group
-          </Text>
-        </Flex>
       </Panel>
     </>
   );

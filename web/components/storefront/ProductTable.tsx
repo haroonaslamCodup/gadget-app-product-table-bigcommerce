@@ -123,6 +123,15 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
       filters.userGroup = customerContext.customerGroupId;
     }
 
+    console.log('[ProductTable] Building filters:', {
+      currentPage,
+      itemsPerPage: config.itemsPerPage,
+      productSource: config.productSource,
+      selectedCollections: config.selectedCollections,
+      categoryId: pageContext?.categoryId,
+      filters,
+    });
+
     return filters;
   }, [config, pageContext, currentPage, sortBy, searchQuery, customerContext]);
 
@@ -149,6 +158,14 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
   const products = productsData?.products || [];
   const totalProducts = productsData?.pagination?.total || productsData?.products?.length || 0;
   const totalPages = productsData?.pagination?.total_pages || Math.ceil(totalProducts / (config.itemsPerPage || 25));
+
+  console.log('[ProductTable] Pagination debug:', {
+    totalProducts,
+    totalPages,
+    itemsPerPage: config.itemsPerPage || 25,
+    paginationMeta: productsData?.pagination,
+    productsCount: products.length
+  });
 
   const columns = config.columnsOrder || config.columns || [
     "image",
@@ -221,7 +238,6 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
                   key={product.id}
                   product={product}
                   columns={columns}
-                  customerContext={customerContext}
                 />
               ))}
             </tbody>
@@ -234,7 +250,6 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
               key={product.id}
               product={product}
               columns={columns}
-              customerContext={customerContext}
               viewMode="grid"
             />
           ))}

@@ -7,14 +7,12 @@ import { AddToCartButton } from "./AddToCartButton";
 interface ProductTableRowProps {
   product: any;
   columns: string[];
-  customerContext?: any;
   viewMode?: "table" | "grid";
 }
 
 export const ProductTableRow = ({
   product,
   columns,
-  customerContext,
   viewMode = "table",
 }: ProductTableRowProps) => {
   if (viewMode === "grid") {
@@ -34,7 +32,6 @@ export const ProductTableRow = ({
             <ProductPrice
               basePrice={product.price}
               salePrice={product.sale_price}
-              customerGroup={customerContext?.customerGroup}
             />
           )}
           {columns.includes("stock") && (
@@ -73,7 +70,6 @@ export const ProductTableRow = ({
             <ProductPrice
               basePrice={product.price}
               salePrice={product.sale_price}
-              customerGroup={customerContext?.customerGroup}
             />
           )}
           {column === "stock" && (

@@ -1,22 +1,22 @@
-import { useNavigate } from "react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import {
+  Badge,
   Box,
   Button,
   Flex,
   H1,
+  Link,
+  Modal,
   Panel,
   ProgressCircle,
   Text,
-  Link,
-  Badge,
-  Modal,
   Textarea,
 } from "@bigcommerce/big-design";
-import { AddIcon, EditIcon, DeleteIcon, FileCopyIcon, CodeIcon } from "@bigcommerce/big-design-icons";
+import { AddIcon, CodeIcon, DeleteIcon, EditIcon, FileCopyIcon } from "@bigcommerce/big-design-icons";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import { api } from "../api";
-import { useProductTables, useDeleteProductTable, useDuplicateProductTable } from "../hooks/useProductTables";
+import { useDeleteProductTable, useDuplicateProductTable, useProductTables } from "../hooks/useProductTables";
 import type { WidgetInstance } from "../types";
 
 export const ProductTablesPage = () => {
@@ -103,6 +103,7 @@ export const ProductTablesPage = () => {
       <Flex justifyContent="space-between" alignItems="center" marginBottom="medium">
         <H1>Product Tables</H1>
         <Button
+          variant="secondary"
           iconLeft={<AddIcon />}
           onClick={() => navigate("/product-tables/new")}
         >
@@ -139,6 +140,7 @@ export const ProductTablesPage = () => {
             </Text>
             <Button
               iconLeft={<AddIcon />}
+              variant="secondary"
               onClick={() => navigate("/product-tables/new")}
             >
               Create Product Table
@@ -187,34 +189,42 @@ export const ProductTablesPage = () => {
                     marginRight="small"
                   />
                   <Button
-                    variant="subtle"
-                    iconOnly={<CodeIcon />}
+                    iconLeft={<CodeIcon />}
+                    variant="secondary"
                     onClick={() => handleShowEmbed(productTable)}
                     aria-label="Show Embed Code"
                     marginRight="xSmall"
-                  />
+                  >
+                    Code
+                  </Button>
                   <Button
-                    variant="subtle"
-                    iconOnly={<EditIcon />}
+                    iconLeft={<EditIcon />}
+                    variant="primary"
                     onClick={() => navigate(`/product-tables/${productTable.id}/edit`)}
                     aria-label="Edit"
                     marginRight="xSmall"
-                  />
+                  >
+                    Edit
+                  </Button>
                   <Button
-                    variant="subtle"
-                    iconOnly={<FileCopyIcon />}
+                    iconLeft={<FileCopyIcon />}
+                    variant="secondary"
                     onClick={() => handleDuplicate(productTable)}
                     isLoading={duplicateProductTable.isPending}
                     aria-label="Duplicate Product Table"
                     marginRight="xSmall"
-                  />
+                  >
+                    Duplicate
+                  </Button>
                   <Button
+                    iconLeft={<DeleteIcon />}
                     variant="subtle"
-                    iconOnly={<DeleteIcon />}
                     onClick={() => handleDelete(productTable.id, productTable.productTableName || "Unnamed Product Table")}
                     isLoading={deleteProductTable.isPending}
                     aria-label="Delete"
-                  />
+                  >
+                    Delete
+                  </Button>
                 </Flex>
               </Flex>
             ))}
