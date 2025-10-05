@@ -9,7 +9,7 @@ import {
   Panel,
   ProgressCircle,
   Text,
-  Textarea,
+  Textarea
 } from "@bigcommerce/big-design";
 import { AddIcon, CodeIcon, DeleteIcon, EditIcon, FileCopyIcon } from "@bigcommerce/big-design-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -42,7 +42,6 @@ export const ProductTablesPage = () => {
       try {
         await deleteProductTable.mutateAsync(id);
       } catch (error) {
-        console.error("Failed to delete product table:", error);
         alert("Failed to delete product table");
       }
     }
@@ -55,7 +54,6 @@ export const ProductTablesPage = () => {
         navigate(`/product-tables/${newProductTable.id}/edit`);
       }
     } catch (error) {
-      console.error("Failed to duplicate product table:", error);
       alert("Failed to duplicate product table");
     }
   };
@@ -113,7 +111,7 @@ export const ProductTablesPage = () => {
 
       {productTableData.length > 0 && (
         <Panel marginBottom="medium">
-          <Box padding="medium">
+          <Box>
             <Text bold marginBottom="xSmall">📋 How to Add Product Tables to Your Storefront</Text>
             <Text marginBottom="xSmall">
               1. Create a product table using the "Create New Product Table" button above
@@ -149,21 +147,32 @@ export const ProductTablesPage = () => {
         </Panel>
       ) : (
         <Panel>
-          <Box padding="medium">
+          <Box>
             {productTableData.map((productTable: WidgetInstance) => (
               <Flex
                 key={productTable.id}
                 justifyContent="space-between"
                 alignItems="center"
-                padding="medium"
                 borderBottom="box"
               >
                 <Box>
-                  <Link onClick={() => navigate(`/product-tables/${productTable.id}/edit`)}>
-                    <Text bold>{productTable.productTableName || "Unnamed Product Table"}</Text>
-                  </Link>
-                  <Flex alignItems="center" marginTop="xSmall">
-                    <Text color="secondary60" marginRight="xSmall">
+                  <Flex alignContent="center">
+                    <Link marginRight="xSmall" href={`/product-tables/${productTable.id}/edit`}>
+                      <Text bold>{productTable.productTableName || "Unnamed Product Table"}</Text>
+                    </Link>
+                    <Badge
+                      label={productTable.placementLocation || "Not Set"}
+                      variant={productTable.placementLocation ? "secondary" : "warning"}
+                      marginRight="xSmall"
+                    />
+                    <Badge
+                      label={productTable.isActive ? "Active" : "Inactive"}
+                      variant={productTable.isActive ? "success" : "secondary"}
+                      marginRight="small"
+                    />
+                  </Flex>
+                  <Flex alignItems="center" marginTop="xSmall" marginBottom="xSmall">
+                    <Text color="secondary60" marginRight="xSmall" margin="none">
                       Product Table ID: {productTable.productTableId}
                     </Text>
                     <Button
@@ -178,16 +187,6 @@ export const ProductTablesPage = () => {
                   </Flex>
                 </Box>
                 <Flex alignItems="center">
-                  <Badge
-                    label={productTable.placementLocation || "Not Set"}
-                    variant={productTable.placementLocation ? "secondary" : "warning"}
-                    marginRight="small"
-                  />
-                  <Badge
-                    label={productTable.isActive ? "Active" : "Inactive"}
-                    variant={productTable.isActive ? "success" : "secondary"}
-                    marginRight="small"
-                  />
                   <Button
                     iconLeft={<CodeIcon />}
                     variant="secondary"
@@ -219,6 +218,7 @@ export const ProductTablesPage = () => {
                   <Button
                     iconLeft={<DeleteIcon />}
                     variant="subtle"
+                    actionType="destructive"
                     onClick={() => handleDelete(productTable.id, productTable.productTableName || "Unnamed Product Table")}
                     isLoading={deleteProductTable.isPending}
                     aria-label="Delete"
@@ -229,7 +229,7 @@ export const ProductTablesPage = () => {
               </Flex>
             ))}
           </Box>
-        </Panel>
+        </Panel >
       )}
 
       <Box marginTop="medium">
@@ -285,6 +285,6 @@ export const ProductTablesPage = () => {
           </Box>
         </Box>
       </Modal>
-    </Box>
+    </Box >
   );
 };

@@ -45,11 +45,9 @@ export const AddToCartButton = ({
 
         // Trigger cart update event for BigCommerce
         window.dispatchEvent(new CustomEvent("cart-quantity-update"));
-      } else {
-        console.error("Failed to add to cart");
       }
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      // Silently fail
     } finally {
       setIsAdding(false);
     }

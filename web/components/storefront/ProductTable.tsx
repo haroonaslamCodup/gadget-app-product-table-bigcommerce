@@ -52,21 +52,10 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
 
   // Check widget visibility based on customer targeting
   const isVisible = useMemo(() => {
-    console.log('[ProductTable] Visibility check:', {
-      isActive: config.isActive,
-      targetAllCustomers: config.targetAllCustomers,
-      targetLoggedInOnly: config.targetLoggedInOnly,
-      targetRetailOnly: config.targetRetailOnly,
-      targetWholesaleOnly: config.targetWholesaleOnly,
-      targetCustomerTags: config.targetCustomerTags,
-      customerContext
-    });
-
     // Default to active if not specified
     const isActive = config.isActive !== false;
 
     if (!isActive) {
-      console.log('[ProductTable] Widget is not active');
       return false;
     }
 
@@ -77,7 +66,6 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
                                   (config.targetCustomerTags && config.targetCustomerTags.length > 0);
 
     if (targetAllCustomers && !hasSpecificTargeting) {
-      console.log('[ProductTable] Widget targets all customers - showing');
       return true;
     }
 
@@ -123,27 +111,10 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
       filters.userGroup = customerContext.customerGroupId;
     }
 
-    console.log('[ProductTable] Building filters:', {
-      currentPage,
-      itemsPerPage: config.itemsPerPage,
-      productSource: config.productSource,
-      selectedCollections: config.selectedCollections,
-      categoryId: pageContext?.categoryId,
-      filters,
-    });
-
     return filters;
   }, [config, pageContext, currentPage, sortBy, searchQuery, customerContext]);
 
   const { data: productsData, isLoading, error } = useProducts(productFilters);
-
-  console.log('[ProductTable] State:', {
-    isVisible,
-    isLoading,
-    error,
-    productsData,
-    productsCount: productsData?.products?.length
-  });
 
   if (!isVisible) return null;
 
@@ -158,14 +129,6 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
   const products = productsData?.products || [];
   const totalProducts = productsData?.pagination?.total || productsData?.products?.length || 0;
   const totalPages = productsData?.pagination?.total_pages || Math.ceil(totalProducts / (config.itemsPerPage || 25));
-
-  console.log('[ProductTable] Pagination debug:', {
-    totalProducts,
-    totalPages,
-    itemsPerPage: config.itemsPerPage || 25,
-    paginationMeta: productsData?.pagination,
-    productsCount: products.length
-  });
 
   const columns = config.columnsOrder || config.columns || [
     "image",

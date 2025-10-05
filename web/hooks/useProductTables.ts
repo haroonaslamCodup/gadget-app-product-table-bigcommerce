@@ -127,11 +127,6 @@ export const useProductTableById = (id?: string): UseQueryResult<WidgetInstance 
 
       const record = result as any;
 
-      // Debug logging
-      console.log('[useProductTableById] Raw record from API:', record);
-      console.log('[useProductTableById] productTableId:', record.productTableId);
-      console.log('[useProductTableById] productTableName:', record.productTableName);
-
       const productTable: WidgetInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
@@ -295,10 +290,12 @@ export const useUpdateProductTable = (): UseMutationResult<
         queryClient.setQueryData(["productTable", variables.id], ctx.previousProductTable);
       }
     },
-    onSuccess: (data, _variables) => {
+    onSuccess: (data, variables) => {
       // Invalidate product tables list
       queryClient.invalidateQueries({ queryKey: ["productTables"] });
-      // Update the specific product table cache
+      // Update the specific product table cache by ID
+      queryClient.setQueryData(["productTable", "id", variables.id], data);
+      // Also update by productTableId if it exists
       if (data?.productTableId) {
         queryClient.setQueryData(["productTable", data.productTableId], data);
       }

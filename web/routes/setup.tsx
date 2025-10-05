@@ -1,5 +1,5 @@
 import { Box, Button, Flex, H1, H2, Link, Message, Panel, Text } from "@bigcommerce/big-design";
-import { CheckIcon, ErrorIcon } from "@bigcommerce/big-design-icons";
+import { CheckIcon } from "@bigcommerce/big-design-icons";
 import { useState } from "react";
 
 export const SetupPage = () => {
@@ -9,8 +9,6 @@ export const SetupPage = () => {
   const [scriptInstalled, setScriptInstalled] = useState(false);
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
   const [manualInstructions, setManualInstructions] = useState<string[] | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [showDebug, setShowDebug] = useState(false);
 
   const installWidgetTemplate = async () => {
     setIsInstalling(true);
@@ -129,7 +127,6 @@ export const SetupPage = () => {
       });
 
       const data = await response.json();
-      console.log("Cleanup templates response:", data);
 
       if (data.success) {
         setAlertMessage({
@@ -137,11 +134,6 @@ export const SetupPage = () => {
           text: data.message || `Deleted ${data.deletedCount} widget template(s).`
         });
         setWidgetTemplateInstalled(false);
-
-        // Show detailed results if available
-        if (data.results && data.results.length > 0) {
-          console.log("Deleted templates:", data.results);
-        }
       } else {
         setAlertMessage({
           type: "error",
@@ -168,7 +160,6 @@ export const SetupPage = () => {
       });
 
       const data = await response.json();
-      console.log("Cleanup scripts response:", data);
 
       if (data.success) {
         const msgType = data.deletedCount === 0 ? "warning" : "success";
@@ -184,23 +175,13 @@ export const SetupPage = () => {
         if (data.deletedCount > 0) {
           setScriptInstalled(false);
         }
-
-        // Show detailed results if available
-        if (data.results && data.results.length > 0) {
-          console.log("Script deletion results:", data.results);
-        }
-        if (data.allScripts) {
-          console.log("All scripts found:", data.allScripts);
-        }
       } else {
-        console.error("Cleanup failed:", data);
         setAlertMessage({
           type: "error",
           text: `Failed to cleanup scripts: ${data.error || data.message}`
         });
       }
     } catch (error) {
-      console.error("Cleanup error:", error);
       setAlertMessage({
         type: "error",
         text: `Error: ${(error as Error).message}`
@@ -215,20 +196,6 @@ export const SetupPage = () => {
     await cleanupWidgetScripts();
   };
 
-  const loadDebugInfo = async () => {
-    try {
-      const response = await fetch("/api/list-widgets", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (data.success) {
-        setDebugInfo(data.data);
-        setShowDebug(true);
-      }
-    } catch (error) {
-      console.error("Failed to load debug info:", error);
-    }
-  };
 
   return (
     <Box>
@@ -248,59 +215,88 @@ export const SetupPage = () => {
 
       {/* Installation Steps */}
       <Panel header="Installation Steps" marginBottom="large">
-        <Box marginBottom="medium">
-          <Flex alignItems="center" marginBottom="small">
-            {widgetTemplateInstalled ? (
-              <CheckIcon color="success" size="large" />
-            ) : (
-              <ErrorIcon color="secondary40" size="large" />
-            )}
-            <H2 marginLeft="small">Step 1: Install Widget Template</H2>
-          </Flex>
-          <Text marginBottom="medium">
-            This registers the Product Table Widget with BigCommerce Page Builder,
-            making it available in the widget dropdown.
-          </Text>
-          <Button
-            onClick={installWidgetTemplate}
-            isLoading={isInstalling}
-            disabled={widgetTemplateInstalled}
+        <Flex flexDirection="row" flexGap="medium" flexWrap="wrap">
+          {/* Step 1 */}
+          <Box
+            style={{ flex: 1 }}
+            border="box"
+            borderRadius="normal"
+            padding="medium"
+            backgroundColor={widgetTemplateInstalled ? "success10" : "secondary10"}
           >
-            {widgetTemplateInstalled ? "Template Installed ✓" : "Install Widget Template"}
-          </Button>
-        </Box>
+            <Flex alignItems="center" marginBottom="small">
+              {widgetTemplateInstalled ? (
+                <CheckIcon color="success" size="large" />
+              ) : (
+                <Text bold style={{ fontSize: "1.25rem" }} color="secondary60">1</Text>
+              )}
+              <Text bold marginLeft="small">Install Widget Template</Text>
+            </Flex>
+            <Text marginBottom="medium" color="secondary60">
+              Registers the Product Table Widget with Page Builder
+            </Text>
+            <Button
+              variant={widgetTemplateInstalled ? "secondary" : "primary"}
+              onClick={installWidgetTemplate}
+              isLoading={isInstalling}
+              disabled={widgetTemplateInstalled}
+            >
+              {widgetTemplateInstalled ? "Installed ✓" : "Install Template"}
+            </Button>
+          </Box>
 
-        <Box marginBottom="medium">
-          <Flex alignItems="center" marginBottom="small">
-            {scriptInstalled ? (
-              <CheckIcon color="success" size="large" />
-            ) : (
-              <ErrorIcon color="secondary40" size="large" />
-            )}
-            <H2 marginLeft="small">Step 2: Install Widget Script</H2>
-          </Flex>
-          <Text marginBottom="medium">
-            This injects the widget loader script into your storefront,
-            making the widgets functional on all pages.
-          </Text>
-          <Button
-            onClick={installWidgetScript}
-            isLoading={isInstalling}
-            disabled={scriptInstalled}
+          {/* Step 2 */}
+          <Box
+            style={{ flex: 1 }}
+            border="box"
+            borderRadius="normal"
+            padding="medium"
+            backgroundColor={scriptInstalled ? "success10" : "secondary10"}
           >
-            {scriptInstalled ? "Script Installed ✓" : "Install Widget Script"}
-          </Button>
-        </Box>
+            <Flex alignItems="center" marginBottom="small">
+              {scriptInstalled ? (
+                <CheckIcon color="success" size="large" />
+              ) : (
+                <Text bold style={{ fontSize: "1.25rem" }} color="secondary60">2</Text>
+              )}
+              <Text bold marginLeft="small">Install Widget Script</Text>
+            </Flex>
+            <Text marginBottom="medium" color="secondary60">
+              Injects widget loader script into storefront
+            </Text>
+            <Button
+              variant={scriptInstalled ? "secondary" : "primary"}
+              onClick={installWidgetScript}
+              isLoading={isInstalling}
+              disabled={scriptInstalled}
+            >
+              {scriptInstalled ? "Installed ✓" : "Install Script"}
+            </Button>
+          </Box>
+        </Flex>
 
-        <Box>
-          <Button
-            variant="primary"
-            onClick={installBoth}
-            isLoading={isInstalling}
-            disabled={widgetTemplateInstalled && scriptInstalled}
-          >
-            Install Both
-          </Button>
+        {/* Quick Install Both */}
+        <Box
+          marginTop="medium"
+          padding="medium"
+          border="box"
+          borderRadius="normal"
+          backgroundColor="primary10"
+        >
+          <Flex justifyContent="space-between" alignItems="center">
+            <Box>
+              <Text bold marginBottom="xSmall">Quick Install</Text>
+              <Text color="secondary60">Install both components at once</Text>
+            </Box>
+            <Button
+              variant="primary"
+              onClick={installBoth}
+              isLoading={isInstalling}
+              disabled={widgetTemplateInstalled && scriptInstalled}
+            >
+              {widgetTemplateInstalled && scriptInstalled ? "All Installed ✓" : "Install Both"}
+            </Button>
+          </Flex>
         </Box>
       </Panel>
 
@@ -393,92 +389,8 @@ export const SetupPage = () => {
               Clean Up All
             </Button>
 
-            <Button
-              variant="secondary"
-              onClick={loadDebugInfo}
-            >
-              Show What's Installed
-            </Button>
           </Flex>
 
-          <Message
-            type="warning"
-            messages={[{
-              text: "This will delete all Product Table Widget templates and scripts from BigCommerce. You'll need to reinstall them after cleanup."
-            }]}
-          />
-
-          {showDebug && debugInfo && (
-            <Box marginTop="medium" padding="medium" backgroundColor="secondary10">
-              <H2 marginBottom="medium">Installed Widgets Debug Info</H2>
-
-              <Text bold>Widget Templates ({debugInfo.templates?.length || 0}):</Text>
-              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
-                {JSON.stringify(debugInfo.templates, null, 2)}
-              </pre>
-
-              <Text bold marginTop="medium">Scripts ({debugInfo.scripts?.length || 0}):</Text>
-              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
-                {JSON.stringify(debugInfo.scripts, null, 2)}
-              </pre>
-
-              <Text bold marginTop="medium">Widget Placements ({debugInfo.placements?.length || 0}):</Text>
-              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
-                {JSON.stringify(debugInfo.placements, null, 2)}
-              </pre>
-
-              <Text bold marginTop="medium">Widgets ({debugInfo.widgets?.length || 0}):</Text>
-              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
-                {JSON.stringify(debugInfo.widgets, null, 2)}
-              </pre>
-            </Box>
-          )}
-        </Box>
-      </Panel>
-
-      {/* Troubleshooting */}
-      <Panel header="Troubleshooting">
-        <Box>
-          <Text bold marginBottom="xSmall">Getting "access token is required" error?</Text>
-          <ul>
-            <li><Text>This means the app needs to be reinstalled to refresh authentication</Text></li>
-            <li><Text>Go to BigCommerce Admin → Apps & Customizations → My Apps</Text></li>
-            <li><Text>Find this app and click "Uninstall"</Text></li>
-            <li><Text>Reinstall from the BigCommerce marketplace</Text></li>
-            <li><Text>Make sure to approve all permission requests during installation</Text></li>
-          </ul>
-
-          <Text bold marginTop="medium" marginBottom="xSmall">Widget not appearing in Page Builder?</Text>
-          <ul>
-            <li><Text>Wait 1-2 minutes after installation and refresh</Text></li>
-            <li><Text>Clear your browser cache</Text></li>
-            <li><Text>Try reinstalling the widget template</Text></li>
-            <li><Text>Check if your BigCommerce plan supports Widget Templates API</Text></li>
-          </ul>
-
-          <Text bold marginTop="medium" marginBottom="xSmall">Widget not working on storefront?</Text>
-          <ul>
-            <li><Text>Make sure the widget script is installed</Text></li>
-            <li><Text>Check browser console for errors</Text></li>
-            <li><Text>Verify the Widget ID is correct</Text></li>
-            <li><Text>Make sure the widget is marked as Active</Text></li>
-            <li><Text>Ensure the widget script URL is accessible</Text></li>
-          </ul>
-
-          <Text bold marginTop="medium" marginBottom="xSmall">Connection issues?</Text>
-          <ul>
-            <li><Text>Check the connection status on the main dashboard</Text></li>
-            <li><Text>Verify your BigCommerce store has the required scopes</Text></li>
-            <li><Text>Try refreshing the page and running setup again</Text></li>
-            <li><Text>If issues persist, reinstall the app completely</Text></li>
-          </ul>
-
-          <Text bold marginTop="medium" marginBottom="xSmall">Need to reinstall?</Text>
-          <Text>
-            You can run the installation steps again at any time.
-            It won't create duplicates - existing installations will be detected.
-            If you're having persistent issues, try uninstalling and reinstalling the entire app.
-          </Text>
         </Box>
       </Panel>
     </Box>

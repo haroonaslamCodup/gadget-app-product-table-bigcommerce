@@ -8,10 +8,12 @@ import {
   H2,
   Input,
   Panel,
-  Radio,
   Select,
-  Text,
   Textarea,
+  Small,
+  Message,
+  AlertsManager,
+  createAlertsManager,
 } from "@bigcommerce/big-design";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -22,6 +24,8 @@ import { useCollections } from "../../hooks/useProducts";
 import { ColumnManager } from "./ColumnManager";
 
 import type { Collection, WidgetFormData, WidgetInstance } from "../../types";
+
+const alertsManager = createAlertsManager();
 
 interface ProductTableFormProps {
   widgetId?: string;
@@ -38,7 +42,7 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     queryFn: () => api.bigcommerce.store.findFirst(),
   });
 
-  // Fetch collections for selector
+  // Fetch collections
   const { data: collectionsData } = useCollections();
 
   // Mutations
@@ -69,6 +73,9 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     notes: "",
   });
 
+  // Validation state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // Load initial data if editing
   useEffect(() => {
     if (initialData) {
@@ -97,8 +104,41 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     }
   }, [initialData]);
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.productTableName.trim()) {
+      newErrors.productTableName = "Product table name is required";
+    }
+
+    if (formData.columns.length === 0) {
+      newErrors.columns = "At least one column must be selected";
+    }
+
+    if (formData.productSource === "specific-collections" && formData.selectedCollections.length === 0) {
+      newErrors.selectedCollections = "Please select at least one collection";
+    }
+
+    const targetingOptions = [formData.targetRetailOnly, formData.targetWholesaleOnly, formData.targetLoggedInOnly];
+    if (!formData.targetAllCustomers && !targetingOptions.some(opt => opt)) {
+      newErrors.customerTargeting = "Please select at least one customer targeting option";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      alertsManager.add({
+        messages: [{ text: "Please fix the errors before submitting." }],
+        type: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
 
     try {
       const widgetData = {
@@ -111,307 +151,328 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
 
       if (isEdit && widgetId) {
         await updateProductTable.mutateAsync({ id: widgetId, config: widgetData });
+        alertsManager.add({
+          messages: [{ text: "Product table updated successfully!" }],
+          type: "success",
+          autoDismiss: true,
+        });
       } else {
         await createProductTable.mutateAsync(widgetData);
+        alertsManager.add({
+          messages: [{ text: "Product table created successfully!" }],
+          type: "success",
+          autoDismiss: true,
+        });
       }
 
-      navigate("/product-tables");
+      setTimeout(() => navigate("/product-tables"), 1000);
     } catch (error) {
-      console.error("Failed to save widget:", error);
-      alert("Failed to save widget");
+      alertsManager.add({
+        messages: [{ text: `Failed to save: ${(error as Error).message}` }],
+        type: "error",
+        autoDismiss: false,
+      });
     }
   };
 
   const collections: Collection[] = collectionsData || [];
 
   return (
-    <Form onSubmit={handleSubmit}>
-      <Box marginBottom="xLarge">
+    <>
+      <AlertsManager manager={alertsManager} />
+
+      <Box marginBottom="xxLarge">
         <H2>{isEdit ? "Edit Product Table" : "Create New Product Table"}</H2>
+        <Small color="secondary60">Configure your product table widget settings</Small>
       </Box>
 
-      {/* Basic Information */}
-      <Panel header="Basic Information" marginBottom="medium">
-        <FormGroup>
-          <Input
-            label="Product Table Name"
-            placeholder="e.g., Homepage Featured Products"
-            value={formData.productTableName}
-            onChange={(e) => setFormData({ ...formData, productTableName: e.target.value })}
-            required
-          />
-        </FormGroup>
+      <Form onSubmit={handleSubmit}>
+        {/* Basic Information Panel */}
+        <Panel header="Basic Information" marginBottom="medium">
+          <Flex flexDirection="row" flexGap="medium" flexWrap="wrap">
+            <Box style={{ flex: 1 }}>
+              <Input
+                label="Product Table Name"
+                description="Give your product table a descriptive name for easy identification"
+                placeholder="e.g., Homepage Featured Products"
+                value={formData.productTableName}
+                onChange={(e) => {
+                  setFormData({ ...formData, productTableName: e.target.value });
+                  if (errors.productTableName) setErrors({ ...errors, productTableName: "" });
+                }}
+                error={errors.productTableName}
+                required
+              />
+            </Box>
 
-        <FormGroup>
-          <Text bold marginBottom="xSmall">Placement Location</Text>
-          <Box>
-            <Box marginBottom="xSmall">
-              <Radio
-                label="Home Page"
-                checked={formData.placementLocation === "homepage"}
-                onChange={() => setFormData({ ...formData, placementLocation: "homepage" })}
+            <Box style={{ flex: 1 }}>
+              <Select
+                label="Placement Location"
+                description="Choose where this product table will be displayed on your store"
+                options={[
+                  { value: "homepage", content: "Home Page" },
+                  { value: "pdp", content: "Product Detail Page (PDP)" },
+                  { value: "category", content: "Category Page" },
+                  { value: "custom", content: "Custom Page" },
+                ]}
+                value={formData.placementLocation}
+                onOptionChange={(value) => setFormData({ ...formData, placementLocation: value as any })}
+                required
               />
             </Box>
-            <Box marginBottom="xSmall">
-              <Radio
-                label="Product Detail Page (PDP)"
-                checked={formData.placementLocation === "pdp"}
-                onChange={() => setFormData({ ...formData, placementLocation: "pdp" })}
-              />
-            </Box>
-            <Box marginBottom="xSmall">
-              <Radio
-                label="Category Page"
-                checked={formData.placementLocation === "category"}
-                onChange={() => setFormData({ ...formData, placementLocation: "category" })}
-              />
-            </Box>
-            <Box>
-              <Radio
-                label="Custom Page"
-                checked={formData.placementLocation === "custom"}
-                onChange={() => setFormData({ ...formData, placementLocation: "custom" })}
-              />
-            </Box>
-          </Box>
-        </FormGroup>
-      </Panel>
+          </Flex>
 
-      {/* Display Settings */}
-      <Panel header="Display Settings" marginBottom="medium">
-        <FormGroup>
-          <Text bold marginBottom="xSmall">Display Format</Text>
-          <Box>
-            <Box marginBottom="xSmall">
-              <Radio
-                label="Folded (Collapsed View)"
-                checked={formData.displayFormat === "folded"}
-                onChange={() => setFormData({ ...formData, displayFormat: "folded" })}
-              />
-            </Box>
-            <Box marginBottom="xSmall">
-              <Radio
-                label="Grouped by Variants"
-                checked={formData.displayFormat === "grouped-variants"}
-                onChange={() => setFormData({ ...formData, displayFormat: "grouped-variants" })}
-              />
-            </Box>
-            <Box marginBottom="xSmall">
-              <Radio
-                label="Grouped by Category"
-                checked={formData.displayFormat === "grouped-category"}
-                onChange={() => setFormData({ ...formData, displayFormat: "grouped-category" })}
-              />
-            </Box>
-            <Box>
-              <Radio
-                label="Grouped by Collection"
-                checked={formData.displayFormat === "grouped-collection"}
-                onChange={() => setFormData({ ...formData, displayFormat: "grouped-collection" })}
-              />
-            </Box>
-          </Box>
-        </FormGroup>
-
-        <FormGroup>
-          <Box marginBottom="xSmall">
-            <Text bold>Table Columns</Text>
-          </Box>
-          <ColumnManager
-            columns={formData.columns}
-            columnsOrder={formData.columnsOrder}
-            onChange={(columns, order) => setFormData({
-              ...formData,
-              columns,
-              columnsOrder: order
-            })}
-          />
-        </FormGroup>
-      </Panel>
-
-      {/* Product Source */}
-      <Panel header="Product Source" marginBottom="medium">
-        <FormGroup>
-          <Radio
-            label="All Collections"
-            checked={formData.productSource === "all-collections"}
-            onChange={() => setFormData({ ...formData, productSource: "all-collections" })}
-          />
-          <Radio
-            label="Specific Collections"
-            checked={formData.productSource === "specific-collections"}
-            onChange={() => setFormData({ ...formData, productSource: "specific-collections" })}
-          />
-          <Radio
-            label="Current Category Only"
-            checked={formData.productSource === "current-category"}
-            onChange={() => setFormData({ ...formData, productSource: "current-category" })}
-          />
-        </FormGroup>
-
-        {formData.productSource === "specific-collections" && (
           <FormGroup>
             <Select
-              label="Select Collections"
-              options={collections.map((c: Collection) => ({ value: c.id.toString(), content: c.name }))}
-              value={formData.selectedCollections[0] || ""}
-              onOptionChange={(value) => setFormData({
-                ...formData,
-                selectedCollections: value ? [value] : []
-              })}
-              placeholder="Choose collections..."
+              label="Product Source"
+              description="Select which products to display in the table"
+              options={[
+                { value: "all-collections", content: "All Collections" },
+                { value: "specific-collections", content: "Specific Collections" },
+                { value: "current-category", content: "Current Category Only" },
+              ]}
+              value={formData.productSource}
+              onOptionChange={(value) => {
+                setFormData({
+                  ...formData,
+                  productSource: value as any,
+                  selectedCollections: value !== "specific-collections" ? [] : formData.selectedCollections
+                });
+                if (errors.selectedCollections) setErrors({ ...errors, selectedCollections: "" });
+              }}
             />
           </FormGroup>
-        )}
-      </Panel>
 
-      {/* Customer Targeting */}
-      <Panel header="Customer Targeting" marginBottom="medium">
-        <FormGroup>
-          <Box>
-            <Box marginBottom="xSmall">
-              <Checkbox
-                label="Show to All Customers"
-                checked={formData.targetAllCustomers}
-                onChange={(e) => setFormData({ ...formData, targetAllCustomers: e.target.checked })}
+          {formData.productSource === "specific-collections" && (
+            <FormGroup>
+              <Select
+                label="Select Collections"
+                description="Choose which collections to display in the table"
+                options={collections.map((c: Collection) => ({ value: c.id.toString(), content: c.name }))}
+                value={formData.selectedCollections[0] || ""}
+                onOptionChange={(value) => {
+                  setFormData({ ...formData, selectedCollections: value ? [value] : [] });
+                  if (errors.selectedCollections) setErrors({ ...errors, selectedCollections: "" });
+                }}
+                error={errors.selectedCollections}
+                placeholder="Choose collections..."
+              />
+            </FormGroup>
+          )}
+        </Panel>
+
+        {/* Display Settings Panel */}
+        <Panel header="Display Settings" marginBottom="medium">
+          <FormGroup>
+            <Select
+              label="Display Format"
+              description="Choose how products are organized in the table"
+              options={[
+                { value: "folded", content: "Folded (Collapsed View)" },
+                { value: "grouped-variants", content: "Grouped by Variants" },
+                { value: "grouped-category", content: "Grouped by Category" },
+                { value: "grouped-collection", content: "Grouped by Collection" },
+              ]}
+              value={formData.displayFormat}
+              onOptionChange={(value) => setFormData({ ...formData, displayFormat: value as any })}
+            />
+          </FormGroup>
+
+          <FormGroup>
+            {errors.columns && (
+              <Message type="error" messages={[{ text: errors.columns }]} marginBottom="small" />
+            )}
+            <ColumnManager
+              columns={formData.columns}
+              columnsOrder={formData.columnsOrder}
+              onChange={(columns, order) => {
+                setFormData({ ...formData, columns, columnsOrder: order });
+                if (errors.columns) setErrors({ ...errors, columns: "" });
+              }}
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Checkbox
+              label="Allow View Switching (Grid ↔ Table)"
+              description="Let customers toggle between grid and table views"
+              checked={formData.allowViewSwitching}
+              onChange={(e) => setFormData({ ...formData, allowViewSwitching: e.target.checked })}
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Checkbox
+              label="Default to Table View"
+              description="Start in table view instead of grid view"
+              checked={formData.defaultToTableView}
+              onChange={(e) => setFormData({ ...formData, defaultToTableView: e.target.checked })}
+            />
+          </FormGroup>
+        </Panel>
+
+        {/* Sorting & Pagination Panel */}
+        <Panel header="Sorting & Pagination" marginBottom="medium">
+          <Flex flexDirection="row" flexGap="medium">
+            <Box style={{ flex: 1 }}>
+              <Select
+                label="Default Sort"
+                description="Initial sort order when table loads"
+                options={[
+                  { value: "name", content: "Name" },
+                  { value: "price-asc", content: "Price: Low to High" },
+                  { value: "price-desc", content: "Price: High to Low" },
+                  { value: "newest", content: "Newest First" },
+                  { value: "oldest", content: "Oldest First" },
+                  { value: "sku", content: "SKU" },
+                ]}
+                value={formData.defaultSort}
+                onOptionChange={(value) => setFormData({ ...formData, defaultSort: value as any })}
               />
             </Box>
-            <Box marginBottom="xSmall">
-              <Checkbox
-                label="Retail Customers Only"
-                checked={formData.targetRetailOnly}
-                onChange={(e) => setFormData({ ...formData, targetRetailOnly: e.target.checked })}
+
+            <Box style={{ flex: 1 }}>
+              <Select
+                label="Items Per Page"
+                description="Number of products to display per page"
+                options={[
+                  { value: "10", content: "10 items" },
+                  { value: "25", content: "25 items" },
+                  { value: "50", content: "50 items" },
+                  { value: "100", content: "100 items" },
+                ]}
+                value={formData.itemsPerPage.toString()}
+                onOptionChange={(value) => setFormData({ ...formData, itemsPerPage: parseInt(value || "25", 10) })}
               />
             </Box>
-            <Box marginBottom="xSmall">
-              <Checkbox
-                label="Wholesale Customers Only"
-                checked={formData.targetWholesaleOnly}
-                onChange={(e) => setFormData({ ...formData, targetWholesaleOnly: e.target.checked })}
-              />
-            </Box>
-            <Box>
-              <Checkbox
-                label="Logged-in Users Only"
-                checked={formData.targetLoggedInOnly}
-                onChange={(e) => setFormData({ ...formData, targetLoggedInOnly: e.target.checked })}
-              />
-            </Box>
-          </Box>
-        </FormGroup>
+          </Flex>
 
-        <FormGroup>
-          <Input
-            label="Customer Tags (comma-separated)"
-            placeholder="e.g., vip, wholesale, preferred"
-            value={formData.targetCustomerTags?.join(", ") || ""}
-            onChange={(e) => setFormData({
-              ...formData,
-              targetCustomerTags: e.target.value.split(",").map(t => t.trim()).filter(Boolean)
-            })}
-          />
-        </FormGroup>
-      </Panel>
+          <FormGroup>
+            <Checkbox
+              label="Enable Customer Sorting"
+              description="Allow customers to re-sort the table by different columns"
+              checked={formData.enableCustomerSorting}
+              onChange={(e) => setFormData({ ...formData, enableCustomerSorting: e.target.checked })}
+            />
+          </FormGroup>
+        </Panel>
 
-      {/* View Options */}
-      <Panel header="View Options" marginBottom="medium">
-        <FormGroup>
-          <Checkbox
-            label="Allow View Switching (Grid ↔ Table)"
-            checked={formData.allowViewSwitching}
-            onChange={(e) => setFormData({ ...formData, allowViewSwitching: e.target.checked })}
-          />
-        </FormGroup>
+        {/* Customer Targeting Panel */}
+        <Panel header="Customer Targeting" marginBottom="medium">
+          {errors.customerTargeting && (
+            <Message type="error" messages={[{ text: errors.customerTargeting }]} marginBottom="medium" />
+          )}
 
-        <FormGroup>
-          <Checkbox
-            label="Default to Table View"
-            checked={formData.defaultToTableView}
-            onChange={(e) => setFormData({ ...formData, defaultToTableView: e.target.checked })}
-          />
-        </FormGroup>
-      </Panel>
+          <FormGroup>
+            <Checkbox
+              label="Show to All Customers"
+              description="Display to everyone including guests"
+              checked={formData.targetAllCustomers}
+              onChange={(e) => {
+                setFormData({ ...formData, targetAllCustomers: e.target.checked });
+                if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
+              }}
+            />
+          </FormGroup>
 
-      {/* Sorting & Pagination */}
-      <Panel header="Sorting & Pagination" marginBottom="medium">
-        <FormGroup>
-          <Select
-            label="Default Sort"
-            options={[
-              { value: "name", content: "Name" },
-              { value: "price-asc", content: "Price: Low to High" },
-              { value: "price-desc", content: "Price: High to Low" },
-              { value: "newest", content: "Newest First" },
-              { value: "oldest", content: "Oldest First" },
-              { value: "sku", content: "SKU" },
-            ]}
-            value={formData.defaultSort || "name"}
-            onOptionChange={(value) => setFormData({ ...formData, defaultSort: value as any })}
-          />
-        </FormGroup>
+          <FormGroup>
+            <Checkbox
+              label="Retail Customers Only"
+              description="Show only to retail customer group"
+              checked={formData.targetRetailOnly}
+              disabled={formData.targetAllCustomers}
+              onChange={(e) => {
+                setFormData({ ...formData, targetRetailOnly: e.target.checked });
+                if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
+              }}
+            />
+          </FormGroup>
 
-        <FormGroup>
-          <Select
-            label="Items Per Page"
-            options={[
-              { value: "10", content: "10" },
-              { value: "25", content: "25" },
-              { value: "50", content: "50" },
-              { value: "100", content: "100" },
-            ]}
-            value={(formData.itemsPerPage || 25).toString()}
-            onOptionChange={(value) => setFormData({ ...formData, itemsPerPage: value ? parseInt(value, 10) : 25 })}
-          />
-        </FormGroup>
+          <FormGroup>
+            <Checkbox
+              label="Wholesale Customers Only"
+              description="Show only to wholesale customer group"
+              checked={formData.targetWholesaleOnly}
+              disabled={formData.targetAllCustomers}
+              onChange={(e) => {
+                setFormData({ ...formData, targetWholesaleOnly: e.target.checked });
+                if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
+              }}
+            />
+          </FormGroup>
 
-        <FormGroup>
-          <Checkbox
-            label="Enable Customer Sorting"
-            checked={formData.enableCustomerSorting}
-            onChange={(e) => setFormData({ ...formData, enableCustomerSorting: e.target.checked })}
-          />
-        </FormGroup>
-      </Panel>
+          <FormGroup>
+            <Checkbox
+              label="Logged-in Users Only"
+              description="Require users to be logged in to see this table"
+              checked={formData.targetLoggedInOnly}
+              disabled={formData.targetAllCustomers}
+              onChange={(e) => {
+                setFormData({ ...formData, targetLoggedInOnly: e.target.checked });
+                if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
+              }}
+            />
+          </FormGroup>
 
-      {/* Status & Notes */}
-      <Panel header="Status & Notes" marginBottom="medium">
-        <FormGroup>
-          <Checkbox
-            label="Product Table Active"
-            checked={formData.isActive}
-            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-          />
-        </FormGroup>
+          <FormGroup>
+            <Input
+              label="Customer Tags (comma-separated)"
+              description="Optionally target customers with specific tags"
+              placeholder="e.g., vip, wholesale, preferred"
+              value={formData.targetCustomerTags?.join(", ") || ""}
+              onChange={(e) => setFormData({
+                ...formData,
+                targetCustomerTags: e.target.value.split(",").map(t => t.trim()).filter(Boolean)
+              })}
+            />
+          </FormGroup>
+        </Panel>
 
-        <FormGroup>
-          <Textarea
-            label="Notes"
-            placeholder="Add any notes about this widget configuration..."
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            rows={4}
-          />
-        </FormGroup>
-      </Panel>
+        {/* Status & Notes Panel */}
+        <Panel header="Status & Notes" marginBottom="medium">
+          <FormGroup>
+            <Checkbox
+              label="Product Table Active"
+              description="Deactivate to hide this table without deleting the configuration"
+              checked={formData.isActive}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            />
+          </FormGroup>
 
-      {/* Actions */}
-      <Flex justifyContent="flex-end" marginTop="large">
-        <Button
-          variant="subtle"
-          onClick={() => navigate("/product-tables")}
-          type="button"
-          marginRight="small"
-        >
-          Cancel
-        </Button>
-        <Button
-          variant="primary"
-          type="submit"
-          isLoading={createProductTable.isPending || updateProductTable.isPending}
-        >
-          {isEdit ? "Update Product Table" : "Create Product Table"}
-        </Button>
-      </Flex>
-    </Form>
+          <FormGroup>
+            <Textarea
+              label="Notes"
+              description="Internal notes about this configuration (not visible to customers)"
+              placeholder="Add any notes about this widget configuration..."
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={4}
+            />
+          </FormGroup>
+        </Panel>
+
+        {/* Actions */}
+        <Box marginTop="xxLarge">
+          <Flex justifyContent="flex-end">
+            <Button
+              variant="subtle"
+              onClick={() => navigate("/product-tables")}
+              type="button"
+              marginRight="medium"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+              isLoading={createProductTable.isPending || updateProductTable.isPending}
+              disabled={!formData.productTableName.trim()}
+            >
+              {isEdit ? "Update Product Table" : "Create Product Table"}
+            </Button>
+          </Flex>
+        </Box>
+      </Form>
+    </>
   );
 };

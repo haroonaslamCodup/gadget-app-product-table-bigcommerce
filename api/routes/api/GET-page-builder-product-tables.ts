@@ -11,8 +11,6 @@ export default async function route({ request, reply, api }: RouteContext) {
     const params = request.query as Record<string, string>;
     const storeHash = params.storeHash;
 
-    console.log('[GET /api/page-builder-product-tables] Fetching product tables for store:', storeHash);
-
     // Fetch all active product tables
     let productTables;
 
@@ -52,8 +50,6 @@ export default async function route({ request, reply, api }: RouteContext) {
       });
     }
 
-    console.log('[GET /api/page-builder-product-tables] Found product tables:', productTables.length);
-
     // Format for BigCommerce Page Builder dropdown
     // Page Builder expects: { label, value } format
     const options = productTables.map((productTable: any) => {
@@ -75,7 +71,6 @@ export default async function route({ request, reply, api }: RouteContext) {
       .send(options);
 
   } catch (error: any) {
-    console.error('[GET /api/page-builder-product-tables] Error:', error);
     return reply.code(500).send([
       {
         label: 'Error loading product tables',

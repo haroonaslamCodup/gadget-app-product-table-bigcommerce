@@ -32,7 +32,6 @@ export default async function route({ reply }: RouteContext) {
       .header("X-Widget-Version", WIDGET_VERSION)
       .send(widgetCode);
   } catch (error) {
-    console.error("Failed to load widget bundle:", error);
     reply
       .code(500)
       .type("application/javascript")
