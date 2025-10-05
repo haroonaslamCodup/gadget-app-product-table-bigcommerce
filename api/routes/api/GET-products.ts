@@ -36,7 +36,7 @@ export default async function route({ request, reply, logger, connections, api }
       limit: limit.toString(),
       page: page.toString(),
       include: "variants,images,custom_fields",
-      // Removed is_visible filter - let's fetch all products first to debug
+      is_visible: "true", // Only fetch visible products
     });
 
     // Add category filter
@@ -124,29 +124,61 @@ export default async function route({ request, reply, logger, connections, api }
       logger.info(`BigCommerce returned ${productsArray.length} products (array response)`);
 
       // For array responses, we need to make a count query to get total
-      // Use the same filters but with limit=0 to get just the count
+      // Use the same filters but with limit=250 and page=1 to get max results and check total
       const countParams = new URLSearchParams(bcParams);
-      countParams.set("limit", "1");
+      countParams.set("limit", "250");
       countParams.set("page", "1");
 
       try {
         const countResponse = await bigcommerceConnection.v3.get<any>(`/catalog/products?${countParams.toString()}`) as any;
+
+        let totalCount = productsArray.length;
+
+        // Check if countResponse has pagination metadata
         if (countResponse?.meta?.pagination) {
+          totalCount = countResponse.meta.pagination.total;
           paginationMeta = {
-            ...countResponse.meta.pagination,
+            total: totalCount,
             count: productsArray.length,
             per_page: limit,
             current_page: page,
+            total_pages: Math.ceil(totalCount / limit),
+            links: countResponse.meta.pagination.links || {},
           };
-          logger.info(`Got total count from separate query:`, paginationMeta);
+          logger.info(`Got total count from separate query: ${totalCount}, total_pages: ${paginationMeta.total_pages}`);
+        } else if (Array.isArray(countResponse)) {
+          // If response is array, count it
+          totalCount = countResponse.length;
+          paginationMeta = {
+            total: totalCount,
+            count: productsArray.length,
+            per_page: limit,
+            current_page: page,
+            total_pages: Math.ceil(totalCount / limit),
+          };
+          logger.info(`Counted products from array response: ${totalCount}, total_pages: ${paginationMeta.total_pages}`);
         }
       } catch (e) {
         logger.warn(`Failed to get product count: ${(e as Error).message}`);
+        // Fallback: estimate based on current results
+        paginationMeta = {
+          total: productsArray.length >= limit ? productsArray.length * 2 : productsArray.length,
+          count: productsArray.length,
+          per_page: limit,
+          current_page: page,
+          total_pages: productsArray.length >= limit ? page + 1 : page,
+        };
       }
     } else if (response.data && Array.isArray(response.data)) {
       // Full response with data and meta
       productsArray = response.data;
       paginationMeta = response.meta?.pagination;
+
+      // Ensure total_pages is calculated if missing
+      if (paginationMeta && !paginationMeta.total_pages && paginationMeta.total) {
+        paginationMeta.total_pages = Math.ceil(paginationMeta.total / limit);
+      }
+
       logger.info(`BigCommerce returned ${productsArray.length} products with pagination meta:`, paginationMeta);
     } else {
       logger.error(`Unexpected BigCommerce response format:`, response);
@@ -161,7 +193,7 @@ export default async function route({ request, reply, logger, connections, api }
         count: productsArray.length,
         per_page: limit,
         current_page: page,
-        total_pages: 1, // Unknown without proper total
+        total_pages: Math.ceil(productsArray.length / limit) || 1,
       }
     };
 

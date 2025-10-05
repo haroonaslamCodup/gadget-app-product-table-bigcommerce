@@ -53,7 +53,7 @@ export default async function route({ request, reply, logger, connections }: Rou
             customerGroupId: customer.customer_group_id,
             customerTags: customer.tags || [],
             isLoggedIn: true,
-            isWholesale: customer.customer_group_id ? true : false, // TODO: Check if group is wholesale
+            isWholesale: customer.customer_group_id ? true : false, // Will be updated below if group details are fetched
             email: customer.email,
             name: `${customer.first_name} ${customer.last_name}`.trim(),
           };

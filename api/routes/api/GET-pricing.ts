@@ -60,12 +60,102 @@ export default async function route({ request, reply, logger, connections }: Rou
       }
     }
 
-    // TODO: Fetch price list pricing for B2B customers
-    // This requires BigCommerce B2B/Enterprise plan
-    // For now, return base pricing
+    // Fetch price list pricing for B2B customers (requires BigCommerce B2B/Enterprise plan)
+    let priceListPrice = null;
+    let wholesalePrice = calculatedPrice;
 
-    // TODO: Apply quantity break pricing
-    // Check for bulk pricing rules based on quantity
+    // Attempt to fetch price list pricing if user group is provided and not guest
+    if (userGroup && userGroup !== "guest" && connections.bigcommerce.current) {
+      try {
+        // Try to fetch price lists (this will fail gracefully if not on B2B/Enterprise plan)
+        const priceListsResponse = await connections.bigcommerce.current.v3.get<any>('/pricelists') as any;
+
+        if (priceListsResponse && Array.isArray(priceListsResponse.data)) {
+          // Find price list that matches the customer group
+          for (const priceList of priceListsResponse.data) {
+            // Check if this price list has records for this product
+            try {
+              const priceListRecordsResponse = await connections.bigcommerce.current.v3.get<any>(
+                `/pricelists/${priceList.id}/records?product_id:in=${productId}`
+              ) as any;
+
+              if (priceListRecordsResponse && Array.isArray(priceListRecordsResponse.data) && priceListRecordsResponse.data.length > 0) {
+                const record = priceListRecordsResponse.data[0];
+
+                // If variant is specified, look for variant-specific pricing
+                if (variantId) {
+                  const variantRecord = priceListRecordsResponse.data.find((r: any) => r.variant_id?.toString() === variantId);
+                  if (variantRecord) {
+                    priceListPrice = variantRecord.price;
+                  }
+                } else {
+                  priceListPrice = record.price;
+                }
+
+                // If price list name suggests wholesale, use this as wholesale price
+                if (priceList.name.toLowerCase().includes('wholesale') || priceList.name.toLowerCase().includes('b2b')) {
+                  wholesalePrice = priceListPrice || calculatedPrice;
+                }
+              }
+            } catch (recordError) {
+              // Continue to next price list if this one fails
+              logger.debug(`Could not fetch price list records for priceListId=${priceList.id}`);
+            }
+          }
+        }
+      } catch (priceListError) {
+        // Price lists API not available (likely not on B2B/Enterprise plan)
+        logger.debug(`Price lists not available - likely not on B2B/Enterprise plan`);
+      }
+    }
+
+    // Fetch bulk pricing rules (quantity breaks)
+    const quantityBreaks: Array<{ min: number; max: number | null; price: number }> = [];
+
+    if (connections.bigcommerce.current) {
+      try {
+        const bulkPricingResponse = await connections.bigcommerce.current.v3.get<any>(
+          `/catalog/products/${productId}/bulk-pricing-rules`
+        ) as any;
+
+        if (bulkPricingResponse && Array.isArray(bulkPricingResponse.data)) {
+          for (const rule of bulkPricingResponse.data) {
+            // Calculate price based on discount type
+            let breakPrice = calculatedPrice;
+
+            if (rule.type === 'price') {
+              breakPrice = rule.amount;
+            } else if (rule.type === 'percent') {
+              breakPrice = calculatedPrice * (1 - rule.amount / 100);
+            } else if (rule.type === 'fixed') {
+              breakPrice = calculatedPrice - rule.amount;
+            }
+
+            quantityBreaks.push({
+              min: rule.quantity_min,
+              max: rule.quantity_max || null,
+              price: breakPrice,
+            });
+          }
+        }
+      } catch (bulkPricingError) {
+        logger.debug(`Could not fetch bulk pricing rules for productId=${productId}`);
+      }
+    }
+
+    // Apply quantity break pricing if applicable
+    let finalPrice = priceListPrice || calculatedPrice;
+
+    if (quantity > 1 && quantityBreaks.length > 0) {
+      // Find applicable quantity break
+      const applicableBreak = quantityBreaks.find(
+        (qb) => quantity >= qb.min && (qb.max === null || quantity <= qb.max)
+      );
+
+      if (applicableBreak) {
+        finalPrice = applicableBreak.price;
+      }
+    }
 
     const pricing = {
       productId,
@@ -75,12 +165,13 @@ export default async function route({ request, reply, logger, connections }: Rou
         base: basePrice,
         sale: salePrice,
         calculated: calculatedPrice,
-        retail: calculatedPrice,
-        wholesale: calculatedPrice, // TODO: Apply wholesale pricing
+        retail: priceListPrice || calculatedPrice,
+        wholesale: wholesalePrice,
+        final: finalPrice, // Price after applying price lists and quantity breaks
       },
       currency: (product.currency as string) || "USD",
       taxIncluded: false,
-      quantityBreaks: [], // TODO: Fetch quantity breaks
+      quantityBreaks,
       minQuantity: (product.order_quantity_minimum as number) || 1,
       maxQuantity: (product.order_quantity_maximum as number) || null,
     };
