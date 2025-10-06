@@ -81,6 +81,10 @@ export interface Product {
   sale_price?: number;
   description?: string;
   weight?: number;
+  custom_url?: {
+    url: string;
+    is_customized: boolean;
+  };
   images?: ProductImage[];
   variants?: ProductVariant[];
   categories?: ProductCategory[];

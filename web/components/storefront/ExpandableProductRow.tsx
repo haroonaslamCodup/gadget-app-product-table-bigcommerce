@@ -33,7 +33,7 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
           <Td $isIndented={isVariant}>
             {isVariant && <VariantIndent>↳</VariantIndent>}
             <div>
-              <ProductLink href={`/products/${product.id}`}>
+              <ProductLink href={product.custom_url?.url || `/products/${product.id}`}>
                 {isVariant ? (
                   <>
                     {item.option_values && item.option_values.length > 0 ? (
@@ -126,7 +126,7 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
                     {isExpanded ? "▼" : "▶"}
                   </ExpandIcon>
                 )}
-                <ProductLink href={`/products/${product.id}`}>
+                <ProductLink href={product.custom_url?.url || `/products/${product.id}`}>
                   {product.name}
                   {hasMultipleVariants && <VariantCount> ({product.variants.length} variants)</VariantCount>}
                 </ProductLink>

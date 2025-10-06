@@ -65,7 +65,7 @@ export const ProductTableRow = ({
             />
           )}
           {column === "sku" && <span>{product.sku}</span>}
-          {column === "name" && <ProductLink href={`/products/${product.id}`}>{product.name}</ProductLink>}
+          {column === "name" && <ProductLink href={product.custom_url?.url || `/products/${product.id}`}>{product.name}</ProductLink>}
           {column === "price" && (
             <ProductPrice
               basePrice={product.calculated_price ?? product.price}

@@ -30,7 +30,7 @@ export default async function route({ request, reply, logger, connections, api }
       limit: limit.toString(),
       page: page.toString(),
       include: "variants,images,custom_fields",
-      include_fields: "id,name,sku,price,calculated_price,sale_price,inventory_level,inventory_tracking,availability,images,variants,categories,brand,description,weight",
+      include_fields: "id,name,sku,price,calculated_price,sale_price,inventory_level,inventory_tracking,availability,images,variants,categories,brand,description,weight,custom_url",
       is_visible: "true",
     });
 
