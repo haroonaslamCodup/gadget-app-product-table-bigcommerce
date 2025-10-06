@@ -196,7 +196,6 @@ export const SetupPage = () => {
     await cleanupWidgetScripts();
   };
 
-
   return (
     <Box>
       {alertMessage && (
@@ -360,6 +359,8 @@ export const SetupPage = () => {
 
         </Box>
       </Panel>
+
+
     </Box>
   );
 };

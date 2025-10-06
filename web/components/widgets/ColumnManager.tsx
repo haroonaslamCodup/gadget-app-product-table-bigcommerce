@@ -1,4 +1,5 @@
-import { Box, Checkbox, Text, Flex } from "@bigcommerce/big-design";
+import { Box, Checkbox, Flex, Text, Input } from "@bigcommerce/big-design";
+import { DeleteIcon } from "@bigcommerce/big-design-icons";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 
@@ -20,6 +21,7 @@ const AVAILABLE_COLUMNS = [
 export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManagerProps) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const handleToggleColumn = useCallback((columnId: string, checked: boolean) => {
     if (checked) {
@@ -74,91 +76,111 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
   const enabledItems = columnsOrder
     .map((id) => AVAILABLE_COLUMNS.find((c) => c.id === id))
     .filter((col): col is typeof AVAILABLE_COLUMNS[0] => col !== undefined);
+  
+  // Filter available columns based on search term
+  const filteredAvailableColumns = AVAILABLE_COLUMNS.filter(column => 
+    column.label.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    column.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Box>
-      {/* Section 1: Enable/Disable Columns */}
-      <Text bold marginBottom="small">
-        Select Columns to Display
-      </Text>
-      <Box
-        border="box"
-        borderRadius="normal"
-        padding="medium"
-        backgroundColor="secondary10"
-        marginBottom="large"
-      >
-        <Flex flexDirection="row" flexWrap="wrap" flexGap="medium">
-          {AVAILABLE_COLUMNS.map((column) => (
-            <Box key={column.id} style={{ minWidth: "200px" }}>
-              <Checkbox
-                checked={columns.includes(column.id)}
-                onChange={(e) => handleToggleColumn(column.id, e.target.checked)}
-                label={column.label}
-              />
-            </Box>
-          ))}
-        </Flex>
-      </Box>
-
-      {/* Section 2: Reorder Enabled Columns via HTML5 Drag & Drop */}
-      {enabledItems.length > 0 ? (
-        <Box>
-          <Text bold marginBottom="small">
-            Column Display Order
-          </Text>
-          <Text color="secondary60" marginBottom="small">
-            Drag rows to reorder how columns appear in your table.
-          </Text>
-          <DragTable>
-            <thead>
-              <tr>
-                <DragTableHeader style={{ width: "80px" }}>Order</DragTableHeader>
-                <DragTableHeader>Column Name</DragTableHeader>
-                <DragTableHeader>Field ID</DragTableHeader>
-              </tr>
-            </thead>
-            <tbody>
-              {enabledItems.map((item, index) => (
-                <DragTableRow
-                  key={item.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index)}
-                  onDragEnd={handleDragEnd}
-                  $isDragging={draggedIndex === index}
-                  $isDragOver={dragOverIndex === index && draggedIndex !== index}
-                >
-                  <DragTableCell>
-                    <DragHandle>⋮⋮</DragHandle>
-                    <Text bold>#{index + 1}</Text>
-                  </DragTableCell>
-                  <DragTableCell>
-                    <Text bold>{item.label}</Text>
-                  </DragTableCell>
-                  <DragTableCell>
-                    <Text color="secondary60">{item.id}</Text>
-                  </DragTableCell>
-                </DragTableRow>
-              ))}
-            </tbody>
-          </DragTable>
-        </Box>
-      ) : (
+      {/* Available columns section with search - full width */}
+      <Box marginBottom="large">
+        <Text bold marginBottom="small">
+          Available Columns
+        </Text>
         <Box
           border="box"
           borderRadius="normal"
-          padding="large"
+          padding="medium"
           backgroundColor="secondary10"
-          style={{ textAlign: "center" }}
         >
-          <Text color="secondary60">
-            No columns enabled. Check at least one column above to configure display order.
+          <Box marginBottom="medium">
+            <Input
+              placeholder="Search columns..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              width="100%"
+            />
+          </Box>
+          <Text color="secondary60" marginBottom="small">
+            {columns.length} of {AVAILABLE_COLUMNS.length} columns selected
           </Text>
+          <Flex flexDirection="row" flexWrap="wrap" flexGap="medium">
+            {filteredAvailableColumns.map((column) => (
+              <Box key={column.id} style={{ minWidth: "240px", flex: "1 1 auto", maxWidth: "300px" }}>
+                <Checkbox
+                  checked={columns.includes(column.id)}
+                  onChange={(e) => handleToggleColumn(column.id, e.target.checked)}
+                  label={column.label}
+                />
+              </Box>
+            ))}
+          </Flex>
         </Box>
-      )}
+      </Box>
+      
+      {/* Full-width drag table section */}
+      <Box>
+        <Text bold marginBottom="small">
+          Column Display Order
+        </Text>
+        <Text color="secondary60" marginBottom="small">
+          Drag rows to reorder how columns appear in your table.
+        </Text>
+        <DragTable>
+          <thead>
+            <tr>
+              <DragTableHeader style={{ width: "80px" }}>Order #</DragTableHeader>
+              <DragTableHeader>Column Name</DragTableHeader>
+              <DragTableHeader style={{ width: "100px" }}>Actions</DragTableHeader>
+            </tr>
+          </thead>
+          <tbody>
+            {enabledItems.map((item, index) => (
+              <DragTableRow
+                key={item.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                $isDragging={draggedIndex === index}
+                $isDragOver={dragOverIndex === index && draggedIndex !== index}
+              >
+                <DragTableCell>
+                  <DragHandle>⋮⋮</DragHandle>
+                  <Text bold>#{index + 1}</Text>
+                </DragTableCell>
+                <DragTableCell>
+                  <Text bold>{item.label}</Text>
+                </DragTableCell>
+                <DragTableCell>
+                  <button 
+                    onClick={() => handleToggleColumn(item.id, false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--bc-color-error, #ff4d4f)',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px'
+                    }}
+                    aria-label={`Remove ${item.label} column`}
+                  >
+                    <DeleteIcon />
+                  </button>
+                </DragTableCell>
+              </DragTableRow>
+            ))}
+          </tbody>
+        </DragTable>
+      </Box>
     </Box>
   );
 };
@@ -166,47 +188,47 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
 const DragTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--bc-color-grey30, #d9d9d9);
   border-radius: 4px;
-  background: white;
+  background: var(--bc-color-white, white);
 `;
 
 const DragTableHeader = styled.th`
   padding: 12px;
   text-align: left;
-  border-bottom: 2px solid #d9d9d9;
-  background: #f5f5f5;
+  border-bottom: 2px solid var(--bc-color-grey30, #d9d9d9);
+  background: var(--bc-color-grey10, #f5f5f5);
   font-weight: 600;
   font-size: 14px;
-  color: #313440;
+  color: var(--bc-color-text-primary, #313440);
 `;
 
 const DragTableRow = styled.tr<{ $isDragging?: boolean; $isDragOver?: boolean }>`
   cursor: move;
   transition: all 0.2s ease;
-  background: ${props => props.$isDragging ? "#e6f7ff" : "white"};
+  background: ${props => props.$isDragging ? "var(--bc-color-primary10, #e6f7ff)" : "var(--bc-color-white, white)"};
   opacity: ${props => props.$isDragging ? 0.5 : 1};
-  border-top: ${props => props.$isDragOver ? "2px solid #1890ff" : "none"};
+  border-top: ${props => props.$isDragOver ? "2px solid var(--bc-color-primary, #1890ff)" : "none"};
 
   &:hover {
-    background: #fafafa;
+    background: var(--bc-color-grey05, #fafafa);
   }
 
   &:not(:last-child) {
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--bc-color-grey20, #f0f0f0);
   }
 `;
 
 const DragTableCell = styled.td`
   padding: 12px;
   font-size: 14px;
-  color: #313440;
+  color: var(--bc-color-text-primary, #313440);
 `;
 
 const DragHandle = styled.span`
   display: inline-block;
   margin-right: 8px;
-  color: #999;
+  color: var(--bc-color-text-muted, #999);
   font-size: 18px;
   vertical-align: middle;
   cursor: grab;

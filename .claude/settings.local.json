@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(cat:*)",
+      "Bash(npm run type-check:*)",
+      "WebFetch(domain:docs.gadget.dev)",
+      "WebSearch",
+      "Bash(npm run build:*)",
+      "WebFetch(domain:developer.bigcommerce.com)",
+      "Bash(npm run build:widget:*)",
+      "Bash(perl:*)",
+      "WebFetch(domain:design.bigcommerce.com)",
+      "Bash(yarn build)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx vite:*)",
+      "Bash(yarn build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
