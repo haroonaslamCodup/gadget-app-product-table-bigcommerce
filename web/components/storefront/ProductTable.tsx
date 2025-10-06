@@ -1,14 +1,14 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { useProducts } from "../../hooks/useProducts";
 import { useCustomerContext } from "../../hooks/useCustomer";
+import { useProducts } from "../../hooks/useProducts";
+import { ExpandableProductRow } from "./ExpandableProductRow";
+import { GroupedView } from "./GroupedView";
+import { Pagination } from "./Pagination";
 import { ProductTableHeader } from "./ProductTableHeader";
 import { ProductTableRow } from "./ProductTableRow";
-import { ExpandableProductRow } from "./ExpandableProductRow";
-import { Pagination } from "./Pagination";
 import { SearchFilter } from "./SearchFilter";
 import { ViewSwitcher } from "./ViewSwitcher";
-import { GroupedView } from "./GroupedView";
 
 export interface WidgetConfig {
   productTableId: string;
@@ -63,8 +63,8 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
     // Default to targeting all customers if no specific targeting is set
     const targetAllCustomers = config.targetAllCustomers !== false;
     const hasSpecificTargeting = config.targetLoggedInOnly || config.targetRetailOnly ||
-                                  config.targetWholesaleOnly ||
-                                  (config.targetCustomerTags && config.targetCustomerTags.length > 0);
+      config.targetWholesaleOnly ||
+      (config.targetCustomerTags && config.targetCustomerTags.length > 0);
 
     if (targetAllCustomers && !hasSpecificTargeting) {
       return true;
@@ -277,14 +277,7 @@ const Table = styled.table`
 `;
 
 const GridContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
 
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
-  }
 `;
 
 const LoadingContainer = styled.div`

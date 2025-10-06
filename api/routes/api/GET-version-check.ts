@@ -29,8 +29,8 @@ export default async function route({ request, reply, api, logger }: RouteContex
       breakingChanges: boolean;
       requiredUpdate: boolean;
     }> = {
-      "1.0.40": {
-        version: "1.0.40",
+      "1.0.41": {
+        version: "1.0.41",
         releaseDate: "2025-01-15",
         changelog: [
           "Added product table dropdown selector in Page Builder",
@@ -57,7 +57,7 @@ export default async function route({ request, reply, api, logger }: RouteContex
     };
 
     // Get latest version metadata
-    const LATEST_VERSION = "1.0.40";
+    const LATEST_VERSION = "1.0.41";
     const latestMetadata = VERSION_METADATA[LATEST_VERSION];
 
     // Compare versions

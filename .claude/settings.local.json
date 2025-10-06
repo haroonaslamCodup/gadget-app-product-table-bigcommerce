@@ -14,7 +14,8 @@
       "Bash(yarn build)",
       "mcp__ide__getDiagnostics",
       "Bash(npx vite:*)",
-      "Bash(yarn build:*)"
+      "Bash(yarn build:*)",
+      "Bash(yarn install)"
     ],
     "deny": [],
     "ask": []

@@ -245,19 +245,17 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
             />
           </FormGroup>
 
-          <FormGroup>
-            {errors.columns && (
-              <Message type="error" messages={[{ text: errors.columns }]} marginBottom="small" />
-            )}
-            <ColumnManager
-              columns={formData.columns}
-              columnsOrder={formData.columnsOrder}
-              onChange={(columns, order) => {
-                setFormData({ ...formData, columns, columnsOrder: order });
-                if (errors.columns) setErrors({ ...errors, columns: "" });
-              }}
-            />
-          </FormGroup>
+          {errors.columns && (
+            <Message type="error" messages={[{ text: errors.columns }]} marginBottom="small" />
+          )}
+          <ColumnManager
+            columns={formData.columns}
+            columnsOrder={formData.columnsOrder}
+            onChange={(columns, order) => {
+              setFormData({ ...formData, columns, columnsOrder: order });
+              if (errors.columns) setErrors({ ...errors, columns: "" });
+            }}
+          />
 
           <FormGroup>
             <Checkbox
