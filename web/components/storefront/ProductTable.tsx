@@ -4,6 +4,7 @@ import { useProducts } from "../../hooks/useProducts";
 import { useCustomerContext } from "../../hooks/useCustomer";
 import { ProductTableHeader } from "./ProductTableHeader";
 import { ProductTableRow } from "./ProductTableRow";
+import { ExpandableProductRow } from "./ExpandableProductRow";
 import { Pagination } from "./Pagination";
 import { SearchFilter } from "./SearchFilter";
 import { ViewSwitcher } from "./ViewSwitcher";
@@ -197,7 +198,7 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
             />
             <tbody>
               {products.map((product: any) => (
-                <ProductTableRow
+                <ExpandableProductRow
                   key={product.id}
                   product={product}
                   columns={columns}

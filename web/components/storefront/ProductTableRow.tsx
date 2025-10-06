@@ -30,8 +30,8 @@ export const ProductTableRow = ({
           {columns.includes("sku") && <ProductSKU>SKU: {product.sku}</ProductSKU>}
           {columns.includes("price") && (
             <ProductPrice
-              basePrice={product.price}
-              salePrice={product.sale_price}
+              basePrice={product.calculated_price ?? product.price}
+              salePrice={product.calculated_sale_price ?? product.sale_price}
             />
           )}
           {columns.includes("stock") && (
@@ -68,8 +68,8 @@ export const ProductTableRow = ({
           {column === "name" && <ProductLink href={`/products/${product.id}`}>{product.name}</ProductLink>}
           {column === "price" && (
             <ProductPrice
-              basePrice={product.price}
-              salePrice={product.sale_price}
+              basePrice={product.calculated_price ?? product.price}
+              salePrice={product.calculated_sale_price ?? product.sale_price}
             />
           )}
           {column === "stock" && (

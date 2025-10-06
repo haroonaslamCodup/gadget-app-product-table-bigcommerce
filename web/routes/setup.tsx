@@ -1,4 +1,4 @@
-import { Box, Button, Flex, H1, H2, Link, Message, Panel, Text } from "@bigcommerce/big-design";
+import { Box, Button, Flex, H1, Message, Panel, Text } from "@bigcommerce/big-design";
 import { CheckIcon } from "@bigcommerce/big-design-icons";
 import { useState } from "react";
 
@@ -208,7 +208,7 @@ export const SetupPage = () => {
         />
       )}
 
-      <H1>Widget Setup</H1>
+      <H1 marginBottom="none">Widget Setup</H1>
       <Text marginBottom="large">
         Before you can use widgets in Page Builder, you need to complete this one-time setup.
       </Text>
@@ -316,39 +316,6 @@ export const SetupPage = () => {
         </Panel>
       )}
 
-      {/* How to Use */}
-      {(widgetTemplateInstalled || scriptInstalled) && (
-        <Panel header="Next Steps" marginBottom="large">
-          <Box marginBottom="medium">
-            <H2>How to Use Your Widgets</H2>
-            <ol>
-              <li>
-                <Text bold>Create a Widget</Text>
-                <Text>Go to <Link href="/widgets">Widgets</Link> and create a new product table widget.</Text>
-              </li>
-              <li>
-                <Text bold>Copy the Widget ID</Text>
-                <Text>After creating the widget, copy its Widget ID (e.g., widget-1759330856855-hqlbdgy)</Text>
-              </li>
-              <li>
-                <Text bold>Add to Page Builder</Text>
-                <Text>
-                  Go to your BigCommerce admin → Storefront → Themes → Customize →
-                  Open any page → Add Widget → Select "Product Table Widget"
-                </Text>
-              </li>
-              <li>
-                <Text bold>Paste Widget ID</Text>
-                <Text>In the widget settings, paste the Widget ID you copied</Text>
-              </li>
-              <li>
-                <Text bold>Publish</Text>
-                <Text>Click Publish and your widget will appear on the page!</Text>
-              </li>
-            </ol>
-          </Box>
-        </Panel>
-      )}
 
       {/* Cleanup Section */}
       <Panel header="Cleanup Old Widgets" marginBottom="large">

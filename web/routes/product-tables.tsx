@@ -98,8 +98,8 @@ export const ProductTablesPage = () => {
 
   return (
     <Box>
-      <Flex justifyContent="space-between" alignItems="center" marginBottom="medium">
-        <H1>Product Tables</H1>
+      <Flex justifyContent="space-between" alignItems="center" marginBottom="medium" >
+        <H1 marginBottom="none">Product Tables</H1>
         <Button
           variant="secondary"
           iconLeft={<AddIcon />}
@@ -108,26 +108,6 @@ export const ProductTablesPage = () => {
           Create New Product Table
         </Button>
       </Flex>
-
-      {productTableData.length > 0 && (
-        <Panel marginBottom="medium">
-          <Box>
-            <Text bold marginBottom="xSmall">📋 How to Add Product Tables to Your Storefront</Text>
-            <Text marginBottom="xSmall">
-              1. Create a product table using the "Create New Product Table" button above
-            </Text>
-            <Text marginBottom="xSmall">
-              2. Configure columns, targeting, and display settings
-            </Text>
-            <Text marginBottom="xSmall">
-              3. Click the code icon ({"<>"}) to get the embed code or copy the Product Table ID
-            </Text>
-            <Text>
-              4. In BigCommerce Page Builder, add a "Product Table Widget" and paste the Product Table ID
-            </Text>
-          </Box>
-        </Panel>
-      )}
 
       {productTableData.length === 0 ? (
         <Panel>

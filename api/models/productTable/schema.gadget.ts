@@ -38,12 +38,7 @@ export const schema: GadgetModel = {
       type: "enum",
       acceptMultipleSelections: false,
       acceptUnlistedOptions: false,
-      options: [
-        "folded",
-        "grouped-variants",
-        "grouped-category",
-        "grouped-collection",
-      ],
+      options: ["folded", "grouped-variants", "grouped-category"],
       storageKey: "displayFormat",
     },
     enableCustomerSorting: {
@@ -80,11 +75,7 @@ export const schema: GadgetModel = {
       type: "enum",
       acceptMultipleSelections: false,
       acceptUnlistedOptions: false,
-      options: [
-        "all-collections",
-        "specific-collections",
-        "current-category",
-      ],
+      options: ["all-products", "current-category"],
       storageKey: "productSource",
     },
     productTableId: {
@@ -96,10 +87,6 @@ export const schema: GadgetModel = {
     selectedCategories: {
       type: "json",
       storageKey: "selectedCategories",
-    },
-    selectedCollections: {
-      type: "json",
-      storageKey: "selectedCollections",
     },
     store: {
       type: "belongsTo",

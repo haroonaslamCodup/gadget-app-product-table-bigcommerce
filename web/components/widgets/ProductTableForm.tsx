@@ -1,29 +1,28 @@
 import {
+  AlertsManager,
   Box,
   Button,
   Checkbox,
+  createAlertsManager,
   Flex,
   Form,
   FormGroup,
   H2,
   Input,
+  Message,
   Panel,
   Select,
-  Textarea,
   Small,
-  Message,
-  AlertsManager,
-  createAlertsManager,
+  Textarea,
 } from "@bigcommerce/big-design";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "../../api";
 import { useCreateProductTable, useUpdateProductTable } from "../../hooks/useProductTables";
-import { useCollections } from "../../hooks/useProducts";
 import { ColumnManager } from "./ColumnManager";
 
-import type { Collection, WidgetFormData, WidgetInstance } from "../../types";
+import type { WidgetFormData, WidgetInstance } from "../../types";
 
 const alertsManager = createAlertsManager();
 
@@ -42,9 +41,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     queryFn: () => api.bigcommerce.store.findFirst(),
   });
 
-  // Fetch collections
-  const { data: collectionsData } = useCollections();
-
   // Mutations
   const createProductTable = useCreateProductTable();
   const updateProductTable = useUpdateProductTable();
@@ -56,8 +52,7 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     displayFormat: "folded",
     columns: ["image", "sku", "name", "price", "stock", "addToCart"],
     columnsOrder: ["image", "sku", "name", "price", "stock", "addToCart"],
-    productSource: "all-collections",
-    selectedCollections: [],
+    productSource: "all-products",
     selectedCategories: [],
     targetAllCustomers: true,
     targetRetailOnly: false,
@@ -85,8 +80,7 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
         displayFormat: initialData.displayFormat || "folded",
         columns: initialData.columns || ["image", "sku", "name", "price", "stock", "addToCart"],
         columnsOrder: initialData.columnsOrder || ["image", "sku", "name", "price", "stock", "addToCart"],
-        productSource: initialData.productSource || "all-collections",
-        selectedCollections: initialData.selectedCollections || [],
+        productSource: initialData.productSource || "all-products",
         selectedCategories: initialData.selectedCategories || [],
         targetAllCustomers: initialData.targetAllCustomers ?? true,
         targetRetailOnly: initialData.targetRetailOnly ?? false,
@@ -113,10 +107,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
 
     if (formData.columns.length === 0) {
       newErrors.columns = "At least one column must be selected";
-    }
-
-    if (formData.productSource === "specific-collections" && formData.selectedCollections.length === 0) {
-      newErrors.selectedCollections = "Please select at least one collection";
     }
 
     const targetingOptions = [formData.targetRetailOnly, formData.targetWholesaleOnly, formData.targetLoggedInOnly];
@@ -175,8 +165,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     }
   };
 
-  const collections: Collection[] = collectionsData || [];
-
   return (
     <>
       <AlertsManager manager={alertsManager} />
@@ -227,8 +215,7 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
               label="Product Source"
               description="Select which products to display in the table"
               options={[
-                { value: "all-collections", content: "All Collections" },
-                { value: "specific-collections", content: "Specific Collections" },
+                { value: "all-products", content: "All Products" },
                 { value: "current-category", content: "Current Category Only" },
               ]}
               value={formData.productSource}
@@ -236,29 +223,10 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
                 setFormData({
                   ...formData,
                   productSource: value as any,
-                  selectedCollections: value !== "specific-collections" ? [] : formData.selectedCollections
                 });
-                if (errors.selectedCollections) setErrors({ ...errors, selectedCollections: "" });
               }}
             />
           </FormGroup>
-
-          {formData.productSource === "specific-collections" && (
-            <FormGroup>
-              <Select
-                label="Select Collections"
-                description="Choose which collections to display in the table"
-                options={collections.map((c: Collection) => ({ value: c.id.toString(), content: c.name }))}
-                value={formData.selectedCollections[0] || ""}
-                onOptionChange={(value) => {
-                  setFormData({ ...formData, selectedCollections: value ? [value] : [] });
-                  if (errors.selectedCollections) setErrors({ ...errors, selectedCollections: "" });
-                }}
-                error={errors.selectedCollections}
-                placeholder="Choose collections..."
-              />
-            </FormGroup>
-          )}
         </Panel>
 
         {/* Display Settings Panel */}
@@ -271,7 +239,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
                 { value: "folded", content: "Folded (Collapsed View)" },
                 { value: "grouped-variants", content: "Grouped by Variants" },
                 { value: "grouped-category", content: "Grouped by Category" },
-                { value: "grouped-collection", content: "Grouped by Collection" },
               ]}
               value={formData.displayFormat}
               onOptionChange={(value) => setFormData({ ...formData, displayFormat: value as any })}
@@ -339,7 +306,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
                   { value: "10", content: "10 items" },
                   { value: "25", content: "25 items" },
                   { value: "50", content: "50 items" },
-                  { value: "100", content: "100 items" },
                 ]}
                 value={formData.itemsPerPage.toString()}
                 onOptionChange={(value) => setFormData({ ...formData, itemsPerPage: parseInt(value || "25", 10) })}

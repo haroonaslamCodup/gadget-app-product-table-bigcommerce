@@ -14,7 +14,7 @@ const getApiBaseUrl = () => {
  * Hook to fetch products with filters
  */
 export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsResponse, Error> => {
-  const { category, collection, userGroup, search, page = 1, limit = 25, sort = "name" } = filters;
+  const { category, userGroup, search, page = 1, limit = 25, sort = "name" } = filters;
 
   return useQuery<ProductsResponse, Error>({
     queryKey: ["products", filters],
@@ -22,7 +22,6 @@ export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsRes
       const params = new URLSearchParams();
 
       if (category) params.set("category", category);
-      if (collection) params.set("collection", collection);
       if (userGroup) params.set("userGroup", userGroup);
       if (search) params.set("search", search);
       params.set("page", page.toString());
@@ -39,6 +38,8 @@ export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsRes
       }
 
       const data = await response.json();
+
+      // Keep variants nested within products for hierarchical display
       return data;
     },
     enabled: true, // Always enabled - fetch all products if no filters
@@ -47,7 +48,7 @@ export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsRes
   });
 };
 
-import type { PricingInfo, Collection, ApiResponse } from "../types";
+import type { PricingInfo, ApiResponse } from "../types";
 
 /**
  * Hook to fetch pricing for a specific product
@@ -76,30 +77,6 @@ export const useProductPricing = (productId?: string, variantId?: string, userGr
     },
     enabled: !!productId,
     staleTime: 1000 * 60 * 2, // 2 minutes - pricing may change more frequently
-  });
-};
-
-/**
- * Hook to fetch available collections
- */
-export const useCollections = (search?: string): UseQueryResult<Collection[], Error> => {
-  return useQuery<Collection[], Error>({
-    queryKey: ["collections", search],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-
-      if (search) params.set("search", search);
-
-      const baseUrl = getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/api/collections?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch collections");
-      }
-
-      return response.json();
-    },
-    staleTime: 1000 * 60 * 10, // 10 minutes - collections don't change often
   });
 };
 

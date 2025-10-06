@@ -6,11 +6,10 @@
 export interface WidgetConfig {
   productTableId: string;
   productTableName?: string;
-  displayFormat?: "folded" | "grouped-variants" | "grouped-category" | "grouped-collection";
+  displayFormat?: "folded" | "grouped-variants" | "grouped-category";
   columns?: string[];
   columnsOrder?: string[];
-  productSource?: "all-collections" | "specific-collections" | "current-category";
-  selectedCollections?: string[];
+  productSource?: "all-products" | "current-category";
   selectedCategories?: string[];
   targetAllCustomers?: boolean;
   targetRetailOnly?: boolean;
@@ -91,7 +90,6 @@ export interface Product {
   availability?: "available" | "disabled" | "preorder";
   base_variant_id?: number;
   product_id?: number;
-  collections?: Array<{ id: string; name: string }>;
 }
 
 export interface ProductsResponse {
@@ -115,16 +113,6 @@ export interface CustomerContext {
   isWholesale: boolean;
   email?: string;
   name?: string;
-}
-
-// Collection Types
-export interface Collection {
-  id: string;
-  name: string;
-  description?: string;
-  productCount?: number;
-  imageUrl?: string;
-  parentId?: string;
 }
 
 // Pricing Types
@@ -167,7 +155,6 @@ export interface PageContext {
 // Filter Types
 export interface ProductFilters {
   category?: string;
-  collection?: string;
   userGroup?: string;
   search?: string;
   page?: number;
@@ -207,11 +194,10 @@ export interface ColumnDefinition {
 export interface WidgetFormData {
   productTableName: string;
   placementLocation: "homepage" | "pdp" | "category" | "custom";
-  displayFormat: "folded" | "grouped-variants" | "grouped-category" | "grouped-collection";
+  displayFormat: "folded" | "grouped-variants" | "grouped-category";
   columns: string[];
   columnsOrder: string[];
-  productSource: "all-collections" | "specific-collections" | "current-category";
-  selectedCollections: string[];
+  productSource: "all-products" | "current-category";
   selectedCategories: string[];
   targetAllCustomers: boolean;
   targetRetailOnly: boolean;

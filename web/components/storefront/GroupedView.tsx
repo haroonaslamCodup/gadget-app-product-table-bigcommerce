@@ -42,9 +42,9 @@ export const GroupedView = ({
         groups[baseId].push(product);
       });
     } else if (displayFormat === "grouped-variants") {
-      // Group variants by product
+      // Group products (variants already nested within products)
       products.forEach((product) => {
-        const productId = product.product_id || product.id;
+        const productId = product.id;
         if (!groups[productId]) {
           groups[productId] = [];
         }
