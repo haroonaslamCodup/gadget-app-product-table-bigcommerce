@@ -42,12 +42,16 @@ export default async function route({ request, reply, logger, connections }: Rou
     // If no customer ID (guest), fetch default guest customer group
     if (!customerId && connections.bigcommerce.current) {
       try {
-        // Fetch store settings to get default customer group for guests
-        const settingsResponse = await connections.bigcommerce.current.v2.get<any>('/settings') as any;
+        // Fetch store information to get default customer group for guests
+        const storeInfoResponse = await connections.bigcommerce.current.v2.get<any>('/store') as any;
 
-        if (settingsResponse && settingsResponse.default_customer_group_id) {
-          const defaultGroupId = settingsResponse.default_customer_group_id;
+        logger.info(`Store info response: ${JSON.stringify(storeInfoResponse)}`);
+
+        if (storeInfoResponse && storeInfoResponse.default_customer_group_id) {
+          const defaultGroupId = storeInfoResponse.default_customer_group_id;
           customerContext.customerGroupId = defaultGroupId;
+
+          logger.info(`Found default guest group ID: ${defaultGroupId}`);
 
           // Fetch group name
           try {
@@ -57,15 +61,18 @@ export default async function route({ request, reply, logger, connections }: Rou
               const groupName = (groupResponse.name as string).toLowerCase();
               customerContext.customerGroup = groupName;
               customerContext.isWholesale = groupName.includes("wholesale") || groupName.includes("b2b");
+              logger.info(`Guest customer group set to: ${groupName} (ID: ${defaultGroupId})`);
             }
           } catch (groupError: unknown) {
             const err = groupError as Error;
             logger.warn(`Failed to fetch guest group details: customerGroupId=${defaultGroupId}, error=${err.message}`);
           }
+        } else {
+          logger.info(`No default customer group found in store info`);
         }
       } catch (settingsError: unknown) {
         const err = settingsError as Error;
-        logger.debug(`Could not fetch store settings for guest group: ${err.message}`);
+        logger.warn(`Could not fetch store info for guest group: ${err.message}`);
       }
     }
 
