@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { useCustomerContext } from "../../hooks/useCustomer";
+import { useCustomerContext, useBigCommerceContext } from "../../hooks/useCustomer";
 import { useProducts } from "../../hooks/useProducts";
 import { ExpandableProductRow } from "./ExpandableProductRow";
 import { GroupedView } from "./GroupedView";
@@ -29,7 +29,11 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
     config.defaultToTableView !== false ? "table" : "grid" // Default to table view
   );
 
-  const { data: customerContext } = useCustomerContext();
+  // Get customer ID from BigCommerce storefront context
+  const { data: bcContext } = useBigCommerceContext();
+
+  // Fetch customer context (group, tags, etc.) using customer ID
+  const { data: customerContext } = useCustomerContext(bcContext?.customerId || undefined);
 
   // Check widget visibility based on customer targeting
   const isVisible = useMemo(() => {
