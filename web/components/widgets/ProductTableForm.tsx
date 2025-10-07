@@ -22,13 +22,13 @@ import { api } from "../../api";
 import { useCreateProductTable, useUpdateProductTable } from "../../hooks/useProductTables";
 import { ColumnManager } from "./ColumnManager";
 
-import type { WidgetFormData, WidgetInstance } from "../../types";
+import type { ProductTableFormData, ProductTableInstance } from "../../types";
 
 const alertsManager = createAlertsManager();
 
 interface ProductTableFormProps {
   widgetId?: string;
-  initialData?: WidgetInstance;
+  initialData?: ProductTableInstance;
 }
 
 export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProps) => {
@@ -46,7 +46,7 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
   const updateProductTable = useUpdateProductTable();
 
   // Form state
-  const [formData, setFormData] = useState<WidgetFormData>({
+  const [formData, setFormData] = useState<ProductTableFormData>({
     productTableName: "",
     placementLocation: "homepage",
     displayFormat: "folded",
@@ -139,6 +139,8 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
           _link: store?.id
         },
         version: "1.0.0",
+        // Generate productTableId for new tables
+        ...(!isEdit && { productTableId: crypto.randomUUID() }),
       };
 
       if (isEdit && widgetId) {

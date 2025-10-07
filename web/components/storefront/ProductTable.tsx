@@ -10,31 +10,10 @@ import { ProductTableRow } from "./ProductTableRow";
 import { SearchFilter } from "./SearchFilter";
 import { ViewSwitcher } from "./ViewSwitcher";
 
-export interface WidgetConfig {
-  productTableId: string;
-  productTableName?: string;
-  displayFormat?: "folded" | "grouped-variants" | "grouped-category" | "grouped-collection";
-  columns?: string[];
-  columnsOrder?: string[];
-  productSource?: "all-collections" | "specific-collections" | "current-category";
-  selectedCollections?: string[];
-  selectedCategories?: string[];
-  targetAllCustomers?: boolean;
-  targetRetailOnly?: boolean;
-  targetWholesaleOnly?: boolean;
-  targetLoggedInOnly?: boolean;
-  targetCustomerTags?: string[];
-  allowViewSwitching?: boolean;
-  defaultToTableView?: boolean;
-  enableCustomerSorting?: boolean;
-  defaultSort?: "name" | "price-asc" | "price-desc" | "newest" | "oldest" | "sku";
-  itemsPerPage?: number;
-  isActive?: boolean;
-  discountType?: "default" | "sale" | "wholesale" | "retail" | "custom";
-}
+import type { ProductTableConfig } from "../../types";
 
 interface ProductTableProps {
-  config: WidgetConfig;
+  config: ProductTableConfig;
   pageContext?: {
     categoryId?: string;
     productId?: string;
@@ -103,9 +82,7 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
       search: searchQuery,
     };
 
-    if (config.productSource === "specific-collections" && config.selectedCollections) {
-      filters.collection = config.selectedCollections.join(",");
-    } else if (config.productSource === "current-category" && pageContext?.categoryId) {
+    if (config.productSource === "current-category" && pageContext?.categoryId) {
       filters.category = pageContext.categoryId;
     }
 

@@ -89,9 +89,12 @@ export const schema: GadgetModel = {
     productTableId: {
       type: "string",
       validations: { unique: true },
-      storageKey: "widgetId",
+      storageKey: "productTableId",
     },
-    productTableName: { type: "string", storageKey: "widgetName" },
+    productTableName: {
+      type: "string",
+      storageKey: "productTableName",
+    },
     selectedCategories: {
       type: "json",
       storageKey: "selectedCategories",

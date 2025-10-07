@@ -19,7 +19,7 @@ export const IndexPage = () => {
     refetchInterval: 30000, // Check every 30 seconds
   });
 
-  const { data: widgets } = useProductTables(store?.id);
+  const { data: productTable } = useProductTables(store?.id);
 
   return (
     <>
@@ -86,7 +86,7 @@ export const IndexPage = () => {
           </Box>
 
           <Box>
-            <Text bold >Features:</Text>
+            <Text bold marginBottom="none" marginTop="small" >Features:</Text>
             <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
               <li>Customer group-specific pricing (retail, wholesale, etc.)</li>
               <li>Customizable columns and display formats</li>
@@ -113,12 +113,12 @@ export const IndexPage = () => {
             </Flex>
 
             <Flex flexGap={"large"} >
-              <Text bold>Widgets Created:</Text>
-              <Text>{widgets?.length || 0}</Text>
+              <Text marginRight="small" bold>Product Table Created:</Text>
+              <Text>{productTable?.length || 0}</Text>
             </Flex>
 
             <Flex flexGap={"medium"} >
-              <Text bold>App Version:</Text>
+              <Text marginRight="small" bold>App Version:</Text>
               <Text>1.0.41</Text>
             </Flex>
           </Flex>

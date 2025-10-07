@@ -1,6 +1,6 @@
 import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import { api } from "../api";
-import type { WidgetFormData, WidgetInstance } from "../types";
+import type { ProductTableFormData, ProductTableInstance } from "../types";
 
 // Helper function to safely convert dates to ISO strings
 const safeToISOString = (date: any): string => {
@@ -10,8 +10,8 @@ const safeToISOString = (date: any): string => {
 /**
  * Hook to fetch all product tables for a specific store
  */
-export const useProductTables = (storeId?: string): UseQueryResult<WidgetInstance[], Error> => {
-  return useQuery<WidgetInstance[], Error>({
+export const useProductTables = (storeId?: string): UseQueryResult<ProductTableInstance[], Error> => {
+  return useQuery<ProductTableInstance[], Error>({
     queryKey: ["productTables", storeId],
     queryFn: async () => {
       const result = await api.productTable.findMany({
@@ -19,9 +19,9 @@ export const useProductTables = (storeId?: string): UseQueryResult<WidgetInstanc
         sort: { createdAt: "Descending" }
       });
 
-      // Transform GadgetRecord to WidgetInstance
+      // Transform GadgetRecord to ProductTableInstance
       return result.map((record: any) => {
-        const productTable: WidgetInstance = {
+        const productTable: ProductTableInstance = {
           id: record.id,
           createdAt: safeToISOString(record.createdAt),
           updatedAt: safeToISOString(record.updatedAt),
@@ -50,6 +50,7 @@ export const useProductTables = (storeId?: string): UseQueryResult<WidgetInstanc
           lastChecked: record.lastChecked || undefined,
           pageBuilderId: record.pageBuilderId || undefined,
           pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+          discountType: record.discountType as any,
         };
         return productTable;
       });
@@ -61,8 +62,8 @@ export const useProductTables = (storeId?: string): UseQueryResult<WidgetInstanc
 /**
  * Hook to fetch a single product table by ID
  */
-export const useProductTable = (productTableId?: string): UseQueryResult<WidgetInstance | null, Error> => {
-  return useQuery<WidgetInstance | null, Error>({
+export const useProductTable = (productTableId?: string): UseQueryResult<ProductTableInstance | null, Error> => {
+  return useQuery<ProductTableInstance | null, Error>({
     queryKey: ["productTable", productTableId],
     queryFn: async () => {
       if (!productTableId) return null;
@@ -74,7 +75,7 @@ export const useProductTable = (productTableId?: string): UseQueryResult<WidgetI
       if (!result) return null;
 
       const record = result as any;
-      const productTable: WidgetInstance = {
+      const productTable: ProductTableInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
@@ -103,6 +104,7 @@ export const useProductTable = (productTableId?: string): UseQueryResult<WidgetI
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+        discountType: record.discountType as any,
       };
       return productTable;
     },
@@ -113,8 +115,8 @@ export const useProductTable = (productTableId?: string): UseQueryResult<WidgetI
 /**
  * Hook to fetch a product table by database ID
  */
-export const useProductTableById = (id?: string): UseQueryResult<WidgetInstance | null, Error> => {
-  return useQuery<WidgetInstance | null, Error>({
+export const useProductTableById = (id?: string): UseQueryResult<ProductTableInstance | null, Error> => {
+  return useQuery<ProductTableInstance | null, Error>({
     queryKey: ["productTable", "id", id],
     queryFn: async () => {
       if (!id) return null;
@@ -125,7 +127,7 @@ export const useProductTableById = (id?: string): UseQueryResult<WidgetInstance 
 
       const record = result as any;
 
-      const productTable: WidgetInstance = {
+      const productTable: ProductTableInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
@@ -154,6 +156,7 @@ export const useProductTableById = (id?: string): UseQueryResult<WidgetInstance 
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+        discountType: record.discountType as any,
       };
       return productTable;
     },
@@ -164,15 +167,15 @@ export const useProductTableById = (id?: string): UseQueryResult<WidgetInstance 
 /**
  * Hook to create a new product table
  */
-export const useCreateProductTable = (): UseMutationResult<WidgetInstance, Error, Partial<WidgetFormData>> => {
+export const useCreateProductTable = (): UseMutationResult<ProductTableInstance, Error, Partial<ProductTableFormData>> => {
   const queryClient = useQueryClient();
 
-  return useMutation<WidgetInstance, Error, Partial<WidgetFormData>>({
-    mutationFn: async (config: Partial<WidgetFormData>) => {
+  return useMutation<ProductTableInstance, Error, Partial<ProductTableFormData>>({
+    mutationFn: async (config: Partial<ProductTableFormData>) => {
       const result = await api.productTable.create(config);
 
       const record = result as any;
-      const productTable: WidgetInstance = {
+      const productTable: ProductTableInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
@@ -201,10 +204,11 @@ export const useCreateProductTable = (): UseMutationResult<WidgetInstance, Error
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+        discountType: record.discountType as any,
       };
       return productTable;
     },
-    onSuccess: (data: WidgetInstance) => {
+    onSuccess: (data: ProductTableInstance) => {
       // Invalidate and refetch product tables list
       queryClient.invalidateQueries({ queryKey: ["productTables"] });
       // Set the newly created product table in cache
@@ -219,18 +223,18 @@ export const useCreateProductTable = (): UseMutationResult<WidgetInstance, Error
  * Hook to update an existing product table
  */
 export const useUpdateProductTable = (): UseMutationResult<
-  WidgetInstance,
+  ProductTableInstance,
   Error,
-  { id: string; config: Partial<WidgetFormData> }
+  { id: string; config: Partial<ProductTableFormData> }
 > => {
   const queryClient = useQueryClient();
 
-  return useMutation<WidgetInstance, Error, { id: string; config: Partial<WidgetFormData> }>({
-    mutationFn: async ({ id, config }: { id: string; config: Partial<WidgetFormData> }) => {
+  return useMutation<ProductTableInstance, Error, { id: string; config: Partial<ProductTableFormData> }>({
+    mutationFn: async ({ id, config }: { id: string; config: Partial<ProductTableFormData> }) => {
       const result = await api.productTable.update(id, config);
 
       const record = result as any;
-      const productTable: WidgetInstance = {
+      const productTable: ProductTableInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
@@ -259,6 +263,7 @@ export const useUpdateProductTable = (): UseMutationResult<
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+        discountType: record.discountType as any,
       };
       return productTable;
     },
@@ -267,10 +272,10 @@ export const useUpdateProductTable = (): UseMutationResult<
       await queryClient.cancelQueries({ queryKey: ["productTable", id] });
 
       // Snapshot previous value
-      const previousProductTable = queryClient.getQueryData<WidgetInstance>(["productTable", id]);
+      const previousProductTable = queryClient.getQueryData<ProductTableInstance>(["productTable", id]);
 
       // Optimistically update to the new value
-      queryClient.setQueryData<WidgetInstance>(["productTable", id], (old) => ({
+      queryClient.setQueryData<ProductTableInstance>(["productTable", id], (old) => ({
         ...old!,
         ...config,
       }));
@@ -280,7 +285,7 @@ export const useUpdateProductTable = (): UseMutationResult<
     },
     onError: (_err, variables, context) => {
       // Rollback on error
-      const ctx = context as { previousProductTable?: WidgetInstance } | undefined;
+      const ctx = context as { previousProductTable?: ProductTableInstance } | undefined;
       if (ctx?.previousProductTable) {
         queryClient.setQueryData(["productTable", variables.id], ctx.previousProductTable);
       }
@@ -320,11 +325,11 @@ export const useDeleteProductTable = (): UseMutationResult<void, Error, string> 
 /**
  * Hook to duplicate a product table
  */
-export const useDuplicateProductTable = (storeId?: string): UseMutationResult<WidgetInstance, Error, WidgetInstance> => {
+export const useDuplicateProductTable = (storeId?: string): UseMutationResult<ProductTableInstance, Error, ProductTableInstance> => {
   const queryClient = useQueryClient();
 
-  return useMutation<WidgetInstance, Error, WidgetInstance>({
-    mutationFn: async (sourceProductTable: WidgetInstance) => {
+  return useMutation<ProductTableInstance, Error, ProductTableInstance>({
+    mutationFn: async (sourceProductTable: ProductTableInstance) => {
       // Extract only the writable fields (exclude id, createdAt, updatedAt, productTableId)
       const newConfig: any = {
         productTableName: `${sourceProductTable.productTableName} (Copy)`,
@@ -347,6 +352,7 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Wi
         isActive: sourceProductTable.isActive,
         notes: sourceProductTable.notes,
         version: sourceProductTable.version,
+        discountType: sourceProductTable.discountType,
         store: {
           _link: storeId
         }
@@ -355,7 +361,7 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Wi
       const result = await api.productTable.create(newConfig);
 
       const record = result as any;
-      const productTable: WidgetInstance = {
+      const productTable: ProductTableInstance = {
         id: record.id,
         createdAt: safeToISOString(record.createdAt),
         updatedAt: safeToISOString(record.updatedAt),
@@ -384,6 +390,7 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Wi
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+        discountType: record.discountType as any,
       };
       return productTable;
     },

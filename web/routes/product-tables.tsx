@@ -17,12 +17,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "../api";
 import { useDeleteProductTable, useDuplicateProductTable, useProductTables } from "../hooks/useProductTables";
-import type { WidgetInstance } from "../types";
+import type { ProductTableInstance } from "../types";
 
 export const ProductTablesPage = () => {
   const navigate = useNavigate();
   const [embedModalOpen, setEmbedModalOpen] = useState(false);
-  const [selectedProductTable, setSelectedProductTable] = useState<WidgetInstance | null>(null);
+  const [selectedProductTable, setSelectedProductTable] = useState<ProductTableInstance | null>(null);
 
   // Fetch current store
   const { data: store, isLoading: storeLoading } = useQuery({
@@ -47,7 +47,7 @@ export const ProductTablesPage = () => {
     }
   };
 
-  const handleDuplicate = async (productTable: WidgetInstance) => {
+  const handleDuplicate = async (productTable: ProductTableInstance) => {
     try {
       const newProductTable = await duplicateProductTable.mutateAsync(productTable);
       if (newProductTable) {
@@ -58,7 +58,7 @@ export const ProductTablesPage = () => {
     }
   };
 
-  const handleShowEmbed = (productTable: WidgetInstance) => {
+  const handleShowEmbed = (productTable: ProductTableInstance) => {
     setSelectedProductTable(productTable);
     setEmbedModalOpen(true);
   };
@@ -94,7 +94,7 @@ export const ProductTablesPage = () => {
   }
 
   // Ensure product tables is always an array
-  const productTableData: WidgetInstance[] = Array.isArray(productTables) ? productTables : [];
+  const productTableData: ProductTableInstance[] = Array.isArray(productTables) ? productTables : [];
 
   return (
     <Box>
@@ -128,7 +128,7 @@ export const ProductTablesPage = () => {
       ) : (
         <Panel>
           <Box>
-            {productTableData.map((productTable: WidgetInstance) => (
+            {productTableData.map((productTable: ProductTableInstance) => (
               <Flex
                 key={productTable.id}
                 justifyContent="space-between"

@@ -2,8 +2,8 @@
  * Type definitions for Product Table Widget
  */
 
-// Widget Configuration Types
-export interface WidgetConfig {
+// Product Table Configuration Types
+export interface ProductTableConfig {
   productTableId: string;
   productTableName?: string;
   displayFormat?: "folded" | "grouped-variants" | "grouped-category";
@@ -32,8 +32,8 @@ export interface WidgetConfig {
   discountType?: "default" | "sale" | "wholesale" | "retail" | "custom";
 }
 
-// Widget Instance from API
-export interface WidgetInstance extends WidgetConfig {
+// Product Table Instance from API
+export interface ProductTableInstance extends ProductTableConfig {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -42,6 +42,12 @@ export interface WidgetInstance extends WidgetConfig {
     storeHash?: string;
   };
 }
+
+// Legacy type aliases for backward compatibility (will be removed in future)
+/** @deprecated Use ProductTableConfig instead */
+export type WidgetConfig = ProductTableConfig;
+/** @deprecated Use ProductTableInstance instead */
+export type WidgetInstance = ProductTableInstance;
 
 // Product Types
 export interface ProductImage {
@@ -136,19 +142,25 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-export interface WidgetListResponse {
+export interface ProductTableListResponse {
   success: boolean;
-  widgets: Array<{
+  productTables: Array<{
     label: string;
     value: string;
     caption: string;
   }>;
 }
 
-export interface WidgetDetailResponse {
+export interface ProductTableDetailResponse {
   success: boolean;
-  widget: WidgetConfig;
+  productTable: ProductTableConfig;
 }
+
+// Legacy type aliases for backward compatibility (will be removed in future)
+/** @deprecated Use ProductTableListResponse instead */
+export type WidgetListResponse = ProductTableListResponse;
+/** @deprecated Use ProductTableDetailResponse instead */
+export type WidgetDetailResponse = ProductTableDetailResponse;
 
 // Page Context Types
 export interface PageContext {
@@ -196,7 +208,7 @@ export interface ColumnDefinition {
 }
 
 // Form Types
-export interface WidgetFormData {
+export interface ProductTableFormData {
   productTableName: string;
   placementLocation: "homepage" | "pdp" | "category" | "custom";
   displayFormat: "folded" | "grouped-variants" | "grouped-category";
@@ -219,9 +231,13 @@ export interface WidgetFormData {
   discountType?: "default" | "sale" | "wholesale" | "retail" | "custom";
 }
 
+// Legacy type alias for backward compatibility (will be removed in future)
+/** @deprecated Use ProductTableFormData instead */
+export type WidgetFormData = ProductTableFormData;
+
 // Hook Return Types
-export interface UseWidgetsReturn {
-  data: WidgetInstance[] | undefined;
+export interface UseProductTablesReturn {
+  data: ProductTableInstance[] | undefined;
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -241,18 +257,28 @@ export interface UseCustomerContextReturn {
 }
 
 // Mutation Types
-export interface CreateWidgetVariables {
-  config: Partial<WidgetFormData>;
+export interface CreateProductTableVariables {
+  config: Partial<ProductTableFormData>;
 }
 
-export interface UpdateWidgetVariables {
+export interface UpdateProductTableVariables {
   id: string;
-  config: Partial<WidgetFormData>;
+  config: Partial<ProductTableFormData>;
 }
 
-export interface DeleteWidgetVariables {
+export interface DeleteProductTableVariables {
   id: string;
 }
+
+// Legacy type aliases for backward compatibility (will be removed in future)
+/** @deprecated Use UseProductTablesReturn instead */
+export type UseWidgetsReturn = UseProductTablesReturn;
+/** @deprecated Use CreateProductTableVariables instead */
+export type CreateWidgetVariables = CreateProductTableVariables;
+/** @deprecated Use UpdateProductTableVariables instead */
+export type UpdateWidgetVariables = UpdateProductTableVariables;
+/** @deprecated Use DeleteProductTableVariables instead */
+export type DeleteWidgetVariables = DeleteProductTableVariables;
 
 // Error Types
 export interface AppError {
