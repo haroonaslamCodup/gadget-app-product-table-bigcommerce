@@ -75,7 +75,12 @@ export const schema: GadgetModel = {
       type: "enum",
       acceptMultipleSelections: false,
       acceptUnlistedOptions: false,
-      options: ["all-products", "specific-categories"],
+      options: [
+        "all-products",
+        "specific-categories",
+        "current-product-variants",
+        "current-category",
+      ],
       storageKey: "productSource",
     },
     productTableId: {
@@ -90,6 +95,11 @@ export const schema: GadgetModel = {
     selectedCategories: {
       type: "json",
       storageKey: "selectedCategories",
+    },
+    showVariantsOnPDP: {
+      type: "boolean",
+      default: false,
+      storageKey: "showVariantsOnPDP",
     },
     store: {
       type: "belongsTo",
@@ -120,6 +130,7 @@ export const schema: GadgetModel = {
       default: false,
       storageKey: "targetWholesaleOnly",
     },
+    variantColumns: { type: "json", storageKey: "variantColumns" },
     version: { type: "string", storageKey: "version" },
   },
 };

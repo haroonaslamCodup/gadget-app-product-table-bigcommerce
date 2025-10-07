@@ -14,7 +14,7 @@ const getApiBaseUrl = () => {
  * Hook to fetch products with filters
  */
 export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsResponse, Error> => {
-  const { categories, userGroup, search, page = 1, limit = 25, sort = "name" } = filters;
+  const { categories, userGroup, search, page = 1, limit = 25, sort = "name", productId, includeVariants } = filters;
 
   return useQuery<ProductsResponse, Error>({
     queryKey: ["products", filters],
@@ -24,6 +24,8 @@ export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsRes
       if (categories) params.set("categories", categories);
       if (userGroup) params.set("userGroup", userGroup);
       if (search) params.set("search", search);
+      if (productId) params.set("productId", productId);
+      if (includeVariants) params.set("includeVariants", includeVariants);
       params.set("page", page.toString());
       params.set("limit", limit.toString());
       params.set("sort", sort);

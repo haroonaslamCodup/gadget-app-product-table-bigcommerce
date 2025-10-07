@@ -67,6 +67,8 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     enableCustomerSorting: true,
     isActive: true,
     notes: "",
+    showVariantsOnPDP: false,
+    variantColumns: ["image", "sku", "name", "price", "stock", "addToCart"],
   });
 
   // Validation state
@@ -95,6 +97,8 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
         enableCustomerSorting: initialData.enableCustomerSorting ?? true,
         isActive: initialData.isActive ?? true,
         notes: initialData.notes || "",
+        showVariantsOnPDP: initialData.showVariantsOnPDP ?? false,
+        variantColumns: initialData.variantColumns || ["image", "sku", "name", "price", "stock", "addToCart"],
       });
     }
   }, [initialData]);
@@ -214,34 +218,68 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
           </Flex>
 
           <FormGroup>
-                          <Select
-                            label="Product Source"
-                            description="Select which products to display in the table"
-                                            options={[
-                                              { value: "all-products", content: "All Products" },
-                                              { value: "specific-categories", content: "Specific Categories" },
-                                            ]}                            value={formData.productSource}
-                            onOptionChange={(value) => {
-                              setFormData({
-                                ...formData,
-                                productSource: value as any,
-                              });
-                            }}
-                          />
-                        </FormGroup>
-            {formData.productSource === "specific-categories" && (
-              <FormGroup>
-                <CategorySelector
-                  selectedCategories={formData.selectedCategories}
-                  onChange={(selected) => {
-                    setFormData({
-                      ...formData,
-                      selectedCategories: selected,
-                    });
-                  }}
-                />
-              </FormGroup>
-            )}        </Panel>
+            <Select
+              label="Product Source"
+              description="Select which products to display in the table"
+              options={[
+                { value: "all-products", content: "All Products" },
+                { value: "specific-categories", content: "Specific Categories" },
+                ...(formData.placementLocation === "pdp"
+                  ? [{ value: "current-product-variants", content: "Current Product Variants (PDP only)" }]
+                  : []
+                ),
+              ]}
+              value={formData.productSource}
+              onOptionChange={(value) => {
+                setFormData({
+                  ...formData,
+                  productSource: value as any,
+                  // Auto-enable variant display when selecting current-product-variants
+                  showVariantsOnPDP: value === "current-product-variants" ? true : formData.showVariantsOnPDP,
+                });
+              }}
+            />
+          </FormGroup>
+
+          {formData.productSource === "specific-categories" && (
+            <FormGroup>
+              <CategorySelector
+                selectedCategories={formData.selectedCategories}
+                onChange={(selected) => {
+                  setFormData({
+                    ...formData,
+                    selectedCategories: selected,
+                  });
+                }}
+              />
+            </FormGroup>
+          )}
+
+          {/* PDP Variant Display Settings */}
+          {formData.placementLocation === "pdp" && (
+            <FormGroup>
+              <Checkbox
+                label="Show Product Variants in Table"
+                description="Display all variants of the current product in an easy-to-purchase table format"
+                checked={formData.showVariantsOnPDP || formData.productSource === "current-product-variants"}
+                disabled={formData.productSource === "current-product-variants"}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  showVariantsOnPDP: e.target.checked,
+                  // Auto-switch product source when enabling variants
+                  productSource: e.target.checked ? "current-product-variants" : "all-products"
+                })}
+              />
+              {formData.showVariantsOnPDP && (
+                <Box marginTop="xSmall">
+                  <Small color="secondary60">
+                    💡 Perfect for products with multiple sizes, colors, or options. Customers can easily compare and purchase variants directly from the table.
+                  </Small>
+                </Box>
+              )}
+            </FormGroup>
+          )}
+        </Panel>
 
         {/* Display Settings Panel */}
         <Panel header="Display Settings" marginBottom="medium">

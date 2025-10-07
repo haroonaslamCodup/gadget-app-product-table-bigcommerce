@@ -86,8 +86,14 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
       search: searchQuery,
     };
 
-    if (config.productSource === "specific-categories" && config.selectedCategories?.length > 0) {
+    // Handle variant display on PDP
+    if (config.productSource === "current-product-variants" && pageContext?.productId) {
+      filters.productId = pageContext.productId;
+      filters.includeVariants = "true";
+    } else if (config.productSource === "specific-categories" && config.selectedCategories && config.selectedCategories.length > 0) {
       filters.categories = config.selectedCategories.join(",");
+    } else if (config.productSource === "current-category" && pageContext?.categoryId) {
+      filters.categories = pageContext.categoryId;
     }
 
     if (customerContext?.customerGroupId) {

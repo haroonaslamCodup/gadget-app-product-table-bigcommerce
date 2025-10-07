@@ -169,7 +169,7 @@ export const useCreateProductTable = (): UseMutationResult<ProductTableInstance,
 
   return useMutation<ProductTableInstance, Error, Partial<ProductTableFormData>>({
     mutationFn: async (config: Partial<ProductTableFormData>) => {
-      const result = await api.productTable.create(config);
+      const result = await api.productTable.create(config as any);
 
       const record = result as any;
       const productTable: ProductTableInstance = {
@@ -227,7 +227,7 @@ export const useUpdateProductTable = (): UseMutationResult<
 
   return useMutation<ProductTableInstance, Error, { id: string; config: Partial<ProductTableFormData> }>({
     mutationFn: async ({ id, config }: { id: string; config: Partial<ProductTableFormData> }) => {
-      const result = await api.productTable.update(id, config);
+      const result = await api.productTable.update(id, config as any);
 
       const record = result as any;
       const productTable: ProductTableInstance = {

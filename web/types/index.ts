@@ -174,11 +174,14 @@ export interface PageContext {
 // Filter Types
 export interface ProductFilters {
   category?: string;
+  categories?: string;
   userGroup?: string;
   search?: string;
   page?: number;
   limit?: number;
   sort?: string;
+  productId?: string;
+  includeVariants?: string;
 }
 
 // Store Types
@@ -216,7 +219,7 @@ export interface ProductTableFormData {
   displayFormat: "folded" | "grouped-variants" | "grouped-category";
   columns: string[];
   columnsOrder: string[];
-  productSource: "all-products" | "current-category";
+  productSource: "all-products" | "current-category" | "current-product-variants" | "specific-categories";
   selectedCategories: string[];
   targetAllCustomers: boolean;
   targetRetailOnly: boolean;
@@ -230,6 +233,9 @@ export interface ProductTableFormData {
   itemsPerPage: number;
   isActive: boolean;
   notes: string;
+  // PDP Variant Settings
+  showVariantsOnPDP: boolean;
+  variantColumns: string[];
 }
 
 // Legacy type alias for backward compatibility (will be removed in future)
