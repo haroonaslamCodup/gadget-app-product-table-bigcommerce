@@ -96,12 +96,14 @@ export default async function route({ request, reply, logger, connections, api }
     // Apply price list pricing for customer groups
     if (products.length > 0) {
       try {
-        if (userGroup && userGroup !== "guest") {
+        // Apply price list if userGroup (customer group ID) is provided
+        // This includes both logged-in customers and guests with a default customer group
+        if (userGroup) {
           // Fetch price list for customer group
           const priceListRecords = await getPriceListForGroup(userGroup, bigcommerceConnection, logger);
           products = products.map(product => applyPricing(product, priceListRecords));
         } else {
-          // Guest users: set calculated prices from base prices
+          // No customer group: set calculated prices from base prices
           products = products.map(product => applyPricing(product, new Map()));
         }
       } catch (error) {

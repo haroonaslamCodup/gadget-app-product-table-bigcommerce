@@ -39,6 +39,36 @@ export default async function route({ request, reply, logger, connections }: Rou
       name: null,
     };
 
+    // If no customer ID (guest), fetch default guest customer group
+    if (!customerId && connections.bigcommerce.current) {
+      try {
+        // Fetch store settings to get default customer group for guests
+        const settingsResponse = await connections.bigcommerce.current.v2.get<any>('/settings') as any;
+
+        if (settingsResponse && settingsResponse.default_customer_group_id) {
+          const defaultGroupId = settingsResponse.default_customer_group_id;
+          customerContext.customerGroupId = defaultGroupId;
+
+          // Fetch group name
+          try {
+            const groupResponse = await connections.bigcommerce.current.v2.get<any>(`/customer_groups/${defaultGroupId}`) as any;
+
+            if (groupResponse && groupResponse.name) {
+              const groupName = (groupResponse.name as string).toLowerCase();
+              customerContext.customerGroup = groupName;
+              customerContext.isWholesale = groupName.includes("wholesale") || groupName.includes("b2b");
+            }
+          } catch (groupError: unknown) {
+            const err = groupError as Error;
+            logger.warn(`Failed to fetch guest group details: customerGroupId=${defaultGroupId}, error=${err.message}`);
+          }
+        }
+      } catch (settingsError: unknown) {
+        const err = settingsError as Error;
+        logger.debug(`Could not fetch store settings for guest group: ${err.message}`);
+      }
+    }
+
     // If customer ID is provided, fetch customer details
     if (customerId && connections.bigcommerce.current) {
       try {
