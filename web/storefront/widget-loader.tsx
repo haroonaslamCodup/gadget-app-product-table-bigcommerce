@@ -119,7 +119,7 @@ export const initProductTableWidget = (config: ProductTableConfig) => {
     console.log('[Product Table Widget] Page Context:', pageContext);
     console.log('[Product Table Widget] BCData:', (window as any).BCData);
     console.log('[Product Table Widget] Available sources:', {
-      dataAttribute: document.querySelector('[data-product-id]')?.getAttribute('data-product-id'),
+      dataAttribute: document.querySelector('[data-entity-id]')?.getAttribute('data-entity-id'),
       bcData: (window as any).BCData?.product_id,
       metaTag: document.querySelector('meta[property="product:id"]')?.getAttribute('content'),
       configOverride: config.pageContext?.productId
