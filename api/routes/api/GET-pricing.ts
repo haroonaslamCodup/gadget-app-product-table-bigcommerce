@@ -12,14 +12,6 @@ import type { RouteContext } from "gadget-server";
  * - userGroup: Customer group (guest, retail, wholesale, etc.)
  * - customerTags: Comma-separated customer tags
  * - quantity: Quantity for bulk pricing
- * - discountType: Type of discount to apply ("default", "sale", "wholesale", "retail", "custom")
- * 
- * Discount Type Behavior:
- * - "default": Use calculated_price (base price) but apply price list if available for this customer group
- * - "sale": Use sale_price if available and lower than base price (ignores price lists)
- * - "wholesale": Use wholesale price list for this customer group (requires B2B/Enterprise plan)
- * - "retail": Use retail price list for this customer group (requires B2B/Enterprise plan)
- * - "custom": Use custom price list for this customer group (requires B2B/Enterprise plan)
  */
 
 export default async function route({ request, reply, logger, connections }: RouteContext) {
@@ -30,7 +22,6 @@ export default async function route({ request, reply, logger, connections }: Rou
     const productId = params.productId;
     const variantId = params.variantId;
     const userGroup = params.userGroup || "guest";
-    const discountType = params.discountType || "default";
     const customerTags = params.customerTags?.split(",") || [];
     const quantity = parseInt(params.quantity || "1", 10);
 
@@ -152,29 +143,10 @@ export default async function route({ request, reply, logger, connections }: Rou
       }
     }
 
-    // Apply discount type based pricing
-    let finalPrice = calculatedPrice; // Default to calculated price
-    
-    if (discountType === "sale" && salePrice && salePrice < calculatedPrice) {
-      // Sale discount: Use sale price if available and lower than calculated price
-      finalPrice = salePrice;
-    } else if (discountType === "wholesale") {
-      // Wholesale discount: Use wholesale price (requires B2B/Enterprise plan)
-      finalPrice = wholesalePrice;
-    } else if (discountType === "retail") {
-      // Retail discount: Use retail price list (requires B2B/Enterprise plan)
-      finalPrice = priceListPrice || calculatedPrice;
-    } else if (discountType === "custom" && priceListPrice) {
-      // Custom discount: Use custom price list (requires B2B/Enterprise plan)
-      finalPrice = priceListPrice;
-    } else if (discountType === "default") {
-      // Default discount: Use calculated price, but apply quantity breaks if applicable
-      finalPrice = calculatedPrice;
-    }
+    // Apply quantity break pricing if applicable
+    let finalPrice = priceListPrice || calculatedPrice;
 
-    // Apply quantity break pricing if applicable (only if not using wholesale/retail custom pricing)
-    if (quantity > 1 && quantityBreaks.length > 0 && 
-        (discountType === "default" || discountType === "sale")) {
+    if (quantity > 1 && quantityBreaks.length > 0) {
       // Find applicable quantity break
       const applicableBreak = quantityBreaks.find(
         (qb) => quantity >= qb.min && (qb.max === null || quantity <= qb.max)

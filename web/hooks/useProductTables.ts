@@ -50,7 +50,6 @@ export const useProductTables = (storeId?: string): UseQueryResult<ProductTableI
           lastChecked: record.lastChecked || undefined,
           pageBuilderId: record.pageBuilderId || undefined,
           pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
-          discountType: record.discountType as any,
         };
         return productTable;
       });
@@ -104,7 +103,6 @@ export const useProductTable = (productTableId?: string): UseQueryResult<Product
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
-        discountType: record.discountType as any,
       };
       return productTable;
     },
@@ -156,7 +154,6 @@ export const useProductTableById = (id?: string): UseQueryResult<ProductTableIns
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
-        discountType: record.discountType as any,
       };
       return productTable;
     },
@@ -204,7 +201,6 @@ export const useCreateProductTable = (): UseMutationResult<ProductTableInstance,
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
-        discountType: record.discountType as any,
       };
       return productTable;
     },
@@ -263,7 +259,6 @@ export const useUpdateProductTable = (): UseMutationResult<
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
-        discountType: record.discountType as any,
       };
       return productTable;
     },
@@ -352,7 +347,6 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Pr
         isActive: sourceProductTable.isActive,
         notes: sourceProductTable.notes,
         version: sourceProductTable.version,
-        discountType: sourceProductTable.discountType,
         store: {
           _link: storeId
         }
@@ -390,7 +384,6 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Pr
         lastChecked: record.lastChecked || undefined,
         pageBuilderId: record.pageBuilderId || undefined,
         pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
-        discountType: record.discountType as any,
       };
       return productTable;
     },

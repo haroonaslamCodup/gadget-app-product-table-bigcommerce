@@ -29,7 +29,6 @@ export interface ProductTableConfig {
   lastChecked?: string;
   pageBuilderId?: string;
   pageContext?: Record<string, unknown>;
-  discountType?: "default" | "sale" | "wholesale" | "retail" | "custom";
 }
 
 // Product Table Instance from API
@@ -228,7 +227,6 @@ export interface ProductTableFormData {
   itemsPerPage: number;
   isActive: boolean;
   notes: string;
-  discountType?: "default" | "sale" | "wholesale" | "retail" | "custom";
 }
 
 // Legacy type alias for backward compatibility (will be removed in future)

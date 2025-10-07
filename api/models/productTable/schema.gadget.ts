@@ -34,14 +34,6 @@ export const schema: GadgetModel = {
       default: false,
       storageKey: "defaultToTableView",
     },
-    discountType: {
-      type: "enum",
-      default: "default",
-      acceptMultipleSelections: false,
-      acceptUnlistedOptions: false,
-      options: ["default", "sale", "wholesale", "retail", "custom"],
-      storageKey: "discountType",
-    },
     displayFormat: {
       type: "enum",
       acceptMultipleSelections: false,

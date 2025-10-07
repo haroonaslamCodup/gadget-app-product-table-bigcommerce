@@ -93,7 +93,7 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
     return filters;
   }, [config, pageContext, currentPage, sortBy, searchQuery, customerContext]);
 
-  const { data: productsData, isLoading, error } = useProducts(productFilters, config.discountType);
+  const { data: productsData, isLoading, error } = useProducts(productFilters);
 
   if (!isVisible) return null;
 

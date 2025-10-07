@@ -66,7 +66,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     enableCustomerSorting: true,
     isActive: true,
     notes: "",
-    discountType: "default",
   });
 
   // Validation state
@@ -95,7 +94,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
         enableCustomerSorting: initialData.enableCustomerSorting ?? true,
         isActive: initialData.isActive ?? true,
         notes: initialData.notes || "",
-        discountType: initialData.discountType || "default",
       });
     }
   }, [initialData]);
@@ -260,22 +258,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
               if (errors.columns) setErrors({ ...errors, columns: "" });
             }}
           />
-
-          <FormGroup>
-            <Select
-              label="Discount Type"
-              description="Choose which pricing/discount type to display in the product table"
-              options={[
-                { value: "default", content: "Default Pricing" },
-                { value: "sale", content: "Sale Price (if available)" },
-                { value: "wholesale", content: "Wholesale Price" },
-                { value: "retail", content: "Retail Price" },
-                { value: "custom", content: "Custom Price List" },
-              ]}
-              value={formData.discountType}
-              onOptionChange={(value) => setFormData({ ...formData, discountType: value as any })}
-            />
-          </FormGroup>
 
           <FormGroup>
             <Checkbox
