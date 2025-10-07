@@ -3,13 +3,13 @@ import type { RouteContext } from "gadget-server";
 import { join } from "path";
 
 // Widget version - increment this when you rebuild the widget to bust cache
-const WIDGET_VERSION = "1.0.45";
+const WIDGET_VERSION = "1.0.46";
 
 /**
  * GET /widget-loader.js
  *
  * Serves the compiled widget bundle that BigCommerce can load.
- * Supports cache busting via version query parameter (?v=1.0.45)
+ * Supports cache busting via version query parameter (?v=1.0.46)
  */
 export default async function route({ reply }: RouteContext) {
   try {

@@ -119,7 +119,7 @@ export const IndexPage = () => {
 
             <Flex flexGap={"medium"} >
               <Text marginRight="small" bold>App Version:</Text>
-              <Text>1.0.45</Text>
+              <Text>1.0.46</Text>
             </Flex>
           </Flex>
         </Box>

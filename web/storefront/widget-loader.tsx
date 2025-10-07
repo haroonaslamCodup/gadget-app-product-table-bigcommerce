@@ -68,11 +68,11 @@ export const initProductTableWidget = (config: ProductTableConfig) => {
 
   // Get page context from multiple sources
   const getProductId = () => {
-    // Try data attribute first
-    const dataAttr = document.querySelector('[data-product-id]')?.getAttribute('data-product-id');
+    // Try data attribute first (BigCommerce uses data-entity-id)
+    const dataAttr = document.querySelector('[data-entity-id]')?.getAttribute('data-entity-id');
     if (dataAttr) return dataAttr;
 
-    // Try window.BCData (BigCommerce global)
+    // Try window.BCData (BigCommerce global) - most reliable
     if (typeof window !== 'undefined' && (window as any).BCData?.product_id) {
       return String((window as any).BCData.product_id);
     }
@@ -80,6 +80,15 @@ export const initProductTableWidget = (config: ProductTableConfig) => {
     // Try meta tag
     const metaTag = document.querySelector('meta[property="product:id"]');
     if (metaTag) return metaTag.getAttribute('content') || undefined;
+
+    // Try URL pattern (e.g., /products/product-name-123/)
+    const urlMatch = window.location.pathname.match(/\/products\/[^\/]+-(\d+)\//);
+    if (urlMatch && urlMatch[1]) return urlMatch[1];
+
+    // Try entity ID from body class (some themes)
+    const bodyClasses = document.body.className;
+    const entityMatch = bodyClasses.match(/productId-(\d+)/);
+    if (entityMatch && entityMatch[1]) return entityMatch[1];
 
     return undefined;
   };
@@ -97,11 +106,25 @@ export const initProductTableWidget = (config: ProductTableConfig) => {
     return undefined;
   };
 
+  // Allow manual override of page context via config
   const pageContext = {
-    categoryId: getCategoryId(),
-    productId: getProductId(),
-    pageType: document.querySelector('[data-page-type]')?.getAttribute('data-page-type') || undefined,
+    categoryId: config.pageContext?.categoryId || getCategoryId(),
+    productId: config.pageContext?.productId || getProductId(),
+    pageType: config.pageContext?.pageType || document.querySelector('[data-page-type]')?.getAttribute('data-page-type') || undefined,
   };
+
+  // Debug logging for page context detection
+  if (config.showVariantsOnPDP || config.productSource === 'current-product-variants') {
+    console.log('[Product Table Widget] Config:', config);
+    console.log('[Product Table Widget] Page Context:', pageContext);
+    console.log('[Product Table Widget] BCData:', (window as any).BCData);
+    console.log('[Product Table Widget] Available sources:', {
+      dataAttribute: document.querySelector('[data-product-id]')?.getAttribute('data-product-id'),
+      bcData: (window as any).BCData?.product_id,
+      metaTag: document.querySelector('meta[property="product:id"]')?.getAttribute('content'),
+      configOverride: config.pageContext?.productId
+    });
+  }
 
   // Create React root and render the product table
   const root = createRoot(container);
