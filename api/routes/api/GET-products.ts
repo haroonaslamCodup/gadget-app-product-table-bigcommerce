@@ -21,7 +21,7 @@ import { getPriceListForGroup, applyPricing } from "../../lib/priceListHelper";
 export default async function route({ request, reply, logger, connections, api }: RouteContext) {
   try {
     const params = request.query as Record<string, string>;
-    const { category, search, userGroup = "guest", sort = "name" } = params;
+    const { categories, search, userGroup, sort = "name" } = params;
     const page = Math.max(1, parseInt(params.page || "1", 10));
     const limit = Math.min(parseInt(params.limit || "25", 10), 250);
 
@@ -34,7 +34,7 @@ export default async function route({ request, reply, logger, connections, api }
       is_visible: "true",
     });
 
-    if (category) bcParams.append("categories:in", category);
+    if (categories) bcParams.append("categories:in", categories);
     if (search) bcParams.append("keyword", search);
 
     // Add sort

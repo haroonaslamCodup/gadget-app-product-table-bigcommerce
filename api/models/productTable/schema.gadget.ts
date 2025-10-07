@@ -75,7 +75,7 @@ export const schema: GadgetModel = {
       type: "enum",
       acceptMultipleSelections: false,
       acceptUnlistedOptions: false,
-      options: ["all-products", "current-category"],
+      options: ["all-products", "specific-categories"],
       storageKey: "productSource",
     },
     productTableId: {

@@ -9,7 +9,7 @@ export interface ProductTableConfig {
   displayFormat?: "folded" | "grouped-variants" | "grouped-category";
   columns?: string[];
   columnsOrder?: string[];
-  productSource?: "all-products" | "current-category";
+  productSource?: "all-products" | "current-category" | "current-product-variants" | "specific-categories";
   selectedCategories?: string[];
   targetAllCustomers?: boolean;
   targetRetailOnly?: boolean;
@@ -29,6 +29,9 @@ export interface ProductTableConfig {
   lastChecked?: string;
   pageBuilderId?: string;
   pageContext?: Record<string, unknown>;
+  // PDP Variant Settings
+  showVariantsOnPDP?: boolean;
+  variantColumns?: string[];
 }
 
 // Product Table Instance from API

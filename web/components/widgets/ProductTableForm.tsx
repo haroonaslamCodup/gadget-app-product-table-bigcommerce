@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "../../api";
 import { useCreateProductTable, useUpdateProductTable } from "../../hooks/useProductTables";
+import { CategorySelector } from "./CategorySelector";
 import { ColumnManager } from "./ColumnManager";
 
 import type { ProductTableFormData, ProductTableInstance } from "../../types";
@@ -213,23 +214,34 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
           </Flex>
 
           <FormGroup>
-            <Select
-              label="Product Source"
-              description="Select which products to display in the table"
-              options={[
-                { value: "all-products", content: "All Products" },
-                { value: "current-category", content: "Current Category Only" },
-              ]}
-              value={formData.productSource}
-              onOptionChange={(value) => {
-                setFormData({
-                  ...formData,
-                  productSource: value as any,
-                });
-              }}
-            />
-          </FormGroup>
-        </Panel>
+                          <Select
+                            label="Product Source"
+                            description="Select which products to display in the table"
+                                            options={[
+                                              { value: "all-products", content: "All Products" },
+                                              { value: "specific-categories", content: "Specific Categories" },
+                                            ]}                            value={formData.productSource}
+                            onOptionChange={(value) => {
+                              setFormData({
+                                ...formData,
+                                productSource: value as any,
+                              });
+                            }}
+                          />
+                        </FormGroup>
+            {formData.productSource === "specific-categories" && (
+              <FormGroup>
+                <CategorySelector
+                  selectedCategories={formData.selectedCategories}
+                  onChange={(selected) => {
+                    setFormData({
+                      ...formData,
+                      selectedCategories: selected,
+                    });
+                  }}
+                />
+              </FormGroup>
+            )}        </Panel>
 
         {/* Display Settings Panel */}
         <Panel header="Display Settings" marginBottom="medium">

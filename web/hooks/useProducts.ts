@@ -14,14 +14,14 @@ const getApiBaseUrl = () => {
  * Hook to fetch products with filters
  */
 export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsResponse, Error> => {
-  const { category, userGroup, search, page = 1, limit = 25, sort = "name" } = filters;
+  const { categories, userGroup, search, page = 1, limit = 25, sort = "name" } = filters;
 
   return useQuery<ProductsResponse, Error>({
     queryKey: ["products", filters],
     queryFn: async () => {
       const params = new URLSearchParams();
 
-      if (category) params.set("category", category);
+      if (categories) params.set("categories", categories);
       if (userGroup) params.set("userGroup", userGroup);
       if (search) params.set("search", search);
       params.set("page", page.toString());

@@ -86,8 +86,8 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
       search: searchQuery,
     };
 
-    if (config.productSource === "current-category" && pageContext?.categoryId) {
-      filters.category = pageContext.categoryId;
+    if (config.productSource === "specific-categories" && config.selectedCategories?.length > 0) {
+      filters.categories = config.selectedCategories.join(",");
     }
 
     if (customerContext?.customerGroupId) {
