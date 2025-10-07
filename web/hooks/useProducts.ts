@@ -13,11 +13,11 @@ const getApiBaseUrl = () => {
 /**
  * Hook to fetch products with filters
  */
-export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsResponse, Error> => {
+export const useProducts = (filters: ProductFilters, discountType?: "default" | "sale" | "wholesale" | "retail" | "custom"): UseQueryResult<ProductsResponse, Error> => {
   const { category, userGroup, search, page = 1, limit = 25, sort = "name" } = filters;
 
   return useQuery<ProductsResponse, Error>({
-    queryKey: ["products", filters],
+    queryKey: ["products", filters, discountType],
     queryFn: async () => {
       const params = new URLSearchParams();
 
@@ -27,6 +27,11 @@ export const useProducts = (filters: ProductFilters): UseQueryResult<ProductsRes
       params.set("page", page.toString());
       params.set("limit", limit.toString());
       params.set("sort", sort);
+      
+      // Add discount type if provided
+      if (discountType) {
+        params.set("discountType", discountType);
+      }
 
       const baseUrl = getApiBaseUrl();
       const url = `${baseUrl}/api/products?${params.toString()}`;
@@ -53,9 +58,9 @@ import type { PricingInfo, ApiResponse } from "../types";
 /**
  * Hook to fetch pricing for a specific product
  */
-export const useProductPricing = (productId?: string, variantId?: string, userGroup?: string): UseQueryResult<PricingInfo | null, Error> => {
+export const useProductPricing = (productId?: string, variantId?: string, userGroup?: string, discountType?: "default" | "sale" | "wholesale" | "retail" | "custom"): UseQueryResult<PricingInfo | null, Error> => {
   return useQuery<PricingInfo | null, Error>({
-    queryKey: ["pricing", productId, variantId, userGroup],
+    queryKey: ["pricing", productId, variantId, userGroup, discountType],
     queryFn: async () => {
       if (!productId) return null;
 
@@ -65,6 +70,7 @@ export const useProductPricing = (productId?: string, variantId?: string, userGr
 
       if (variantId) params.set("variantId", variantId);
       if (userGroup) params.set("userGroup", userGroup);
+      if (discountType) params.set("discountType", discountType);
 
       const baseUrl = getApiBaseUrl();
       const response = await fetch(`${baseUrl}/api/pricing?${params.toString()}`);

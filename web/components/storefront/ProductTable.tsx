@@ -30,6 +30,7 @@ export interface WidgetConfig {
   defaultSort?: "name" | "price-asc" | "price-desc" | "newest" | "oldest" | "sku";
   itemsPerPage?: number;
   isActive?: boolean;
+  discountType?: "default" | "sale" | "wholesale" | "retail" | "custom";
 }
 
 interface ProductTableProps {
@@ -115,7 +116,7 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
     return filters;
   }, [config, pageContext, currentPage, sortBy, searchQuery, customerContext]);
 
-  const { data: productsData, isLoading, error } = useProducts(productFilters);
+  const { data: productsData, isLoading, error } = useProducts(productFilters, config.discountType);
 
   if (!isVisible) return null;
 

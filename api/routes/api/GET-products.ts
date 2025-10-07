@@ -21,7 +21,7 @@ import { getPriceListForGroup, applyPricing } from "../../lib/priceListHelper";
 export default async function route({ request, reply, logger, connections, api }: RouteContext) {
   try {
     const params = request.query as Record<string, string>;
-    const { category, search, userGroup = "guest", sort = "name" } = params;
+    const { category, search, userGroup = "guest", discountType = "default", sort = "name" } = params;
     const page = Math.max(1, parseInt(params.page || "1", 10));
     const limit = Math.min(parseInt(params.limit || "25", 10), 250);
 
@@ -98,16 +98,26 @@ export default async function route({ request, reply, logger, connections, api }
       try {
         if (userGroup && userGroup !== "guest") {
           // Fetch price list for customer group
+          logger.info(`Applying pricing for userGroup=${userGroup}, discountType=${discountType}`);
           const priceListRecords = await getPriceListForGroup(userGroup, bigcommerceConnection, logger);
-          products = products.map(product => applyPricing(product, priceListRecords));
+          
+          if (priceListRecords.size === 0) {
+            logger.warn(`No price list records found for userGroup=${userGroup}. Using base pricing with discountType=${discountType}`);
+          } else {
+            logger.info(`Found ${priceListRecords.size} price list records for userGroup=${userGroup}`);
+          }
+          
+          products = products.map(product => applyPricing(product, priceListRecords, discountType as any));
         } else {
           // Guest users: set calculated prices from base prices
-          products = products.map(product => applyPricing(product, new Map()));
+          logger.info(`Applying guest pricing with discountType=${discountType}`);
+          products = products.map(product => applyPricing(product, new Map(), discountType as any));
         }
       } catch (error) {
-        logger.error(`Price list application failed: ${(error as Error).message}`);
+        logger.error(`Price list application failed for userGroup=${userGroup}, discountType=${discountType}: ${(error as Error).message}`);
+        logger.debug(`Error stack: ${(error as Error).stack}`);
         // Continue with base pricing
-        products = products.map(product => applyPricing(product, new Map()));
+        products = products.map(product => applyPricing(product, new Map(), discountType as any));
       }
     }
 

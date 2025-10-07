@@ -29,6 +29,7 @@ export interface WidgetConfig {
   lastChecked?: string;
   pageBuilderId?: string;
   pageContext?: Record<string, unknown>;
+  discountType?: "default" | "sale" | "wholesale" | "retail" | "custom";
 }
 
 // Widget Instance from API
@@ -215,6 +216,7 @@ export interface WidgetFormData {
   itemsPerPage: number;
   isActive: boolean;
   notes: string;
+  discountType?: "default" | "sale" | "wholesale" | "retail" | "custom";
 }
 
 // Hook Return Types
