@@ -1,5 +1,5 @@
 import type { RouteContext } from "gadget-server";
-import { getPriceListForGroup, applyPricing } from "../../lib/priceListHelper";
+import { applyPricing, getPriceListForGroup } from "../../lib/priceListHelper";
 
 /**
  * Route: GET /api/products (OPTIMIZED)
@@ -40,65 +40,95 @@ export default async function route({ request, reply, logger, connections, api }
         return reply.code(500).send({ error: "BigCommerce connection not available" });
       }
 
-      // Fetch product with all variants
-      const productResponse = await bigcommerceConnection.v3.get<any>(
-        `/catalog/products/${productId}?include=variants,images,custom_fields&include_fields=id,name,sku,price,calculated_price,sale_price,inventory_level,inventory_tracking,availability,images,variants,categories,brand,description,weight,custom_url`
-      ) as any;
+      logger.info(`Fetching variants for product ID: ${productId}`);
 
-      if (!productResponse || (!Array.isArray(productResponse) && !productResponse.data)) {
-        return reply.code(404).send({ error: "Product not found" });
-      }
+      try {
+        // Fetch product with all variants
+        const productResponse = await bigcommerceConnection.v3.get<any>(
+          `/catalog/products/${productId}?include=variants,images,custom_fields&include_fields=id,name,sku,price,calculated_price,sale_price,inventory_level,inventory_tracking,availability,images,variants,categories,brand,description,weight,custom_url`
+        ) as any;
 
-      const product = Array.isArray(productResponse) ? productResponse[0] : productResponse.data;
+        logger.info(`Product response received: hasData=${!!productResponse}, isArray=${Array.isArray(productResponse)}`);
 
-      // Transform variants into product-like objects for table display
-      const variants = (product.variants || []).map((variant: any) => ({
-        id: variant.id,
-        product_id: product.id,
-        name: `${product.name} - ${variant.option_values?.map((ov: any) => ov.label).join(', ') || 'Variant'}`,
-        sku: variant.sku || product.sku,
-        price: variant.price || product.price,
-        calculated_price: variant.calculated_price || variant.price || product.price,
-        sale_price: variant.sale_price || product.sale_price,
-        inventory_level: variant.inventory_level,
-        inventory_tracking: variant.inventory_tracking || product.inventory_tracking,
-        availability: variant.purchasing_disabled ? 'disabled' : 'available',
-        images: product.images || [],
-        variant_id: variant.id,
-        is_variant: true,
-        option_values: variant.option_values || [],
-        weight: variant.weight || product.weight,
-        custom_url: product.custom_url,
-      }));
+        if (!productResponse) {
+          logger.error(`Product ${productId} not found - empty response`);
+          return reply.code(404).send({ error: "Product not found", products: [], pagination: { total: 0, count: 0, per_page: 0, current_page: 1, total_pages: 0 } });
+        }
 
-      // Apply pricing for customer groups
-      let processedVariants = variants;
-      if (userGroup) {
-        try {
-          const priceListRecords = await getPriceListForGroup(userGroup, bigcommerceConnection, logger);
-          processedVariants = variants.map((v: any) => applyPricing(v, priceListRecords));
-        } catch (error) {
-          logger.error(`Price list application failed: ${(error as Error).message}`);
+        // Handle different response formats
+        let product;
+        if (Array.isArray(productResponse)) {
+          product = productResponse[0];
+        } else if (productResponse.data) {
+          product = Array.isArray(productResponse.data) ? productResponse.data[0] : productResponse.data;
+        } else {
+          product = productResponse;
+        }
+
+        if (!product || !product.id) {
+          logger.error(`Product ${productId} not found - no product data`);
+          return reply.code(404).send({ error: "Product not found", products: [], pagination: { total: 0, count: 0, per_page: 0, current_page: 1, total_pages: 0 } });
+        }
+
+        logger.info(`Product found: ${product.name}, variants count: ${product.variants?.length || 0}`);
+
+        // Transform variants into product-like objects for table display
+        const variants = (product.variants || []).map((variant: any) => ({
+          id: variant.id,
+          product_id: product.id,
+          name: `${product.name} - ${variant.option_values?.map((ov: any) => ov.label).join(', ') || 'Variant'}`,
+          sku: variant.sku || product.sku,
+          price: variant.price || product.price,
+          calculated_price: variant.calculated_price || variant.price || product.price,
+          sale_price: variant.sale_price || product.sale_price,
+          inventory_level: variant.inventory_level,
+          inventory_tracking: variant.inventory_tracking || product.inventory_tracking,
+          availability: variant.purchasing_disabled ? 'disabled' : 'available',
+          images: product.images || [],
+          variant_id: variant.id,
+          is_variant: true,
+          option_values: variant.option_values || [],
+          weight: variant.weight || product.weight,
+          custom_url: product.custom_url,
+        }));
+
+        // Apply pricing for customer groups
+        let processedVariants = variants;
+        if (userGroup) {
+          try {
+            const priceListRecords = await getPriceListForGroup(userGroup, bigcommerceConnection, logger);
+            processedVariants = variants.map((v: any) => applyPricing(v, priceListRecords));
+          } catch (error) {
+            logger.error(`Price list application failed: ${(error as Error).message}`);
+            processedVariants = variants.map((v: any) => applyPricing(v, new Map()));
+          }
+        } else {
           processedVariants = variants.map((v: any) => applyPricing(v, new Map()));
         }
-      } else {
-        processedVariants = variants.map((v: any) => applyPricing(v, new Map()));
-      }
 
-      return reply
-        .code(200)
-        .header("Content-Type", "application/json")
-        .header("Cache-Control", "public, max-age=180")
-        .send({
-          products: processedVariants,
-          pagination: {
-            total: processedVariants.length,
-            count: processedVariants.length,
-            per_page: processedVariants.length,
-            current_page: 1,
-            total_pages: 1,
-          },
+        return reply
+          .code(200)
+          .header("Content-Type", "application/json")
+          .header("Cache-Control", "public, max-age=180")
+          .send({
+            products: processedVariants,
+            pagination: {
+              total: processedVariants.length,
+              count: processedVariants.length,
+              per_page: processedVariants.length,
+              current_page: 1,
+              total_pages: 1,
+            },
+          });
+      } catch (error: any) {
+        logger.error(`Error fetching product variants: ${error.message}`);
+        return reply.code(500).send({
+          error: "Failed to fetch product variants",
+          message: error.message,
+          products: [],
+          pagination: { total: 0, count: 0, per_page: 0, current_page: 1, total_pages: 0 }
         });
+      }
     }
 
     // Build API query for normal product listing

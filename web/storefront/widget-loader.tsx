@@ -66,10 +66,40 @@ export const initProductTableWidget = (config: ProductTableConfig) => {
     return;
   }
 
-  // Get page context from the DOM
+  // Get page context from multiple sources
+  const getProductId = () => {
+    // Try data attribute first
+    const dataAttr = document.querySelector('[data-product-id]')?.getAttribute('data-product-id');
+    if (dataAttr) return dataAttr;
+
+    // Try window.BCData (BigCommerce global)
+    if (typeof window !== 'undefined' && (window as any).BCData?.product_id) {
+      return String((window as any).BCData.product_id);
+    }
+
+    // Try meta tag
+    const metaTag = document.querySelector('meta[property="product:id"]');
+    if (metaTag) return metaTag.getAttribute('content') || undefined;
+
+    return undefined;
+  };
+
+  const getCategoryId = () => {
+    // Try data attribute first
+    const dataAttr = document.querySelector('[data-category-id]')?.getAttribute('data-category-id');
+    if (dataAttr) return dataAttr;
+
+    // Try window.BCData
+    if (typeof window !== 'undefined' && (window as any).BCData?.category_id) {
+      return String((window as any).BCData.category_id);
+    }
+
+    return undefined;
+  };
+
   const pageContext = {
-    categoryId: document.querySelector('[data-category-id]')?.getAttribute('data-category-id') || undefined,
-    productId: document.querySelector('[data-product-id]')?.getAttribute('data-product-id') || undefined,
+    categoryId: getCategoryId(),
+    productId: getProductId(),
     pageType: document.querySelector('[data-page-type]')?.getAttribute('data-page-type') || undefined,
   };
 
