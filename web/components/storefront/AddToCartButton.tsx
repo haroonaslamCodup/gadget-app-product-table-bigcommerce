@@ -28,34 +28,28 @@ export const AddToCartButton = ({
     setIsAdding(true);
 
     try {
-      // Get Gadget API base URL (set by widget loader)
-      const baseUrl = typeof window !== 'undefined' && (window as any).__GADGET_API_URL__
-        ? (window as any).__GADGET_API_URL__
-        : '';
+      // Use BigCommerce's native add-to-cart URL
+      // This is the most reliable method for adding to cart on a storefront
+      const cartUrl = variantId
+        ? `/cart.php?action=add&product_id=${productId}&qty=${quantity}&variant_id=${variantId}`
+        : `/cart.php?action=add&product_id=${productId}&qty=${quantity}`;
 
-      // Use our Gadget API route to add to cart
-      const response = await fetch(`${baseUrl}/api/add-to-cart`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          productId,
-          variantId,
-          quantity,
-        }),
-      });
+      // Create a hidden form and submit it
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = cartUrl;
+      form.style.display = 'none';
 
-      if (response.ok) {
-        setIsAdded(true);
-        setTimeout(() => setIsAdded(false), 2000);
+      document.body.appendChild(form);
+      form.submit();
 
-        // Trigger cart update event for BigCommerce
-        window.dispatchEvent(new CustomEvent("cart-quantity-update"));
-      }
+      // Show success state briefly before redirect
+      setIsAdded(true);
+
+      // Trigger cart update event for BigCommerce
+      window.dispatchEvent(new CustomEvent("cart-quantity-update"));
     } catch (error) {
       console.error("Failed to add to cart:", error);
-    } finally {
       setIsAdding(false);
     }
   };

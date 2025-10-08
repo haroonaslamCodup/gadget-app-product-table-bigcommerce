@@ -87,12 +87,14 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
           </Td>
         );
       case "addToCart":
+        // For variants, use product ID + variant ID
+        // For products without variants, use product ID only
         return (
           <Td>
             <AddToCartButton
               productId={product.id}
-              variantId={isVariant ? item.id : product.variants?.[0]?.id}
-              isAvailable={item.availability === "available" || product.availability === "available"}
+              variantId={isVariant ? item.id : undefined}
+              isAvailable={isVariant ? (item.availability === "available") : (product.availability === "available")}
               minQuantity={product.order_quantity_minimum}
               maxQuantity={product.order_quantity_maximum}
             />
@@ -139,6 +141,10 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
                 </ProductLink>
               </Td>
             );
+          }
+          // Hide add-to-cart button on parent row if product has multiple variants
+          if (column === "addToCart" && hasMultipleVariants) {
+            return <Td key={column}>-</Td>;
           }
           return renderCell(column, product, false);
         })}
