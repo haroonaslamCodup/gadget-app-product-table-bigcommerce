@@ -28,8 +28,13 @@ export const AddToCartButton = ({
     setIsAdding(true);
 
     try {
+      // Get Gadget API base URL (set by widget loader)
+      const baseUrl = typeof window !== 'undefined' && (window as any).__GADGET_API_URL__
+        ? (window as any).__GADGET_API_URL__
+        : '';
+
       // Use our Gadget API route to add to cart
-      const response = await fetch("/api/add-to-cart", {
+      const response = await fetch(`${baseUrl}/api/add-to-cart`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -115,8 +115,6 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
     <>
       {/* Parent Product Row */}
       <TableRow
-        onClick={hasMultipleVariants ? () => setIsExpanded(!isExpanded) : undefined}
-        $isClickable={hasMultipleVariants}
         $isExpanded={isExpanded}
       >
         {columns.map((column) => {
@@ -124,7 +122,14 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
             return (
               <Td key={column} $hasVariants={hasMultipleVariants}>
                 {hasMultipleVariants && (
-                  <ExpandIcon $isExpanded={isExpanded}>
+                  <ExpandIcon
+                    $isExpanded={isExpanded}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsExpanded(!isExpanded);
+                    }}
+                  >
                     {isExpanded ? "▼" : "▶"}
                   </ExpandIcon>
                 )}
@@ -149,10 +154,9 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
   );
 };
 
-const TableRow = styled.tr<{ $isClickable?: boolean; $isExpanded?: boolean }>`
+const TableRow = styled.tr<{ $isExpanded?: boolean }>`
   border-bottom: 1px solid var(--color-greyLight, var(--container-border-global-color-base, #e0e0e0));
   transition: background-color 0.2s;
-  cursor: ${(props) => (props.$isClickable ? "pointer" : "default")};
   background-color: ${(props) => (props.$isExpanded ? "var(--color-greyLightest, #f9f9f9)" : "transparent")};
 
   &:hover {
@@ -195,6 +199,11 @@ const ExpandIcon = styled.span<{ $isExpanded: boolean }>`
   color: var(--color-textSecondary, #666);
   transition: transform 0.2s;
   user-select: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-primary, #1a73e8);
+  }
 `;
 
 const VariantIndent = styled.span`
