@@ -4,7 +4,6 @@ import {
   Button,
   Flex,
   H1,
-  Link,
   Modal,
   Panel,
   ProgressCircle,
@@ -134,12 +133,11 @@ export const ProductTablesPage = () => {
                 justifyContent="space-between"
                 alignItems="center"
                 borderBottom="box"
+                marginBottom="small"
               >
                 <Box>
-                  <Flex alignContent="center">
-                    <Link marginRight="xSmall" href={`/product-tables/${productTable.id}/edit`}>
-                      <Text bold>{productTable.productTableName || "Unnamed Product Table"}</Text>
-                    </Link>
+                  <Flex alignContent="center" flexGap="small">
+                    <Text marginBottom="none" marginRight="xSmall" bold>{productTable.productTableName || "Unnamed Product Table"}</Text>
                     <Badge
                       label={productTable.placementLocation || "Not Set"}
                       variant={productTable.placementLocation ? "secondary" : "warning"}
