@@ -93,6 +93,8 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
               productId={product.id}
               variantId={isVariant ? item.id : product.variants?.[0]?.id}
               isAvailable={item.availability === "available" || product.availability === "available"}
+              minQuantity={product.order_quantity_minimum}
+              maxQuantity={product.order_quantity_maximum}
             />
           </Td>
         );

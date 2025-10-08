@@ -45,6 +45,8 @@ export const ProductTableRow = ({
               productId={product.id}
               variantId={product.variants?.[0]?.id}
               isAvailable={product.availability === "available"}
+              minQuantity={product.order_quantity_minimum}
+              maxQuantity={product.order_quantity_maximum}
             />
           )}
         </CardContent>
@@ -83,6 +85,8 @@ export const ProductTableRow = ({
               productId={product.id}
               variantId={product.variants?.[0]?.id}
               isAvailable={product.availability === "available"}
+              minQuantity={product.order_quantity_minimum}
+              maxQuantity={product.order_quantity_maximum}
             />
           )}
           {column === "description" && (

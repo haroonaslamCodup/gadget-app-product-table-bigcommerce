@@ -45,7 +45,7 @@ export default async function route({ request, reply, logger, connections, api }
       try {
         // Fetch product with all variants
         const productResponse = await bigcommerceConnection.v3.get<any>(
-          `/catalog/products/${productId}?include=variants,images,custom_fields&include_fields=id,name,sku,price,calculated_price,sale_price,inventory_level,inventory_tracking,availability,images,variants,categories,brand,description,weight,custom_url`
+          `/catalog/products/${productId}?include=variants,images,custom_fields&include_fields=id,name,sku,price,calculated_price,sale_price,inventory_level,inventory_tracking,availability,images,variants,categories,brand,description,weight,custom_url,order_quantity_minimum,order_quantity_maximum`
         ) as any;
 
         logger.info(`Product response received: hasData=${!!productResponse}, isArray=${Array.isArray(productResponse)}`);
@@ -90,6 +90,8 @@ export default async function route({ request, reply, logger, connections, api }
           option_values: variant.option_values || [],
           weight: variant.weight || product.weight,
           custom_url: product.custom_url,
+          order_quantity_minimum: product.order_quantity_minimum || 0,
+          order_quantity_maximum: product.order_quantity_maximum || 0,
         }));
 
         // Apply pricing for customer groups
@@ -136,7 +138,7 @@ export default async function route({ request, reply, logger, connections, api }
       limit: limit.toString(),
       page: page.toString(),
       include: "variants,images,custom_fields",
-      include_fields: "id,name,sku,price,calculated_price,sale_price,inventory_level,inventory_tracking,availability,images,variants,categories,brand,description,weight,custom_url",
+      include_fields: "id,name,sku,price,calculated_price,sale_price,inventory_level,inventory_tracking,availability,images,variants,categories,brand,description,weight,custom_url,order_quantity_minimum,order_quantity_maximum",
       is_visible: "true",
     });
 

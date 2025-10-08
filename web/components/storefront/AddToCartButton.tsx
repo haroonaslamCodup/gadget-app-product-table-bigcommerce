@@ -5,16 +5,22 @@ interface AddToCartButtonProps {
   productId: number;
   variantId?: number;
   isAvailable: boolean;
+  minQuantity?: number;
+  maxQuantity?: number;
 }
 
 export const AddToCartButton = ({
   productId,
   variantId,
   isAvailable,
+  minQuantity = 0,
+  maxQuantity = 0,
 }: AddToCartButtonProps) => {
-  const [quantity, setQuantity] = useState(1);
+  const defaultQuantity = minQuantity > 1 ? minQuantity : 1;
+  const [quantity, setQuantity] = useState(defaultQuantity);
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const handleAddToCart = async () => {
     if (!isAvailable || isAdding) return;
@@ -22,20 +28,16 @@ export const AddToCartButton = ({
     setIsAdding(true);
 
     try {
-      // Use BigCommerce Storefront API to add to cart
-      const response = await fetch("/api/storefront/cart/items", {
+      // Use our Gadget API route to add to cart
+      const response = await fetch("/api/add-to-cart", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          lineItems: [
-            {
-              productId,
-              variantId,
-              quantity,
-            },
-          ],
+          productId,
+          variantId,
+          quantity,
         }),
       });
 
@@ -47,10 +49,38 @@ export const AddToCartButton = ({
         window.dispatchEvent(new CustomEvent("cart-quantity-update"));
       }
     } catch (error) {
-      // Silently fail
+      console.error("Failed to add to cart:", error);
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newQuantity = parseInt(e.target.value) || defaultQuantity;
+
+    // Apply minimum constraint
+    if (minQuantity > 0 && newQuantity < minQuantity) {
+      newQuantity = minQuantity;
+    }
+
+    // Apply maximum constraint
+    if (maxQuantity > 0 && newQuantity > maxQuantity) {
+      newQuantity = maxQuantity;
+    }
+
+    setQuantity(Math.max(defaultQuantity, newQuantity));
+  };
+
+  const hasInventoryLimits = minQuantity > 0 || maxQuantity > 0;
+
+  const getTooltipText = () => {
+    if (!hasInventoryLimits) return "";
+
+    const parts = [];
+    if (minQuantity > 0) parts.push(`Min: ${minQuantity}`);
+    if (maxQuantity > 0) parts.push(`Max: ${maxQuantity}`);
+
+    return parts.join(" | ");
   };
 
   if (!isAvailable) {
@@ -59,13 +89,23 @@ export const AddToCartButton = ({
 
   return (
     <Container>
-      <QuantityInput
-        type="number"
-        min="1"
-        value={quantity}
-        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-        disabled={isAdding}
-      />
+      <QuantityWrapper
+        onMouseEnter={() => hasInventoryLimits && setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        <QuantityInput
+          type="number"
+          min={minQuantity > 0 ? minQuantity : 1}
+          max={maxQuantity > 0 ? maxQuantity : undefined}
+          value={quantity}
+          onChange={handleQuantityChange}
+          disabled={isAdding}
+          title={getTooltipText()}
+        />
+        {hasInventoryLimits && showTooltip && (
+          <Tooltip>{getTooltipText()}</Tooltip>
+        )}
+      </QuantityWrapper>
       <Button onClick={handleAddToCart} disabled={isAdding || isAdded} $isAdded={isAdded}>
         {isAdding ? "Adding..." : isAdded ? "Added!" : "Add to Cart"}
       </Button>
@@ -77,6 +117,38 @@ const Container = styled.div`
   display: flex;
   gap: var(--spacing-sm, 0.5rem);
   align-items: center;
+`;
+
+const QuantityWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const Tooltip = styled.div`
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: var(--color-textBase, #333);
+  color: white;
+  font-size: var(--fontSize-smallest, 0.75rem);
+  border-radius: var(--borderRadius-base, 4px);
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: var(--elevation-200, 0 2px 8px rgba(0, 0, 0, 0.2));
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--color-textBase, #333);
+  }
 `;
 
 const QuantityInput = styled.input`
