@@ -4,7 +4,7 @@ import { ProductTableRow } from "./ProductTableRow";
 
 interface GroupedViewProps {
   products: any[];
-  displayFormat: "folded" | "grouped-variants" | "grouped-category" | "grouped-collection";
+  displayFormat: "folded" | "unfolded" | "grouped";
   columns: string[];
   isLoading?: boolean;
 }
@@ -32,25 +32,7 @@ export const GroupedView = ({
   const groupProducts = () => {
     const groups: Record<string, any[]> = {};
 
-    if (displayFormat === "folded") {
-      // Group by base product (parent product)
-      products.forEach((product) => {
-        const baseId = product.base_variant_id || product.id;
-        if (!groups[baseId]) {
-          groups[baseId] = [];
-        }
-        groups[baseId].push(product);
-      });
-    } else if (displayFormat === "grouped-variants") {
-      // Group products (variants already nested within products)
-      products.forEach((product) => {
-        const productId = product.id;
-        if (!groups[productId]) {
-          groups[productId] = [];
-        }
-        groups[productId].push(product);
-      });
-    } else if (displayFormat === "grouped-category") {
+    if (displayFormat === "grouped") {
       // Group by category
       products.forEach((product) => {
         const category = product.categories?.[0]?.name || "Uncategorized";
@@ -59,14 +41,14 @@ export const GroupedView = ({
         }
         groups[category].push(product);
       });
-    } else if (displayFormat === "grouped-collection") {
-      // Group by collection
+    } else {
+      // For folded/unfolded, group by base product (parent product)
       products.forEach((product) => {
-        const collection = product.collections?.[0]?.name || "Uncategorized";
-        if (!groups[collection]) {
-          groups[collection] = [];
+        const baseId = product.base_variant_id || product.id;
+        if (!groups[baseId]) {
+          groups[baseId] = [];
         }
-        groups[collection].push(product);
+        groups[baseId].push(product);
       });
     }
 
@@ -94,7 +76,7 @@ export const GroupedView = ({
           <GroupCard key={groupKey}>
             <GroupHeader onClick={() => toggleGroup(groupKey)}>
               <GroupTitle>
-                {displayFormat === "grouped-category" || displayFormat === "grouped-collection"
+                {displayFormat === "grouped"
                   ? groupKey
                   : mainProduct.name}
               </GroupTitle>

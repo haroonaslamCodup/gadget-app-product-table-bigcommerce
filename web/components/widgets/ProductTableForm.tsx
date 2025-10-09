@@ -51,24 +51,22 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     productTableName: "",
     placementLocation: "homepage",
     displayFormat: "folded",
-    columns: ["image", "sku", "name", "price", "stock", "addToCart"],
-    columnsOrder: ["image", "sku", "name", "price", "stock", "addToCart"],
+    columns: ["image", "name", "sku", "price", "stock", "addToCart"],
+    columnsOrder: ["image", "name", "sku", "price", "stock", "addToCart"],
+    columnLabels: {},
     productSource: "all-products",
     selectedCategories: [],
     targetAllCustomers: true,
     targetRetailOnly: false,
     targetWholesaleOnly: false,
-    targetCustomerTags: [],
     targetLoggedInOnly: false,
-    allowViewSwitching: true,
-    defaultToTableView: false,
     defaultSort: "name",
     itemsPerPage: 25,
     enableCustomerSorting: true,
     isActive: true,
     notes: "",
     showVariantsOnPDP: false,
-    variantColumns: ["image", "sku", "name", "price", "stock", "addToCart"],
+    variantColumns: ["image", "name", "sku", "price", "stock", "addToCart"],
   });
 
   // Validation state
@@ -81,24 +79,22 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
         productTableName: initialData.productTableName || "",
         placementLocation: initialData.placementLocation || "homepage",
         displayFormat: initialData.displayFormat || "folded",
-        columns: initialData.columns || ["image", "sku", "name", "price", "stock", "addToCart"],
-        columnsOrder: initialData.columnsOrder || ["image", "sku", "name", "price", "stock", "addToCart"],
+        columns: initialData.columns || ["image", "name", "sku", "price", "stock", "addToCart"],
+        columnsOrder: initialData.columnsOrder || ["image", "name", "sku", "price", "stock", "addToCart"],
+        columnLabels: initialData.columnLabels || {},
         productSource: initialData.productSource || "all-products",
         selectedCategories: initialData.selectedCategories || [],
         targetAllCustomers: initialData.targetAllCustomers ?? true,
         targetRetailOnly: initialData.targetRetailOnly ?? false,
         targetWholesaleOnly: initialData.targetWholesaleOnly ?? false,
-        targetCustomerTags: initialData.targetCustomerTags || [],
         targetLoggedInOnly: initialData.targetLoggedInOnly ?? false,
-        allowViewSwitching: initialData.allowViewSwitching ?? true,
-        defaultToTableView: initialData.defaultToTableView ?? false,
         defaultSort: initialData.defaultSort || "name",
         itemsPerPage: initialData.itemsPerPage || 25,
         enableCustomerSorting: initialData.enableCustomerSorting ?? true,
         isActive: initialData.isActive ?? true,
         notes: initialData.notes || "",
         showVariantsOnPDP: initialData.showVariantsOnPDP ?? false,
-        variantColumns: initialData.variantColumns || ["image", "sku", "name", "price", "stock", "addToCart"],
+        variantColumns: initialData.variantColumns || ["image", "name", "sku", "price", "stock", "addToCart"],
       });
     }
   }, [initialData]);
@@ -279,6 +275,27 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
               )}
             </FormGroup>
           )}
+
+          {/* Status & Notes */}
+          <FormGroup>
+            <Checkbox
+              label="Product Table Active"
+              description="Deactivate to hide this table without deleting the configuration"
+              checked={formData.isActive}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Textarea
+              label="Notes"
+              description="Internal notes about this configuration (not visible to customers)"
+              placeholder="Add any notes about this widget configuration..."
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={4}
+            />
+          </FormGroup>
         </Panel>
 
         {/* Display Settings Panel */}
@@ -289,8 +306,8 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
               description="Choose how products are organized in the table"
               options={[
                 { value: "folded", content: "Folded (Collapsed View)" },
-                { value: "grouped-variants", content: "Grouped by Variants" },
-                { value: "grouped-category", content: "Grouped by Category" },
+                { value: "unfolded", content: "Unfolded (Expanded View)" },
+                { value: "grouped", content: "Grouped" },
               ]}
               value={formData.displayFormat}
               onOptionChange={(value) => setFormData({ ...formData, displayFormat: value as any })}
@@ -303,29 +320,12 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
           <ColumnManager
             columns={formData.columns}
             columnsOrder={formData.columnsOrder}
-            onChange={(columns, order) => {
-              setFormData({ ...formData, columns, columnsOrder: order });
+            columnLabels={formData.columnLabels}
+            onChange={(columns, order, labels) => {
+              setFormData({ ...formData, columns, columnsOrder: order, columnLabels: labels });
               if (errors.columns) setErrors({ ...errors, columns: "" });
             }}
           />
-
-          <FormGroup>
-            <Checkbox
-              label="Allow View Switching (Grid ↔ Table)"
-              description="Let customers toggle between grid and table views"
-              checked={formData.allowViewSwitching}
-              onChange={(e) => setFormData({ ...formData, allowViewSwitching: e.target.checked })}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Checkbox
-              label="Default to Table View"
-              description="Start in table view instead of grid view"
-              checked={formData.defaultToTableView}
-              onChange={(e) => setFormData({ ...formData, defaultToTableView: e.target.checked })}
-            />
-          </FormGroup>
         </Panel>
 
         {/* Sorting & Pagination Panel */}
@@ -362,15 +362,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
               />
             </Box>
           </Flex>
-
-          <FormGroup>
-            <Checkbox
-              label="Enable Customer Sorting"
-              description="Allow customers to re-sort the table by different columns"
-              checked={formData.enableCustomerSorting}
-              onChange={(e) => setFormData({ ...formData, enableCustomerSorting: e.target.checked })}
-            />
-          </FormGroup>
         </Panel>
 
         {/* Customer Targeting Panel */}
@@ -427,42 +418,6 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
                 setFormData({ ...formData, targetLoggedInOnly: e.target.checked });
                 if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
               }}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Input
-              label="Customer Tags (comma-separated)"
-              description="Optionally target customers with specific tags"
-              placeholder="e.g., vip, wholesale, preferred"
-              value={formData.targetCustomerTags?.join(", ") || ""}
-              onChange={(e) => setFormData({
-                ...formData,
-                targetCustomerTags: e.target.value.split(",").map(t => t.trim()).filter(Boolean)
-              })}
-            />
-          </FormGroup>
-        </Panel>
-
-        {/* Status & Notes Panel */}
-        <Panel header="Status & Notes" marginBottom="medium">
-          <FormGroup>
-            <Checkbox
-              label="Product Table Active"
-              description="Deactivate to hide this table without deleting the configuration"
-              checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Textarea
-              label="Notes"
-              description="Internal notes about this configuration (not visible to customers)"
-              placeholder="Add any notes about this widget configuration..."
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={4}
             />
           </FormGroup>
         </Panel>

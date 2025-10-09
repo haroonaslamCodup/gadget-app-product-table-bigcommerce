@@ -50,7 +50,6 @@ export default async function route({ reply, api, logger, request }: RouteContex
       targetRetailOnly: productTable.targetRetailOnly,
       targetWholesaleOnly: productTable.targetWholesaleOnly,
       targetLoggedInOnly: productTable.targetLoggedInOnly,
-      targetCustomerTags: productTable.targetCustomerTags,
       allowViewSwitching: productTable.allowViewSwitching,
       defaultToTableView: productTable.defaultToTableView,
       enableCustomerSorting: productTable.enableCustomerSorting,

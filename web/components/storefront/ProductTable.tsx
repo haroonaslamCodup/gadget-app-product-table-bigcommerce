@@ -6,9 +6,7 @@ import { ExpandableProductRow } from "./ExpandableProductRow";
 import { GroupedView } from "./GroupedView";
 import { Pagination } from "./Pagination";
 import { ProductTableHeader } from "./ProductTableHeader";
-import { ProductTableRow } from "./ProductTableRow";
 import { SearchFilter } from "./SearchFilter";
-import { ViewSwitcher } from "./ViewSwitcher";
 
 import type { ProductTableConfig } from "../../types";
 
@@ -25,9 +23,6 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState(config.defaultSort || "name");
-  const [viewMode, setViewMode] = useState<"table" | "grid">(
-    config.defaultToTableView !== false ? "table" : "grid" // Default to table view
-  );
 
   // Get customer ID from BigCommerce storefront context
   const { data: bcContext } = useBigCommerceContext();
@@ -46,9 +41,7 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
 
     // Default to targeting all customers if no specific targeting is set
     const targetAllCustomers = config.targetAllCustomers !== false;
-    const hasSpecificTargeting = config.targetLoggedInOnly || config.targetRetailOnly ||
-      config.targetWholesaleOnly ||
-      (config.targetCustomerTags && config.targetCustomerTags.length > 0);
+    const hasSpecificTargeting = config.targetLoggedInOnly || config.targetRetailOnly || config.targetWholesaleOnly;
 
     if (targetAllCustomers && !hasSpecificTargeting) {
       return true;
@@ -64,14 +57,6 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
 
     if (config.targetWholesaleOnly && !customerContext?.isWholesale) {
       return false;
-    }
-
-    if (config.targetCustomerTags && config.targetCustomerTags.length > 0) {
-      const customerTags = customerContext?.customerTags || [];
-      const hasMatchingTag = config.targetCustomerTags.some(tag =>
-        customerTags.includes(tag)
-      );
-      if (!hasMatchingTag) return false;
     }
 
     return true;
@@ -129,15 +114,12 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
   ];
 
   // Render grouped view if display format is grouped
-  if (config.displayFormat?.startsWith("grouped-")) {
+  if (config.displayFormat === "grouped") {
     return (
       <WidgetContainer>
-        {config.allowViewSwitching && (
-          <ControlsRow>
-            <SearchFilter value={searchQuery} onChange={setSearchQuery} />
-            <ViewSwitcher mode={viewMode} onChange={setViewMode} />
-          </ControlsRow>
-        )}
+        <ControlsRow>
+          <SearchFilter value={searchQuery} onChange={setSearchQuery} />
+        </ControlsRow>
 
         <GroupedView
           products={products}
@@ -162,9 +144,6 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
     <WidgetContainer>
       <ControlsRow>
         <SearchFilter value={searchQuery} onChange={setSearchQuery} />
-        {(config.allowViewSwitching !== false) && (
-          <ViewSwitcher mode={viewMode} onChange={setViewMode} />
-        )}
       </ControlsRow>
 
       {isLoading ? (
@@ -176,12 +155,12 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
         <EmptyState>
           <EmptyText>No products found</EmptyText>
         </EmptyState>
-      ) : viewMode === "table" ? (
+      ) : (
         <TableContainer>
           <Table>
             <ProductTableHeader
               columns={columns}
-              onSort={config.enableCustomerSorting ? ((sort: string) => setSortBy(sort as any)) : undefined}
+              onSort={config.enableCustomerSorting !== false ? ((sort: string) => setSortBy(sort as any)) : undefined}
               currentSort={sortBy}
             />
             <tbody>
@@ -190,22 +169,12 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
                   key={product.id}
                   product={product}
                   columns={columns}
+                  displayFormat={config.displayFormat}
                 />
               ))}
             </tbody>
           </Table>
         </TableContainer>
-      ) : (
-        <GridContainer>
-          {products.map((product: any) => (
-            <ProductTableRow
-              key={product.id}
-              product={product}
-              columns={columns}
-              viewMode="grid"
-            />
-          ))}
-        </GridContainer>
       )}
 
       {totalPages > 1 && (
@@ -262,10 +231,6 @@ const Table = styled.table`
     min-width: 100%;
     font-size: 0.875rem;
   }
-`;
-
-const GridContainer = styled.div`
-
 `;
 
 const LoadingContainer = styled.div`

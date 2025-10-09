@@ -8,10 +8,12 @@ import { AddToCartButton } from "./AddToCartButton";
 interface ExpandableProductRowProps {
   product: any;
   columns: string[];
+  displayFormat?: "folded" | "unfolded" | "grouped";
 }
 
-export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+export const ExpandableProductRow = ({ product, columns, displayFormat = "folded" }: ExpandableProductRowProps) => {
+  // For unfolded mode, always show variants expanded
+  const [isExpanded, setIsExpanded] = useState(displayFormat === "unfolded");
   const hasMultipleVariants = product.variants && product.variants.length > 1;
 
   const renderCell = (column: string, item: any, isVariant = false) => {
@@ -123,7 +125,8 @@ export const ExpandableProductRow = ({ product, columns }: ExpandableProductRowP
           if (column === "name") {
             return (
               <Td key={column} $hasVariants={hasMultipleVariants}>
-                {hasMultipleVariants && (
+                {/* Only show expand icon in folded mode */}
+                {hasMultipleVariants && displayFormat === "folded" && (
                   <ExpandIcon
                     $isExpanded={isExpanded}
                     onClick={(e) => {

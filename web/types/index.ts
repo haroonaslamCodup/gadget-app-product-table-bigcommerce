@@ -6,18 +6,16 @@
 export interface ProductTableConfig {
   productTableId: string;
   productTableName?: string;
-  displayFormat?: "folded" | "grouped-variants" | "grouped-category";
+  displayFormat?: "folded" | "unfolded" | "grouped";
   columns?: string[];
   columnsOrder?: string[];
+  columnLabels?: Record<string, string>; // Custom labels for columns (e.g., { "name": "Product Title", "price": "Cost" })
   productSource?: "all-products" | "current-category" | "current-product-variants" | "specific-categories";
   selectedCategories?: string[];
   targetAllCustomers?: boolean;
   targetRetailOnly?: boolean;
   targetWholesaleOnly?: boolean;
   targetLoggedInOnly?: boolean;
-  targetCustomerTags?: string[];
-  allowViewSwitching?: boolean;
-  defaultToTableView?: boolean;
   enableCustomerSorting?: boolean;
   defaultSort?: "name" | "price-asc" | "price-desc" | "newest" | "oldest" | "sku";
   itemsPerPage?: number;
@@ -216,18 +214,16 @@ export interface ColumnDefinition {
 export interface ProductTableFormData {
   productTableName: string;
   placementLocation: "homepage" | "pdp" | "category" | "custom";
-  displayFormat: "folded" | "grouped-variants" | "grouped-category";
+  displayFormat: "folded" | "unfolded" | "grouped";
   columns: string[];
   columnsOrder: string[];
+  columnLabels: Record<string, string>; // Custom labels for columns
   productSource: "all-products" | "current-category" | "current-product-variants" | "specific-categories";
   selectedCategories: string[];
   targetAllCustomers: boolean;
   targetRetailOnly: boolean;
   targetWholesaleOnly: boolean;
   targetLoggedInOnly: boolean;
-  targetCustomerTags: string[];
-  allowViewSwitching: boolean;
-  defaultToTableView: boolean;
   enableCustomerSorting: boolean;
   defaultSort: "name" | "price-asc" | "price-desc" | "newest" | "oldest" | "sku";
   itemsPerPage: number;

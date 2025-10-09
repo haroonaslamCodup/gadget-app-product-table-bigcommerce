@@ -7,11 +7,7 @@ export const schema: GadgetModel = {
   type: "gadget/model-schema/v1",
   storageKey: "WidgetInstance",
   fields: {
-    allowViewSwitching: {
-      type: "boolean",
-      default: true,
-      storageKey: "allowViewSwitching",
-    },
+    columnLabels: { type: "json", storageKey: "columnLabels" },
     columns: { type: "json", storageKey: "columns" },
     columnsOrder: { type: "json", storageKey: "columnsOrder" },
     createdBy: { type: "string", storageKey: "createdBy" },
@@ -29,16 +25,11 @@ export const schema: GadgetModel = {
       ],
       storageKey: "defaultSort",
     },
-    defaultToTableView: {
-      type: "boolean",
-      default: false,
-      storageKey: "defaultToTableView",
-    },
     displayFormat: {
       type: "enum",
       acceptMultipleSelections: false,
       acceptUnlistedOptions: false,
-      options: ["folded", "grouped-variants", "grouped-category"],
+      options: ["folded", "unfolded", "grouped"],
       storageKey: "displayFormat",
     },
     enableCustomerSorting: {
@@ -110,10 +101,6 @@ export const schema: GadgetModel = {
       type: "boolean",
       default: true,
       storageKey: "targetAllCustomers",
-    },
-    targetCustomerTags: {
-      type: "json",
-      storageKey: "targetCustomerTags",
     },
     targetLoggedInOnly: {
       type: "boolean",

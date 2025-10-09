@@ -1,5 +1,5 @@
-import { Box, Button, Checkbox, Flex, Input, Message, Text } from "@bigcommerce/big-design";
-import { ArrowDownwardIcon, ArrowUpwardIcon, DeleteIcon } from "@bigcommerce/big-design-icons";
+import { Box, Button, Checkbox, Flex, Input, Message, Small, Text } from "@bigcommerce/big-design";
+import { ArrowDownwardIcon, ArrowUpwardIcon, DeleteIcon, EditIcon } from "@bigcommerce/big-design-icons";
 import {
   closestCenter,
   DndContext,
@@ -25,31 +25,51 @@ import styled from "styled-components";
 interface ColumnManagerProps {
   columns: string[];
   columnsOrder: string[];
-  onChange: (columns: string[], order: string[]) => void;
+  columnLabels: Record<string, string>;
+  onChange: (columns: string[], order: string[], labels: Record<string, string>) => void;
 }
 
 const AVAILABLE_COLUMNS = [
-  { id: "image", label: "Product Image", icon: "🖼️" },
-  { id: "sku", label: "SKU", icon: "🏷️" },
-  { id: "name", label: "Product Name", icon: "📦" },
-  { id: "price", label: "Price", icon: "💰" },
-  { id: "stock", label: "Stock Status", icon: "📊" },
-  { id: "addToCart", label: "Add to Cart", icon: "🛒" },
+  { id: "image", label: "Product Image", icon: "🖼️", required: true },
+  { id: "name", label: "Product Name", icon: "📦", required: true },
+  { id: "sku", label: "SKU", icon: "🏷️", required: false },
+  { id: "price", label: "Price", icon: "💰", required: false },
+  { id: "stock", label: "Stock Status", icon: "📊", required: false },
+  { id: "addToCart", label: "Add to Cart", icon: "🛒", required: false },
 ];
+
+// Required columns that cannot be removed and must maintain order
+const REQUIRED_COLUMNS = ["image", "name"];
 
 interface SortableItemProps {
   id: string;
   label: string;
+  customLabel?: string;
   icon: string;
   index: number;
+  isRequired: boolean;
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onEditLabel: (newLabel: string) => void;
   isFirst: boolean;
   isLast: boolean;
 }
 
-function SortableItem({ id, label, icon, index, onRemove, onMoveUp, onMoveDown, isFirst, isLast }: SortableItemProps) {
+function SortableItem({
+  id,
+  label,
+  customLabel,
+  icon,
+  index,
+  isRequired,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  onEditLabel,
+  isFirst,
+  isLast
+}: SortableItemProps) {
   const {
     attributes,
     listeners,
@@ -59,66 +79,135 @@ function SortableItem({ id, label, icon, index, onRemove, onMoveUp, onMoveDown, 
     isDragging,
   } = useSortable({ id });
 
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
+  const [tempLabel, setTempLabel] = useState(customLabel || label);
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  const handleSaveLabel = () => {
+    if (tempLabel.trim()) {
+      onEditLabel(tempLabel.trim());
+    }
+    setIsEditingLabel(false);
+  };
+
+  const handleCancelEdit = () => {
+    setTempLabel(customLabel || label);
+    setIsEditingLabel(false);
+  };
+
+  const displayLabel = customLabel || label;
+
+  // Disable drag for required columns that must maintain their order
+  const canDrag = !isRequired || (index > 1); // Allow dragging if not in first two positions
+  const canMoveUp = !isFirst && !(isRequired && index <= 1);
+  const canMoveDown = !isLast && !(isRequired && index === 0);
 
   return (
     <DraggableCard
       ref={setNodeRef}
       style={style}
       $isDragging={isDragging}
+      $isRequired={isRequired}
     >
       <DragHandle
-        {...attributes}
-        {...listeners}
-        aria-label={`Drag to reorder ${label}`}
-        title="Drag to reorder"
+        {...(canDrag ? attributes : {})}
+        {...(canDrag ? listeners : {})}
+        aria-label={canDrag ? `Drag to reorder ${displayLabel}` : `${displayLabel} position is fixed`}
+        title={canDrag ? "Drag to reorder" : "Position fixed"}
+        $disabled={!canDrag}
       >
-        <DragIcon>⠿</DragIcon>
+        <DragIcon>{canDrag ? "⠿" : "🔒"}</DragIcon>
       </DragHandle>
 
       <CardContent>
         <ColumnInfo>
-          <OrderBadge>#{index + 1}</OrderBadge>
-          <ColumnLabel>
-            <span style={{ marginRight: "8px" }}>{icon}</span>
-            <Text bold>{label}</Text>
-          </ColumnLabel>
+          <OrderBadge $isRequired={isRequired}>#{index + 1}</OrderBadge>
+          <ColumnLabelWrapper>
+            {isEditingLabel ? (
+              <LabelEditContainer>
+                <Input
+                  value={tempLabel}
+                  onChange={(e) => setTempLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveLabel();
+                    if (e.key === "Escape") handleCancelEdit();
+                  }}
+                  autoFocus
+                  placeholder={label}
+                />
+                <Flex marginTop="xSmall">
+                  <Button onClick={handleSaveLabel} marginRight="xSmall">Save</Button>
+                  <Button variant="subtle" onClick={handleCancelEdit}>Cancel</Button>
+                </Flex>
+              </LabelEditContainer>
+            ) : (
+              <ColumnLabel>
+                <span style={{ marginRight: "8px" }}>{icon}</span>
+                <div>
+                  <Text bold>{displayLabel}</Text>
+                  {customLabel && (
+                    <Small color="secondary60" marginLeft="xSmall">(Custom)</Small>
+                  )}
+                  {isRequired && (
+                    <RequiredBadge>Required</RequiredBadge>
+                  )}
+                </div>
+              </ColumnLabel>
+            )}
+          </ColumnLabelWrapper>
         </ColumnInfo>
 
         <ActionButtons>
-          <QuickActionButton
-            onClick={onMoveUp}
-            disabled={isFirst}
-            aria-label={`Move ${label} up`}
-            title="Move up"
-          >
-            <ArrowUpwardIcon />
-          </QuickActionButton>
-          <QuickActionButton
-            onClick={onMoveDown}
-            disabled={isLast}
-            aria-label={`Move ${label} down`}
-            title="Move down"
-          >
-            <ArrowDownwardIcon />
-          </QuickActionButton>
-          <RemoveButton
-            onClick={onRemove}
-            aria-label={`Remove ${label} column`}
-            title="Remove column"
-          >
-            <DeleteIcon />
-          </RemoveButton>
+          {!isEditingLabel && (
+            <>
+              <QuickActionButton
+                type="button"
+                onClick={() => setIsEditingLabel(true)}
+                aria-label={`Edit label for ${displayLabel}`}
+                title="Edit label"
+              >
+                <EditIcon />
+              </QuickActionButton>
+              <QuickActionButton
+                type="button"
+                onClick={onMoveUp}
+                disabled={!canMoveUp}
+                aria-label={`Move ${displayLabel} up`}
+                title={canMoveUp ? "Move up" : "Cannot move up"}
+              >
+                <ArrowUpwardIcon />
+              </QuickActionButton>
+              <QuickActionButton
+                type="button"
+                onClick={onMoveDown}
+                disabled={!canMoveDown}
+                aria-label={`Move ${displayLabel} down`}
+                title={canMoveDown ? "Move down" : "Cannot move down"}
+              >
+                <ArrowDownwardIcon />
+              </QuickActionButton>
+              <RemoveButton
+                type="button"
+                onClick={onRemove}
+                disabled={isRequired}
+                aria-label={isRequired ? `${displayLabel} is required and cannot be removed` : `Remove ${displayLabel} column`}
+                title={isRequired ? "Required column" : "Remove column"}
+              >
+                <DeleteIcon />
+              </RemoveButton>
+            </>
+          )}
         </ActionButtons>
       </CardContent>
     </DraggableCard>
   );
 }
 
-export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManagerProps) => {
+export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }: ColumnManagerProps) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -133,30 +222,75 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
     })
   );
 
+  // Ensure required columns are always included and in correct order
+  const ensureRequiredColumns = useCallback((cols: string[], order: string[]): [string[], string[]] => {
+    const newCols = new Set(cols);
+    const newOrder = [...order];
+
+    // Add required columns if missing
+    REQUIRED_COLUMNS.forEach(col => newCols.add(col));
+
+    // Ensure image is first and name is second in the order
+    const filteredOrder = newOrder.filter(col => !REQUIRED_COLUMNS.includes(col));
+    const finalOrder = ["image", "name", ...filteredOrder].filter(col => newCols.has(col));
+
+    return [Array.from(newCols), finalOrder];
+  }, []);
+
   const handleToggleColumn = useCallback((columnId: string, checked: boolean) => {
+    // Prevent unchecking required columns
+    if (!checked && REQUIRED_COLUMNS.includes(columnId)) {
+      return;
+    }
+
     if (checked) {
       const newColumns = [...columns, columnId];
       const newOrder = [...columnsOrder, columnId];
-      onChange(newColumns, newOrder);
+      const [finalCols, finalOrder] = ensureRequiredColumns(newColumns, newOrder);
+      onChange(finalCols, finalOrder, columnLabels);
     } else {
       const newColumns = columns.filter((c) => c !== columnId);
       const newOrder = columnsOrder.filter((c) => c !== columnId);
-      onChange(newColumns, newOrder);
+      const [finalCols, finalOrder] = ensureRequiredColumns(newColumns, newOrder);
+      onChange(finalCols, finalOrder, columnLabels);
     }
-  }, [columns, columnsOrder, onChange]);
+  }, [columns, columnsOrder, columnLabels, ensureRequiredColumns, onChange]);
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    const draggedId = event.active.id as string;
+    // Prevent dragging required columns to maintain their order
+    if (REQUIRED_COLUMNS.includes(draggedId)) {
+      const index = columnsOrder.indexOf(draggedId);
+      if (index < 2) {
+        // Don't allow dragging if in first two positions
+        return;
+      }
+    }
+    setActiveId(draggedId);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = columnsOrder.indexOf(active.id as string);
-      const newIndex = columnsOrder.indexOf(over.id as string);
-      const newOrder = arrayMove(columnsOrder, oldIndex, newIndex);
-      onChange(columns, newOrder);
+      const activeId = active.id as string;
+      const overId = over.id as string;
+
+      // Don't allow moving items into the first two positions (reserved for required columns)
+      const overIndex = columnsOrder.indexOf(overId);
+      if (overIndex < 2 && !REQUIRED_COLUMNS.includes(activeId)) {
+        setActiveId(null);
+        return;
+      }
+
+      const oldIndex = columnsOrder.indexOf(activeId);
+      const newIndex = columnsOrder.indexOf(overId);
+
+      let newOrder = arrayMove(columnsOrder, oldIndex, newIndex);
+
+      // Ensure image and name stay in first two positions
+      const [finalCols, finalOrder] = ensureRequiredColumns(columns, newOrder);
+      onChange(finalCols, finalOrder, columnLabels);
     }
 
     setActiveId(null);
@@ -164,16 +298,41 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
+
+    const columnId = columnsOrder[index];
+
+    // Prevent moving into required column positions
+    if (index === 1 || (index === 2 && REQUIRED_COLUMNS.includes(columnId))) {
+      return;
+    }
+
     const newOrder = [...columnsOrder];
     [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
-    onChange(columns, newOrder);
+
+    const [finalCols, finalOrder] = ensureRequiredColumns(columns, newOrder);
+    onChange(finalCols, finalOrder, columnLabels);
   };
 
   const handleMoveDown = (index: number) => {
     if (index === columnsOrder.length - 1) return;
+
+    const columnId = columnsOrder[index];
+
+    // Prevent moving first required column down
+    if (index === 0 && REQUIRED_COLUMNS.includes(columnId)) {
+      return;
+    }
+
     const newOrder = [...columnsOrder];
     [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-    onChange(columns, newOrder);
+
+    const [finalCols, finalOrder] = ensureRequiredColumns(columns, newOrder);
+    onChange(finalCols, finalOrder, columnLabels);
+  };
+
+  const handleEditLabel = (columnId: string, newLabel: string) => {
+    const newLabels = { ...columnLabels, [columnId]: newLabel };
+    onChange(columns, columnsOrder, newLabels);
   };
 
   const handleResetOrder = () => {
@@ -187,7 +346,9 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
     const defaultOrder = AVAILABLE_COLUMNS
       .filter(col => columns.includes(col.id))
       .map(col => col.id);
-    onChange(columns, defaultOrder);
+
+    const [finalCols, finalOrder] = ensureRequiredColumns(columns, defaultOrder);
+    onChange(finalCols, finalOrder, columnLabels);
   };
 
   const enabledItems = columnsOrder
@@ -213,6 +374,14 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
             <ColumnCount>{columns.length} / {AVAILABLE_COLUMNS.length} selected</ColumnCount>
           </SectionHeader>
 
+          <Message
+            type="info"
+            messages={[
+              { text: "Product Image and Product Name are required columns and will always appear first." }
+            ]}
+            marginBottom="medium"
+          />
+
           <SearchBox marginBottom="medium">
             <Input
               placeholder="Search columns..."
@@ -226,11 +395,13 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
               <ColumnCheckboxCard
                 key={column.id}
                 $isChecked={columns.includes(column.id)}
+                $isRequired={column.required}
               >
                 <Checkbox
                   checked={columns.includes(column.id)}
                   onChange={(e) => handleToggleColumn(column.id, e.target.checked)}
-                  label={`${column.icon} ${column.label}`}
+                  label={`${column.icon} ${column.label}${column.required ? ' (Required)' : ''}`}
+                  disabled={column.required}
                 />
               </ColumnCheckboxCard>
             ))}
@@ -250,9 +421,12 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
             )}
           </SectionHeader>
 
-          <Text color="secondary60" marginBottom="medium">
-            Drag cards to reorder, or use the arrow buttons. This determines the column order in your product table.
+          <Text color="secondary60" marginBottom="xSmall">
+            Drag cards to reorder, or use the arrow buttons. Click the edit icon to customize column labels.
           </Text>
+          <Small color="secondary60" marginBottom="medium">
+            💡 Product Image and Product Name must remain in the first two positions.
+          </Small>
 
           {enabledItems.length === 0 ? (
             <EmptyState>
@@ -280,11 +454,14 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
                       key={item.id}
                       id={item.id}
                       label={item.label}
+                      customLabel={columnLabels[item.id]}
                       icon={item.icon}
                       index={index}
+                      isRequired={item.required || false}
                       onRemove={() => handleToggleColumn(item.id, false)}
                       onMoveUp={() => handleMoveUp(index)}
                       onMoveDown={() => handleMoveDown(index)}
+                      onEditLabel={(newLabel) => handleEditLabel(item.id, newLabel)}
                       isFirst={index === 0}
                       isLast={index === enabledItems.length - 1}
                     />
@@ -304,7 +481,7 @@ export const ColumnManager = ({ columns, columnsOrder, onChange }: ColumnManager
                         </OrderBadge>
                         <ColumnLabel>
                           <span style={{ marginRight: "8px" }}>{activeItem.icon}</span>
-                          <Text bold>{activeItem.label}</Text>
+                          <Text bold>{columnLabels[activeId] || activeItem.label}</Text>
                         </ColumnLabel>
                       </ColumnInfo>
                     </CardContent>
@@ -387,32 +564,39 @@ const ColumnList = styled.div`
   width: 100%;
 `;
 
-const ColumnCheckboxCard = styled.div<{ $isChecked?: boolean }>`
+const ColumnCheckboxCard = styled.div<{ $isChecked?: boolean; $isRequired?: boolean }>`
   width: 100%;
   box-sizing: border-box;
   padding: 12px 16px;
   border: 2px solid ${props =>
-    props.$isChecked
+    props.$isRequired
+      ? "var(--bc-color-warning-light, #ffe58f)"
+      : props.$isChecked
       ? "var(--bc-color-primary, #1890ff)"
       : "var(--bc-color-grey20, #f0f0f0)"
   };
   border-radius: 8px;
   background: ${props =>
-    props.$isChecked
+    props.$isRequired
+      ? "var(--bc-color-warning-lighter, #fffbe6)"
+      : props.$isChecked
       ? "var(--bc-color-primary05, #f0f8ff)"
       : "var(--bc-color-white, white)"
   };
   transition: all 0.2s ease;
-  cursor: pointer;
+  cursor: ${props => props.$isRequired ? "not-allowed" : "pointer"};
+  opacity: ${props => props.$isRequired ? 0.8 : 1};
 
   &:hover {
     border-color: ${props =>
-    props.$isChecked
+    props.$isRequired
+      ? "var(--bc-color-warning, #faad14)"
+      : props.$isChecked
       ? "var(--bc-color-primary-dark, #1070d0)"
       : "var(--bc-color-grey40, #bfbfbf)"
   };
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
+    transform: ${props => props.$isRequired ? "none" : "translateY(-1px)"};
   }
 `;
 
@@ -422,11 +606,19 @@ const DragList = styled.div`
   gap: 12px;
 `;
 
-const DraggableCard = styled.div<{ $isDragging?: boolean; $isOverlay?: boolean }>`
+const DraggableCard = styled.div<{ $isDragging?: boolean; $isOverlay?: boolean; $isRequired?: boolean }>`
   display: flex;
   align-items: center;
-  background: var(--bc-color-white, white);
-  border: 2px solid var(--bc-color-grey20, #f0f0f0);
+  background: ${props =>
+    props.$isRequired
+      ? "var(--bc-color-warning-lighter, #fffbe6)"
+      : "var(--bc-color-white, white)"
+  };
+  border: 2px solid ${props =>
+    props.$isRequired
+      ? "var(--bc-color-warning-light, #ffe58f)"
+      : "var(--bc-color-grey20, #f0f0f0)"
+  };
   border-radius: 8px;
   padding: 16px;
   gap: 16px;
@@ -445,32 +637,48 @@ const DraggableCard = styled.div<{ $isDragging?: boolean; $isOverlay?: boolean }
       ? "0 8px 24px rgba(0, 0, 0, 0.15)"
       : "0 4px 12px rgba(0, 0, 0, 0.1)"
   };
-    border-color: var(--bc-color-grey30, #d9d9d9);
+    border-color: ${props =>
+    props.$isRequired
+      ? "var(--bc-color-warning, #faad14)"
+      : "var(--bc-color-grey30, #d9d9d9)"
+  };
     transform: ${props => props.$isOverlay ? "none" : "translateY(-2px)"};
   }
 `;
 
-const DragHandle = styled.div`
+const DragHandle = styled.div<{ $disabled?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background: var(--bc-color-grey10, #f5f5f5);
-  cursor: grab;
+  background: ${props =>
+    props.$disabled
+      ? "var(--bc-color-grey20, #f0f0f0)"
+      : "var(--bc-color-grey10, #f5f5f5)"
+  };
+  cursor: ${props => props.$disabled ? "not-allowed" : "grab"};
   transition: all 0.2s ease;
   flex-shrink: 0;
 
   &:hover {
-    background: var(--bc-color-grey20, #f0f0f0);
-    transform: scale(1.1);
+    background: ${props =>
+    props.$disabled
+      ? "var(--bc-color-grey20, #f0f0f0)"
+      : "var(--bc-color-grey20, #f0f0f0)"
+  };
+    transform: ${props => props.$disabled ? "none" : "scale(1.1)"};
   }
 
   &:active {
-    cursor: grabbing;
-    background: var(--bc-color-grey30, #d9d9d9);
-    transform: scale(0.95);
+    cursor: ${props => props.$disabled ? "not-allowed" : "grabbing"};
+    background: ${props =>
+    props.$disabled
+      ? "var(--bc-color-grey20, #f0f0f0)"
+      : "var(--bc-color-grey30, #d9d9d9)"
+  };
+    transform: ${props => props.$disabled ? "none" : "scale(0.95)"};
   }
 `;
 
@@ -496,13 +704,17 @@ const ColumnInfo = styled.div`
   flex: 1;
 `;
 
-const OrderBadge = styled.div`
+const OrderBadge = styled.div<{ $isRequired?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: var(--bc-color-primary, #1890ff);
+  background: ${props =>
+    props.$isRequired
+      ? "var(--bc-color-warning, #faad14)"
+      : "var(--bc-color-primary, #1890ff)"
+  };
   color: white;
   border-radius: 6px;
   font-weight: 700;
@@ -510,11 +722,34 @@ const OrderBadge = styled.div`
   flex-shrink: 0;
 `;
 
+const ColumnLabelWrapper = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
 const ColumnLabel = styled.div`
   display: flex;
   align-items: center;
   font-size: 15px;
   color: var(--bc-color-text-primary, #313440);
+  gap: 8px;
+`;
+
+const RequiredBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--bc-color-warning-light, #ffe58f);
+  color: var(--bc-color-warning-dark, #d48806);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-left: 8px;
+`;
+
+const LabelEditContainer = styled.div`
+  width: 100%;
 `;
 
 const ActionButtons = styled.div`
@@ -570,14 +805,22 @@ const RemoveButton = styled.button`
   transition: all 0.2s ease;
   color: var(--bc-color-error, #ff4d4f);
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--bc-color-error-lighter, #fff1f0);
     border-color: var(--bc-color-error, #ff4d4f);
     transform: translateY(-1px);
   }
 
-  &:active {
+  &:active:not(:disabled) {
     transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: var(--bc-color-grey10, #f5f5f5);
+    border-color: var(--bc-color-grey30, #d9d9d9);
+    color: var(--bc-color-grey40, #bfbfbf);
   }
 
   svg {
