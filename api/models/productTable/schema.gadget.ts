@@ -97,6 +97,14 @@ export const schema: GadgetModel = {
       parent: { model: "bigcommerce/store" },
       storageKey: "storeId",
     },
+    tableType: {
+      type: "enum",
+      default: "normal",
+      acceptMultipleSelections: false,
+      acceptUnlistedOptions: false,
+      options: ["normal", "variant"],
+      storageKey: "tableType",
+    },
     targetAllCustomers: {
       type: "boolean",
       default: true,

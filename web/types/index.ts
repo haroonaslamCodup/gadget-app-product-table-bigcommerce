@@ -21,6 +21,7 @@ export interface ProductTableConfig {
   itemsPerPage?: number;
   isActive?: boolean;
   placementLocation?: "homepage" | "pdp" | "category" | "custom";
+  tableType?: "normal" | "variant";
   version?: string;
   notes?: string;
   createdBy?: string;
@@ -228,6 +229,7 @@ export interface ProductTableFormData {
   defaultSort: "name" | "price-asc" | "price-desc" | "newest" | "oldest" | "sku";
   itemsPerPage: number;
   isActive: boolean;
+  tableType: "normal" | "variant";
   notes: string;
   // PDP Variant Settings
   showVariantsOnPDP: boolean;

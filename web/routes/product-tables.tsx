@@ -8,9 +8,9 @@ import {
   Panel,
   ProgressCircle,
   Text,
-  Textarea
+  Textarea,
 } from "@bigcommerce/big-design";
-import { AddIcon, CodeIcon, DeleteIcon, EditIcon, FileCopyIcon } from "@bigcommerce/big-design-icons";
+import { AddIcon, CodeIcon, ContentCopyIcon, DeleteIcon, EditIcon, FileCopyIcon } from "@bigcommerce/big-design-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -21,6 +21,7 @@ import type { ProductTableInstance } from "../types";
 export const ProductTablesPage = () => {
   const navigate = useNavigate();
   const [embedModalOpen, setEmbedModalOpen] = useState(false);
+  const [tableTypeModalOpen, setTableTypeModalOpen] = useState(false);
   const [selectedProductTable, setSelectedProductTable] = useState<ProductTableInstance | null>(null);
 
   // Fetch current store
@@ -102,7 +103,7 @@ export const ProductTablesPage = () => {
         <Button
           variant="secondary"
           iconLeft={<AddIcon />}
-          onClick={() => navigate("/product-tables/new")}
+          onClick={() => setTableTypeModalOpen(true)}
         >
           Create New Product Table
         </Button>
@@ -118,7 +119,7 @@ export const ProductTablesPage = () => {
             <Button
               iconLeft={<AddIcon />}
               variant="secondary"
-              onClick={() => navigate("/product-tables/new")}
+              onClick={() => setTableTypeModalOpen(true)}
             >
               Create Product Table
             </Button>
@@ -149,7 +150,7 @@ export const ProductTablesPage = () => {
                       marginRight="small"
                     />
                   </Flex>
-                  <Flex alignItems="center" marginTop="xSmall" marginBottom="xSmall">
+                  <Flex alignItems="center" marginBottom="xSmall">
                     <Text color="secondary60" marginRight="xSmall" margin="none">
                       Product Table ID: {productTable.productTableId}
                     </Text>
@@ -164,45 +165,37 @@ export const ProductTablesPage = () => {
                     />
                   </Flex>
                 </Box>
-                <Flex alignItems="center">
+                <Flex alignItems="center" flexGap="xSmall">
                   <Button
-                    iconLeft={<CodeIcon />}
+                    iconOnly={<CodeIcon />}
                     variant="secondary"
                     onClick={() => handleShowEmbed(productTable)}
                     aria-label="Show Embed Code"
-                    marginRight="xSmall"
-                  >
-                    Code
-                  </Button>
+                  />
+
                   <Button
-                    iconLeft={<EditIcon />}
+                    iconOnly={<EditIcon />}
                     variant="primary"
                     onClick={() => navigate(`/product-tables/${productTable.id}/edit`)}
                     aria-label="Edit"
-                    marginRight="xSmall"
-                  >
-                    Edit
-                  </Button>
+                  />
+
                   <Button
-                    iconLeft={<FileCopyIcon />}
+                    iconOnly={<ContentCopyIcon />}
                     variant="secondary"
                     onClick={() => handleDuplicate(productTable)}
                     isLoading={duplicateProductTable.isPending}
                     aria-label="Duplicate Product Table"
-                    marginRight="xSmall"
-                  >
-                    Duplicate
-                  </Button>
+                  />
+
                   <Button
-                    iconLeft={<DeleteIcon />}
+                    iconOnly={<DeleteIcon />}
                     variant="subtle"
                     actionType="destructive"
                     onClick={() => handleDelete(productTable.id, productTable.productTableName || "Unnamed Product Table")}
                     isLoading={deleteProductTable.isPending}
                     aria-label="Delete"
-                  >
-                    Delete
-                  </Button>
+                  />
                 </Flex>
               </Flex>
             ))}
@@ -215,6 +208,67 @@ export const ProductTablesPage = () => {
           Total product tables: {productTableData.length}
         </Text>
       </Box>
+
+      {/* Table Type Selection Modal */}
+      <Modal
+        isOpen={tableTypeModalOpen}
+        onClose={() => setTableTypeModalOpen(false)}
+        header="Select Table Type"
+        closeOnClickOutside={false}
+        closeOnEscKey={true}
+      >
+        <Box>
+          <Text marginBottom="medium">
+            Choose the type of product table you want to create:
+          </Text>
+
+          <Box
+            border="box"
+            borderRadius="normal"
+            padding="medium"
+            marginBottom="medium"
+            style={{ cursor: "pointer" }}
+            backgroundColor="white"
+            onClick={() => {
+              setTableTypeModalOpen(false);
+              navigate("/product-tables/new?type=normal");
+            }}
+          >
+            <Text bold marginBottom="xSmall">Normal Product Table</Text>
+            <Text color="secondary60">
+              Display products from your catalog on Home Page, Category Pages, or Custom Pages.
+              Choose from all products or specific categories.
+            </Text>
+          </Box>
+
+          <Box
+            border="box"
+            borderRadius="normal"
+            padding="medium"
+            style={{ cursor: "pointer" }}
+            backgroundColor="white"
+            onClick={() => {
+              setTableTypeModalOpen(false);
+              navigate("/product-tables/new?type=variant");
+            }}
+          >
+            <Text bold marginBottom="xSmall">Variant Table (PDP Only)</Text>
+            <Text color="secondary60">
+              Display all variants of a single product in table format on Product Detail Pages.
+              Perfect for products with multiple sizes, colors, or options.
+            </Text>
+          </Box>
+
+          <Flex justifyContent="flex-end" marginTop="medium" marginBottom="medium">
+            <Button
+              variant="subtle"
+              onClick={() => setTableTypeModalOpen(false)}
+            >
+              Cancel
+            </Button>
+          </Flex>
+        </Box>
+      </Modal>
 
       {/* Embed Code Modal */}
       <Modal

@@ -10,12 +10,18 @@ const safeToISOString = (date: any): string => {
 /**
  * Hook to fetch all product tables for a specific store
  */
-export const useProductTables = (storeId?: string): UseQueryResult<ProductTableInstance[], Error> => {
+export const useProductTables = (storeId?: string, tableType?: "normal" | "variant"): UseQueryResult<ProductTableInstance[], Error> => {
   return useQuery<ProductTableInstance[], Error>({
-    queryKey: ["productTables", storeId],
+    queryKey: ["productTables", storeId, tableType],
     queryFn: async () => {
+      // Build filter for store and optional table type
+      const filter: any = storeId ? { store: { id: { equals: storeId } } } : undefined;
+      if (filter && tableType) {
+        filter.tableType = { equals: tableType };
+      }
+
       const result = await api.productTable.findMany({
-        filter: storeId ? { store: { id: { equals: storeId } } } : undefined,
+        filter,
         sort: { createdAt: "Descending" }
       });
 
@@ -30,6 +36,7 @@ export const useProductTables = (storeId?: string): UseQueryResult<ProductTableI
           displayFormat: record.displayFormat as any,
           columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
           columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+          columnLabels: record.columnLabels ? JSON.parse(JSON.stringify(record.columnLabels)) : undefined,
           productSource: record.productSource as any,
           selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
           targetAllCustomers: record.targetAllCustomers ?? true,
@@ -41,12 +48,15 @@ export const useProductTables = (storeId?: string): UseQueryResult<ProductTableI
           itemsPerPage: record.itemsPerPage ?? 25,
           isActive: record.isActive ?? true,
           placementLocation: record.placementLocation as any,
+          tableType: record.tableType || 'normal',
           version: record.version || '1.0.0',
           notes: record.notes || '',
           createdBy: record.createdBy || undefined,
           lastChecked: record.lastChecked || undefined,
           pageBuilderId: record.pageBuilderId || undefined,
           pageContext: record.pageContext ? JSON.parse(JSON.stringify(record.pageContext)) : undefined,
+          showVariantsOnPDP: record.showVariantsOnPDP ?? false,
+          variantColumns: record.variantColumns ? JSON.parse(JSON.stringify(record.variantColumns)) : undefined,
         };
         return productTable;
       });
@@ -80,6 +90,7 @@ export const useProductTable = (productTableId?: string): UseQueryResult<Product
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        columnLabels: record.columnLabels ? JSON.parse(JSON.stringify(record.columnLabels)) : undefined,
         productSource: record.productSource as any,
         selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
         targetAllCustomers: record.targetAllCustomers ?? true,
@@ -91,6 +102,9 @@ export const useProductTable = (productTableId?: string): UseQueryResult<Product
         itemsPerPage: record.itemsPerPage ?? 25,
         isActive: record.isActive ?? true,
         placementLocation: record.placementLocation as any,
+        tableType: record.tableType || 'normal',
+        showVariantsOnPDP: record.showVariantsOnPDP ?? false,
+        variantColumns: record.variantColumns ? JSON.parse(JSON.stringify(record.variantColumns)) : undefined,
         version: record.version || '1.0.0',
         notes: record.notes || '',
         createdBy: record.createdBy || undefined,
@@ -128,6 +142,7 @@ export const useProductTableById = (id?: string): UseQueryResult<ProductTableIns
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        columnLabels: record.columnLabels ? JSON.parse(JSON.stringify(record.columnLabels)) : undefined,
         productSource: record.productSource as any,
         selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
         targetAllCustomers: record.targetAllCustomers ?? true,
@@ -139,6 +154,9 @@ export const useProductTableById = (id?: string): UseQueryResult<ProductTableIns
         itemsPerPage: record.itemsPerPage ?? 25,
         isActive: record.isActive ?? true,
         placementLocation: record.placementLocation as any,
+        tableType: record.tableType || 'normal',
+        showVariantsOnPDP: record.showVariantsOnPDP ?? false,
+        variantColumns: record.variantColumns ? JSON.parse(JSON.stringify(record.variantColumns)) : undefined,
         version: record.version || '1.0.0',
         notes: record.notes || '',
         createdBy: record.createdBy || undefined,
@@ -172,6 +190,7 @@ export const useCreateProductTable = (): UseMutationResult<ProductTableInstance,
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        columnLabels: record.columnLabels ? JSON.parse(JSON.stringify(record.columnLabels)) : undefined,
         productSource: record.productSource as any,
         selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
         targetAllCustomers: record.targetAllCustomers ?? true,
@@ -183,6 +202,9 @@ export const useCreateProductTable = (): UseMutationResult<ProductTableInstance,
         itemsPerPage: record.itemsPerPage ?? 25,
         isActive: record.isActive ?? true,
         placementLocation: record.placementLocation as any,
+        tableType: record.tableType || 'normal',
+        showVariantsOnPDP: record.showVariantsOnPDP ?? false,
+        variantColumns: record.variantColumns ? JSON.parse(JSON.stringify(record.variantColumns)) : undefined,
         version: record.version || '1.0.0',
         notes: record.notes || '',
         createdBy: record.createdBy || undefined,
@@ -227,6 +249,7 @@ export const useUpdateProductTable = (): UseMutationResult<
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        columnLabels: record.columnLabels ? JSON.parse(JSON.stringify(record.columnLabels)) : undefined,
         productSource: record.productSource as any,
         selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
         targetAllCustomers: record.targetAllCustomers ?? true,
@@ -238,6 +261,9 @@ export const useUpdateProductTable = (): UseMutationResult<
         itemsPerPage: record.itemsPerPage ?? 25,
         isActive: record.isActive ?? true,
         placementLocation: record.placementLocation as any,
+        tableType: record.tableType || 'normal',
+        showVariantsOnPDP: record.showVariantsOnPDP ?? false,
+        variantColumns: record.variantColumns ? JSON.parse(JSON.stringify(record.variantColumns)) : undefined,
         version: record.version || '1.0.0',
         notes: record.notes || '',
         createdBy: record.createdBy || undefined,
@@ -316,6 +342,7 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Pr
         displayFormat: sourceProductTable.displayFormat,
         columns: sourceProductTable.columns,
         columnsOrder: sourceProductTable.columnsOrder,
+        columnLabels: sourceProductTable.columnLabels,
         productSource: sourceProductTable.productSource,
         selectedCategories: sourceProductTable.selectedCategories,
         targetAllCustomers: sourceProductTable.targetAllCustomers,
@@ -326,8 +353,11 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Pr
         defaultSort: sourceProductTable.defaultSort,
         itemsPerPage: sourceProductTable.itemsPerPage,
         placementLocation: sourceProductTable.placementLocation,
+        tableType: sourceProductTable.tableType,
         isActive: sourceProductTable.isActive,
         notes: sourceProductTable.notes,
+        showVariantsOnPDP: sourceProductTable.showVariantsOnPDP,
+        variantColumns: sourceProductTable.variantColumns,
         version: sourceProductTable.version,
         store: {
           _link: storeId
@@ -346,6 +376,7 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Pr
         displayFormat: record.displayFormat as any,
         columns: record.columns ? JSON.parse(JSON.stringify(record.columns)) : undefined,
         columnsOrder: record.columnsOrder ? JSON.parse(JSON.stringify(record.columnsOrder)) : undefined,
+        columnLabels: record.columnLabels ? JSON.parse(JSON.stringify(record.columnLabels)) : undefined,
         productSource: record.productSource as any,
         selectedCategories: record.selectedCategories ? JSON.parse(JSON.stringify(record.selectedCategories)) : undefined,
         targetAllCustomers: record.targetAllCustomers ?? true,
@@ -357,6 +388,9 @@ export const useDuplicateProductTable = (storeId?: string): UseMutationResult<Pr
         itemsPerPage: record.itemsPerPage ?? 25,
         isActive: record.isActive ?? true,
         placementLocation: record.placementLocation as any,
+        tableType: record.tableType || 'normal',
+        showVariantsOnPDP: record.showVariantsOnPDP ?? false,
+        variantColumns: record.variantColumns ? JSON.parse(JSON.stringify(record.variantColumns)) : undefined,
         version: record.version || '1.0.0',
         notes: record.notes || '',
         createdBy: record.createdBy || undefined,

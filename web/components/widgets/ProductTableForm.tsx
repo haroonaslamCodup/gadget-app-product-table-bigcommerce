@@ -14,10 +14,11 @@ import {
   Select,
   Small,
   Textarea,
+  Text as BigText,
 } from "@bigcommerce/big-design";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { api } from "../../api";
 import { useCreateProductTable, useUpdateProductTable } from "../../hooks/useProductTables";
 import { CategorySelector } from "./CategorySelector";
@@ -34,7 +35,12 @@ interface ProductTableFormProps {
 
 export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEdit = !!widgetId;
+
+  // Get table type from URL params (for new tables)
+  const tableTypeFromUrl = searchParams.get("type") as "normal" | "variant" | null;
+  const initialTableType = tableTypeFromUrl || "normal";
 
   // Fetch store
   const { data: store } = useQuery({
@@ -46,15 +52,15 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
   const createProductTable = useCreateProductTable();
   const updateProductTable = useUpdateProductTable();
 
-  // Form state
+  // Form state - set initial values based on table type
   const [formData, setFormData] = useState<ProductTableFormData>({
     productTableName: "",
-    placementLocation: "homepage",
+    placementLocation: initialTableType === "variant" ? "pdp" : "homepage",
     displayFormat: "folded",
     columns: ["image", "name", "sku", "price", "stock", "addToCart"],
     columnsOrder: ["image", "name", "sku", "price", "stock", "addToCart"],
     columnLabels: {},
-    productSource: "all-products",
+    productSource: initialTableType === "variant" ? "current-product-variants" : "all-products",
     selectedCategories: [],
     targetAllCustomers: true,
     targetRetailOnly: false,
@@ -64,8 +70,9 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     itemsPerPage: 25,
     enableCustomerSorting: true,
     isActive: true,
+    tableType: initialTableType,
     notes: "",
-    showVariantsOnPDP: false,
+    showVariantsOnPDP: initialTableType === "variant",
     variantColumns: ["image", "name", "sku", "price", "stock", "addToCart"],
   });
 
@@ -92,6 +99,7 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
         itemsPerPage: initialData.itemsPerPage || 25,
         enableCustomerSorting: initialData.enableCustomerSorting ?? true,
         isActive: initialData.isActive ?? true,
+        tableType: initialData.tableType || "normal",
         notes: initialData.notes || "",
         showVariantsOnPDP: initialData.showVariantsOnPDP ?? false,
         variantColumns: initialData.variantColumns || ["image", "name", "sku", "price", "stock", "addToCart"],
@@ -180,8 +188,27 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
       <Form onSubmit={handleSubmit}>
         {/* Basic Information Panel */}
         <Panel header="Basic Information" marginBottom="medium">
-          <Flex flexDirection="row" flexGap="medium" flexWrap="wrap">
-            <Box style={{ flex: 1 }}>
+          {/* Show table type badge for context */}
+          {!isEdit && (
+            <Box marginBottom="medium">
+              <Flex flexDirection="column" flexGap="xSmall">
+                <BigText>
+                  <strong>Table Type: </strong>
+                  {formData.tableType === "variant"
+                    ? "Variant Table (PDP Only)"
+                    : "Normal Product Table"}
+                </BigText>
+                {formData.tableType === "variant" && (
+                  <Small color="secondary60">
+                    💡 This table will display all variants of a product on Product Detail Pages.
+                  </Small>
+                )}
+              </Flex>
+            </Box>
+          )}
+
+          <Flex flexDirection="row" flexWrap="wrap" marginHorizontal="-small">
+            <Box style={{ flex: 1, minWidth: '300px' }} paddingHorizontal="small" marginBottom="medium">
               <Input
                 label="Product Table Name"
                 description="Give your product table a descriptive name for easy identification"
@@ -196,21 +223,23 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
               />
             </Box>
 
-            <Box style={{ flex: 1 }}>
-              <Select
-                label="Placement Location"
-                description="Choose where this product table will be displayed on your store"
-                options={[
-                  { value: "homepage", content: "Home Page" },
-                  { value: "pdp", content: "Product Detail Page (PDP)" },
-                  { value: "category", content: "Category Page" },
-                  { value: "custom", content: "Custom Page" },
-                ]}
-                value={formData.placementLocation}
-                onOptionChange={(value) => setFormData({ ...formData, placementLocation: value as any })}
-                required
-              />
-            </Box>
+            {/* Hide placement location for variant tables (always PDP) */}
+            {formData.tableType !== "variant" && (
+              <Box style={{ flex: 1, minWidth: '300px' }} paddingHorizontal="small" marginBottom="medium">
+                <Select
+                  label="Placement Location"
+                  description="Choose where this product table will be displayed on your store"
+                  options={[
+                    { value: "homepage", content: "Home Page" },
+                    { value: "category", content: "Category Page" },
+                    { value: "custom", content: "Custom Page" },
+                  ]}
+                  value={formData.placementLocation}
+                  onOptionChange={(value) => setFormData({ ...formData, placementLocation: value as any })}
+                  required
+                />
+              </Box>
+            )}
           </Flex>
 
           <FormGroup>
@@ -220,7 +249,8 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
               options={[
                 { value: "all-products", content: "All Products" },
                 { value: "specific-categories", content: "Specific Categories" },
-                ...(formData.placementLocation === "pdp"
+                // Only show current-product-variants for variant table type OR normal tables on PDP
+                ...(formData.tableType === "variant" || formData.placementLocation === "pdp"
                   ? [{ value: "current-product-variants", content: "Current Product Variants (PDP only)" }]
                   : []
                 ),
@@ -234,6 +264,7 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
                   showVariantsOnPDP: value === "current-product-variants" ? true : formData.showVariantsOnPDP,
                 });
               }}
+              disabled={formData.tableType === "variant"} // Disable for variant tables (always current-product-variants)
             />
           </FormGroup>
 
@@ -251,8 +282,8 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
             </FormGroup>
           )}
 
-          {/* PDP Variant Display Settings */}
-          {formData.placementLocation === "pdp" && (
+          {/* PDP Variant Display Settings - Hidden for variant tables (they always show variants) */}
+          {formData.placementLocation === "pdp" && formData.tableType !== "variant" && (
             <FormGroup>
               <Checkbox
                 label="Show Product Variants in Table"
