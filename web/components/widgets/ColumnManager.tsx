@@ -148,10 +148,12 @@ function SortableItem({
               <ColumnLabel>
                 <span style={{ marginRight: "8px" }}>{icon}</span>
                 <div>
-                  <Text bold>{displayLabel}</Text>
-                  {customLabel && (
-                    <Small color="secondary60" marginLeft="xSmall">(Custom)</Small>
-                  )}
+                  <Text margin="none" >{displayLabel}
+                    {customLabel && (
+                      <Small style={{ display: "inline-block" }} color="secondary60" bold> (Custom)</Small>
+                    )}
+                  </Text>
+
                   {isRequired && (
                     <RequiredBadge>Required</RequiredBadge>
                   )}
@@ -352,8 +354,14 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
   };
 
   const enabledItems = columnsOrder
-    .map((id) => AVAILABLE_COLUMNS.find((c) => c.id === id))
-    .filter((col): col is typeof AVAILABLE_COLUMNS[0] => col !== undefined);
+    .map((id) => {
+      const found = AVAILABLE_COLUMNS.find((c) => c.id === id);
+      if (!found) {
+        console.warn(`Column ID "${id}" not found in AVAILABLE_COLUMNS - skipping`);
+      }
+      return found;
+    })
+    .filter((col): col is NonNullable<typeof col> => col !== undefined);
 
   const filteredAvailableColumns = AVAILABLE_COLUMNS.filter(column =>
     column.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -572,16 +580,16 @@ const ColumnCheckboxCard = styled.div<{ $isChecked?: boolean; $isRequired?: bool
     props.$isRequired
       ? "var(--bc-color-warning-light, #ffe58f)"
       : props.$isChecked
-      ? "var(--bc-color-primary, #1890ff)"
-      : "var(--bc-color-grey20, #f0f0f0)"
+        ? "var(--bc-color-primary, #1890ff)"
+        : "var(--bc-color-grey20, #f0f0f0)"
   };
   border-radius: 8px;
   background: ${props =>
     props.$isRequired
       ? "var(--bc-color-warning-lighter, #fffbe6)"
       : props.$isChecked
-      ? "var(--bc-color-primary05, #f0f8ff)"
-      : "var(--bc-color-white, white)"
+        ? "var(--bc-color-primary05, #f0f8ff)"
+        : "var(--bc-color-white, white)"
   };
   transition: all 0.2s ease;
   cursor: ${props => props.$isRequired ? "not-allowed" : "pointer"};
@@ -592,8 +600,8 @@ const ColumnCheckboxCard = styled.div<{ $isChecked?: boolean; $isRequired?: bool
     props.$isRequired
       ? "var(--bc-color-warning, #faad14)"
       : props.$isChecked
-      ? "var(--bc-color-primary-dark, #1070d0)"
-      : "var(--bc-color-grey40, #bfbfbf)"
+        ? "var(--bc-color-primary-dark, #1070d0)"
+        : "var(--bc-color-grey40, #bfbfbf)"
   };
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     transform: ${props => props.$isRequired ? "none" : "translateY(-1px)"};
@@ -745,7 +753,6 @@ const RequiredBadge = styled.span`
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  margin-left: 8px;
 `;
 
 const LabelEditContainer = styled.div`

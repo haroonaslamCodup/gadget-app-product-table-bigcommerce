@@ -1,12 +1,12 @@
 import {
   AlertsManager,
+  Text as BigText,
   Box,
   Button,
   Checkbox,
   createAlertsManager,
   Flex,
   Form,
-  FormGroup,
   H2,
   Input,
   Message,
@@ -14,17 +14,26 @@ import {
   Select,
   Small,
   Textarea,
-  Text as BigText,
 } from "@bigcommerce/big-design";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import styled from "styled-components";
 import { api } from "../../api";
-import { useCreateProductTable, useUpdateProductTable } from "../../hooks/useProductTables";
+import {
+  useCreateProductTable,
+  useUpdateProductTable,
+} from "../../hooks/useProductTables";
+import type { ProductTableFormData, ProductTableInstance } from "../../types";
 import { CategorySelector } from "./CategorySelector";
 import { ColumnManager } from "./ColumnManager";
 
-import type { ProductTableFormData, ProductTableInstance } from "../../types";
+// ✅ Responsive GridBox: creates 1 column on mobile, 2 on tablet/desktop
+const GridBox = styled(Box)`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  gap: ${({ theme }) => theme.spacing.medium};
+`;
 
 const alertsManager = createAlertsManager();
 
@@ -33,26 +42,25 @@ interface ProductTableFormProps {
   initialData?: ProductTableInstance;
 }
 
-export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProps) => {
+export const ProductTableForm = ({
+  widgetId,
+  initialData,
+}: ProductTableFormProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isEdit = !!widgetId;
 
-  // Get table type from URL params (for new tables)
   const tableTypeFromUrl = searchParams.get("type") as "normal" | "variant" | null;
   const initialTableType = tableTypeFromUrl || "normal";
 
-  // Fetch store
   const { data: store } = useQuery({
     queryKey: ["store"],
     queryFn: () => api.bigcommerce.store.findFirst(),
   });
 
-  // Mutations
   const createProductTable = useCreateProductTable();
   const updateProductTable = useUpdateProductTable();
 
-  // Form state - set initial values based on table type
   const [formData, setFormData] = useState<ProductTableFormData>({
     productTableName: "",
     placementLocation: initialTableType === "variant" ? "pdp" : "homepage",
@@ -60,7 +68,8 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     columns: ["image", "name", "sku", "price", "stock", "addToCart"],
     columnsOrder: ["image", "name", "sku", "price", "stock", "addToCart"],
     columnLabels: {},
-    productSource: initialTableType === "variant" ? "current-product-variants" : "all-products",
+    productSource:
+      initialTableType === "variant" ? "current-product-variants" : "all-products",
     selectedCategories: [],
     targetAllCustomers: true,
     targetRetailOnly: false,
@@ -76,53 +85,47 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     variantColumns: ["image", "name", "sku", "price", "stock", "addToCart"],
   });
 
-  // Validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Load initial data if editing
   useEffect(() => {
     if (initialData) {
+      // Define valid column IDs
+      const validColumnIds = ["image", "name", "sku", "price", "stock", "addToCart"];
+
+      // Filter out any invalid column IDs from initialData
+      const sanitizedColumns = (initialData.columns || []).filter(col => validColumnIds.includes(col));
+      const sanitizedOrder = (initialData.columnsOrder || []).filter(col => validColumnIds.includes(col));
+
+      // Ensure required columns are present
+      const finalColumns = Array.from(new Set(["image", "name", ...sanitizedColumns]));
+      const finalOrder = ["image", "name", ...sanitizedOrder.filter(col => !["image", "name"].includes(col))];
+
       setFormData({
-        productTableName: initialData.productTableName || "",
-        placementLocation: initialData.placementLocation || "homepage",
-        displayFormat: initialData.displayFormat || "folded",
-        columns: initialData.columns || ["image", "name", "sku", "price", "stock", "addToCart"],
-        columnsOrder: initialData.columnsOrder || ["image", "name", "sku", "price", "stock", "addToCart"],
-        columnLabels: initialData.columnLabels || {},
-        productSource: initialData.productSource || "all-products",
-        selectedCategories: initialData.selectedCategories || [],
-        targetAllCustomers: initialData.targetAllCustomers ?? true,
-        targetRetailOnly: initialData.targetRetailOnly ?? false,
-        targetWholesaleOnly: initialData.targetWholesaleOnly ?? false,
-        targetLoggedInOnly: initialData.targetLoggedInOnly ?? false,
-        defaultSort: initialData.defaultSort || "name",
-        itemsPerPage: initialData.itemsPerPage || 25,
-        enableCustomerSorting: initialData.enableCustomerSorting ?? true,
-        isActive: initialData.isActive ?? true,
-        tableType: initialData.tableType || "normal",
-        notes: initialData.notes || "",
-        showVariantsOnPDP: initialData.showVariantsOnPDP ?? false,
-        variantColumns: initialData.variantColumns || ["image", "name", "sku", "price", "stock", "addToCart"],
+        ...formData,
+        ...initialData,
+        columns: finalColumns,
+        columnsOrder: finalOrder,
       });
     }
   }, [initialData]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-
     if (!formData.productTableName.trim()) {
       newErrors.productTableName = "Product table name is required";
     }
-
     if (formData.columns.length === 0) {
       newErrors.columns = "At least one column must be selected";
     }
-
-    const targetingOptions = [formData.targetRetailOnly, formData.targetWholesaleOnly, formData.targetLoggedInOnly];
-    if (!formData.targetAllCustomers && !targetingOptions.some(opt => opt)) {
-      newErrors.customerTargeting = "Please select at least one customer targeting option";
+    const targetingOptions = [
+      formData.targetRetailOnly,
+      formData.targetWholesaleOnly,
+      formData.targetLoggedInOnly,
+    ];
+    if (!formData.targetAllCustomers && !targetingOptions.some((opt) => opt)) {
+      newErrors.customerTargeting =
+        "Please select at least one customer targeting option";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -142,11 +145,8 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
     try {
       const widgetData = {
         ...formData,
-        store: {
-          _link: store?.id
-        },
+        store: { _link: store?.id },
         version: "1.0.0",
-        // Generate productTableId for new tables
         ...(!isEdit && { productTableId: crypto.randomUUID() }),
       };
 
@@ -182,298 +182,281 @@ export const ProductTableForm = ({ widgetId, initialData }: ProductTableFormProp
 
       <Box marginBottom="xxLarge">
         <H2>{isEdit ? "Edit Product Table" : "Create New Product Table"}</H2>
-        <Small color="secondary60">Configure your product table widget settings</Small>
+        <Small color="secondary60">
+          Configure your product table widget settings
+        </Small>
       </Box>
 
       <Form onSubmit={handleSubmit}>
-        {/* Basic Information Panel */}
-        <Panel header="Basic Information" marginBottom="medium">
-          {/* Show table type badge for context */}
+        <Panel header="Basic Information" marginBottom="xLarge">
           {!isEdit && (
             <Box marginBottom="medium">
-              <Flex flexDirection="column" flexGap="xSmall">
-                <BigText>
-                  <strong>Table Type: </strong>
-                  {formData.tableType === "variant"
-                    ? "Variant Table (PDP Only)"
-                    : "Normal Product Table"}
-                </BigText>
-                {formData.tableType === "variant" && (
-                  <Small color="secondary60">
-                    💡 This table will display all variants of a product on Product Detail Pages.
-                  </Small>
-                )}
-              </Flex>
+              <BigText>
+                <strong>Table Type:</strong>{" "}
+                {formData.tableType === "variant"
+                  ? "Variant Product Table (PDP Only)"
+                  : "Normal Product Table"}
+              </BigText>
+              {formData.tableType === "variant" && (
+                <Small color="secondary60">
+                  💡 Displays all variants of a product on the PDP.
+                </Small>
+              )}
             </Box>
           )}
 
-          <Flex flexDirection="row" flexWrap="wrap" marginHorizontal="-small">
-            <Box style={{ flex: 1, minWidth: '300px' }} paddingHorizontal="small" marginBottom="medium">
-              <Input
-                label="Product Table Name"
-                description="Give your product table a descriptive name for easy identification"
-                placeholder="e.g., Homepage Featured Products"
-                value={formData.productTableName}
-                onChange={(e) => {
-                  setFormData({ ...formData, productTableName: e.target.value });
-                  if (errors.productTableName) setErrors({ ...errors, productTableName: "" });
-                }}
-                error={errors.productTableName}
-                required
-              />
-            </Box>
+          {/* ✅ Two-column responsive grid */}
+          <GridBox marginBottom="medium">
+            <Input
+              width="100%"
+              label="Product Table Name"
+              description="Give your table a descriptive name"
+              placeholder="e.g., Homepage Featured Products"
+              value={formData.productTableName}
+              onChange={(e) =>
+                setFormData({ ...formData, productTableName: e.target.value })
+              }
+              error={errors.productTableName}
+              required
+            />
 
-            {/* Hide placement location for variant tables (always PDP) */}
             {formData.tableType !== "variant" && (
-              <Box style={{ flex: 1, minWidth: '300px' }} paddingHorizontal="small" marginBottom="medium">
-                <Select
-                  label="Placement Location"
-                  description="Choose where this product table will be displayed on your store"
-                  options={[
-                    { value: "homepage", content: "Home Page" },
-                    { value: "category", content: "Category Page" },
-                    { value: "custom", content: "Custom Page" },
-                  ]}
-                  value={formData.placementLocation}
-                  onOptionChange={(value) => setFormData({ ...formData, placementLocation: value as any })}
-                  required
-                />
-              </Box>
+              <Select
+                width="100%"
+                label="Placement Location"
+                description="Where this table appears on your store"
+                options={[
+                  { value: "homepage", content: "Home Page" },
+                  { value: "category", content: "Category Page" },
+                  { value: "custom", content: "Custom Page" },
+                ]}
+                value={formData.placementLocation}
+                onOptionChange={(value) =>
+                  setFormData({ ...formData, placementLocation: value as any })
+                }
+              />
             )}
-          </Flex>
+          </GridBox>
 
-          <FormGroup>
+          <Box marginBottom="medium">
             <Select
               label="Product Source"
-              description="Select which products to display in the table"
+              description="Select which products to display"
               options={[
                 { value: "all-products", content: "All Products" },
                 { value: "specific-categories", content: "Specific Categories" },
-                // Only show current-product-variants for variant table type OR normal tables on PDP
-                ...(formData.tableType === "variant" || formData.placementLocation === "pdp"
-                  ? [{ value: "current-product-variants", content: "Current Product Variants (PDP only)" }]
-                  : []
-                ),
+                ...(formData.tableType === "variant" ||
+                  formData.placementLocation === "pdp"
+                  ? [
+                    {
+                      value: "current-product-variants",
+                      content: "Current Product Variants (PDP only)",
+                    },
+                  ]
+                  : []),
               ]}
               value={formData.productSource}
-              onOptionChange={(value) => {
+              onOptionChange={(value) =>
                 setFormData({
                   ...formData,
                   productSource: value as any,
-                  // Auto-enable variant display when selecting current-product-variants
-                  showVariantsOnPDP: value === "current-product-variants" ? true : formData.showVariantsOnPDP,
-                });
-              }}
-              disabled={formData.tableType === "variant"} // Disable for variant tables (always current-product-variants)
+                  showVariantsOnPDP:
+                    value === "current-product-variants"
+                      ? true
+                      : formData.showVariantsOnPDP,
+                })
+              }
             />
-          </FormGroup>
+          </Box>
 
           {formData.productSource === "specific-categories" && (
-            <FormGroup>
+            <Box marginBottom="medium">
               <CategorySelector
                 selectedCategories={formData.selectedCategories}
-                onChange={(selected) => {
-                  setFormData({
-                    ...formData,
-                    selectedCategories: selected,
-                  });
-                }}
+                onChange={(selected) =>
+                  setFormData({ ...formData, selectedCategories: selected })
+                }
               />
-            </FormGroup>
+            </Box>
           )}
 
-          {/* PDP Variant Display Settings - Hidden for variant tables (they always show variants) */}
-          {formData.placementLocation === "pdp" && formData.tableType !== "variant" && (
-            <FormGroup>
-              <Checkbox
-                label="Show Product Variants in Table"
-                description="Display all variants of the current product in an easy-to-purchase table format"
-                checked={formData.showVariantsOnPDP || formData.productSource === "current-product-variants"}
-                disabled={formData.productSource === "current-product-variants"}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  showVariantsOnPDP: e.target.checked,
-                  // Auto-switch product source when enabling variants
-                  productSource: e.target.checked ? "current-product-variants" : "all-products"
-                })}
-              />
-              {formData.showVariantsOnPDP && (
-                <Box marginTop="xSmall">
-                  <Small color="secondary60">
-                    💡 Perfect for products with multiple sizes, colors, or options. Customers can easily compare and purchase variants directly from the table.
-                  </Small>
-                </Box>
-              )}
-            </FormGroup>
-          )}
-
-          {/* Status & Notes */}
-          <FormGroup>
+          <GridBox marginBottom="medium">
             <Checkbox
-              label="Product Table Active"
-              description="Deactivate to hide this table without deleting the configuration"
+              label="Active"
+              description="Deactivate to hide this table"
               checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+              onChange={(e) =>
+                setFormData({ ...formData, isActive: e.target.checked })
+              }
             />
-          </FormGroup>
 
-          <FormGroup>
+            <Box />
+          </GridBox>
+
+          <Box marginBottom="medium">
             <Textarea
               label="Notes"
-              description="Internal notes about this configuration (not visible to customers)"
-              placeholder="Add any notes about this widget configuration..."
+              description="Internal notes (not visible to customers)"
+              placeholder="Add any notes about this configuration..."
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={4}
+              onChange={(e) =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
+              rows={3}
             />
-          </FormGroup>
+          </Box>
         </Panel>
 
-        {/* Display Settings Panel */}
-        <Panel header="Display Settings" marginBottom="medium">
-          <FormGroup>
+        {/* 🧩 DISPLAY SETTINGS */}
+        <Panel header="Display Settings" marginBottom="xLarge">
+          <Box marginBottom="medium">
             <Select
               label="Display Format"
-              description="Choose how products are organized in the table"
               options={[
-                { value: "folded", content: "Folded (Collapsed View)" },
-                { value: "unfolded", content: "Unfolded (Expanded View)" },
+                { value: "folded", content: "Folded (Collapsed)" },
+                { value: "unfolded", content: "Unfolded (Expanded)" },
                 { value: "grouped", content: "Grouped" },
               ]}
               value={formData.displayFormat}
-              onOptionChange={(value) => setFormData({ ...formData, displayFormat: value as any })}
+              onOptionChange={(value) =>
+                setFormData({ ...formData, displayFormat: value as any })
+              }
             />
-          </FormGroup>
+          </Box>
 
           {errors.columns && (
-            <Message type="error" messages={[{ text: errors.columns }]} marginBottom="small" />
+            <Message type="error" messages={[{ text: errors.columns }]} marginBottom="medium" />
           )}
+
           <ColumnManager
             columns={formData.columns}
             columnsOrder={formData.columnsOrder}
             columnLabels={formData.columnLabels}
-            onChange={(columns, order, labels) => {
-              setFormData({ ...formData, columns, columnsOrder: order, columnLabels: labels });
-              if (errors.columns) setErrors({ ...errors, columns: "" });
-            }}
+            onChange={(columns, order, labels) =>
+              setFormData({
+                ...formData,
+                columns,
+                columnsOrder: order,
+                columnLabels: labels,
+              })
+            }
           />
         </Panel>
 
-        {/* Sorting & Pagination Panel */}
-        <Panel header="Sorting & Pagination" marginBottom="medium">
-          <Flex flexDirection="row" flexGap="medium">
-            <Box style={{ flex: 1 }}>
-              <Select
-                label="Default Sort"
-                description="Initial sort order when table loads"
-                options={[
-                  { value: "name", content: "Name" },
-                  { value: "price-asc", content: "Price: Low to High" },
-                  { value: "price-desc", content: "Price: High to Low" },
-                  { value: "newest", content: "Newest First" },
-                  { value: "oldest", content: "Oldest First" },
-                  { value: "sku", content: "SKU" },
-                ]}
-                value={formData.defaultSort}
-                onOptionChange={(value) => setFormData({ ...formData, defaultSort: value as any })}
-              />
-            </Box>
+        {/* 🔢 SORTING & PAGINATION */}
+        <Panel header="Sorting & Pagination" marginBottom="xLarge">
+          <GridBox>
+            <Select
+              label="Default Sort"
+              options={[
+                { value: "name", content: "Name" },
+                { value: "price-asc", content: "Price: Low to High" },
+                { value: "price-desc", content: "Price: High to Low" },
+                { value: "newest", content: "Newest" },
+                { value: "oldest", content: "Oldest" },
+              ]}
+              value={formData.defaultSort}
+              onOptionChange={(value) =>
+                setFormData({ ...formData, defaultSort: value as any })
+              }
+            />
 
-            <Box style={{ flex: 1 }}>
-              <Select
-                label="Items Per Page"
-                description="Number of products to display per page"
-                options={[
-                  { value: "10", content: "10 items" },
-                  { value: "25", content: "25 items" },
-                  { value: "50", content: "50 items" },
-                ]}
-                value={formData.itemsPerPage.toString()}
-                onOptionChange={(value) => setFormData({ ...formData, itemsPerPage: parseInt(value || "25", 10) })}
-              />
-            </Box>
-          </Flex>
+            <Select
+              label="Items Per Page"
+              options={[
+                { value: "10", content: "10" },
+                { value: "25", content: "25" },
+                { value: "50", content: "50" },
+              ]}
+              value={formData.itemsPerPage.toString()}
+              onOptionChange={(value) =>
+                setFormData({
+                  ...formData,
+                  itemsPerPage: parseInt(value || "25", 10),
+                })
+              }
+            />
+          </GridBox>
         </Panel>
 
-        {/* Customer Targeting Panel */}
-        <Panel header="Customer Targeting" marginBottom="medium">
+        {/* 🎯 CUSTOMER TARGETING */}
+        <Panel header="Customer Targeting" marginBottom="xLarge">
           {errors.customerTargeting && (
-            <Message type="error" messages={[{ text: errors.customerTargeting }]} marginBottom="medium" />
+            <Message
+              type="error"
+              messages={[{ text: errors.customerTargeting }]}
+              marginBottom="medium"
+            />
           )}
 
-          <FormGroup>
+          <Box marginBottom="medium">
             <Checkbox
               label="Show to All Customers"
-              description="Display to everyone including guests"
               checked={formData.targetAllCustomers}
-              onChange={(e) => {
-                setFormData({ ...formData, targetAllCustomers: e.target.checked });
-                if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
-              }}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  targetAllCustomers: e.target.checked,
+                })
+              }
             />
-          </FormGroup>
+          </Box>
 
-          <FormGroup>
+          <GridBox>
             <Checkbox
               label="Retail Customers Only"
-              description="Show only to retail customer group"
-              checked={formData.targetRetailOnly}
               disabled={formData.targetAllCustomers}
-              onChange={(e) => {
-                setFormData({ ...formData, targetRetailOnly: e.target.checked });
-                if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
-              }}
+              checked={formData.targetRetailOnly}
+              onChange={(e) =>
+                setFormData({ ...formData, targetRetailOnly: e.target.checked })
+              }
             />
-          </FormGroup>
-
-          <FormGroup>
             <Checkbox
               label="Wholesale Customers Only"
-              description="Show only to wholesale customer group"
-              checked={formData.targetWholesaleOnly}
               disabled={formData.targetAllCustomers}
-              onChange={(e) => {
-                setFormData({ ...formData, targetWholesaleOnly: e.target.checked });
-                if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
-              }}
+              checked={formData.targetWholesaleOnly}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  targetWholesaleOnly: e.target.checked,
+                })
+              }
             />
-          </FormGroup>
-
-          <FormGroup>
             <Checkbox
               label="Logged-in Users Only"
-              description="Require users to be logged in to see this table"
-              checked={formData.targetLoggedInOnly}
               disabled={formData.targetAllCustomers}
-              onChange={(e) => {
-                setFormData({ ...formData, targetLoggedInOnly: e.target.checked });
-                if (errors.customerTargeting) setErrors({ ...errors, customerTargeting: "" });
-              }}
+              checked={formData.targetLoggedInOnly}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  targetLoggedInOnly: e.target.checked,
+                })
+              }
             />
-          </FormGroup>
+          </GridBox>
         </Panel>
 
-        {/* Actions */}
-        <Box marginTop="xxLarge">
-          <Flex justifyContent="flex-end">
-            <Button
-              variant="subtle"
-              onClick={() => navigate("/product-tables")}
-              type="button"
-              marginRight="medium"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              type="submit"
-              isLoading={createProductTable.isPending || updateProductTable.isPending}
-              disabled={!formData.productTableName.trim()}
-            >
-              {isEdit ? "Update Product Table" : "Create Product Table"}
-            </Button>
-          </Flex>
-        </Box>
+        {/* 🧭 ACTIONS */}
+        <Flex justifyContent="flex-end" marginTop="xxLarge">
+          <Button
+            variant="subtle"
+            onClick={() => navigate("/product-tables")}
+            type="button"
+            marginRight="medium"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            isLoading={
+              createProductTable.isPending || updateProductTable.isPending
+            }
+            disabled={!formData.productTableName.trim()}
+          >
+            {isEdit ? "Update Product Table" : "Create Product Table"}
+          </Button>
+        </Flex>
       </Form>
     </>
   );
