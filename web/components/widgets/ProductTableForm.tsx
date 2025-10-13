@@ -13,6 +13,7 @@ import {
   Panel,
   Select,
   Small,
+  Text,
   Textarea,
 } from "@bigcommerce/big-design";
 import { useQuery } from "@tanstack/react-query";
@@ -24,6 +25,7 @@ import {
   useCreateProductTable,
   useUpdateProductTable,
 } from "../../hooks/useProductTables";
+import { useGlobalInstallWidget } from "../../hooks/useGlobalInstall";
 import type { ProductTableFormData, ProductTableInstance } from "../../types";
 import { CategorySelector } from "./CategorySelector";
 import { ColumnManager } from "./ColumnManager";
@@ -60,6 +62,7 @@ export const ProductTableForm = ({
 
   const createProductTable = useCreateProductTable();
   const updateProductTable = useUpdateProductTable();
+  const globalInstall = useGlobalInstallWidget();
 
   const [formData, setFormData] = useState<ProductTableFormData>({
     productTableName: "",
@@ -170,6 +173,48 @@ export const ProductTableForm = ({
     } catch (error) {
       alertsManager.add({
         messages: [{ text: `Failed to save: ${(error as Error).message}` }],
+        type: "error",
+        autoDismiss: false,
+      });
+    }
+  };
+
+  const handleGlobalInstall = async () => {
+    if (!initialData?.productTableId) {
+      alertsManager.add({
+        messages: [{ text: "Product Table ID not found. Please save the product table first." }],
+        type: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    if (!confirm(
+      "This will install this product table globally on all category pages using BigCommerce Widgets API.\n\n" +
+      "Are you sure you want to continue?"
+    )) {
+      return;
+    }
+
+    try {
+      await globalInstall.mutateAsync({
+        productTableId: initialData.productTableId,
+      });
+
+      alertsManager.add({
+        messages: [{
+          text: "✅ Product table installed globally on all category pages! " +
+                "The widget will now appear on every category page automatically."
+        }],
+        type: "success",
+        autoDismiss: false,
+      });
+    } catch (error) {
+      alertsManager.add({
+        messages: [{
+          text: `Failed to install globally: ${(error as Error).message}. ` +
+                `You can still add it manually using Page Builder.`
+        }],
         type: "error",
         autoDismiss: false,
       });
@@ -449,6 +494,45 @@ export const ProductTableForm = ({
             />
           </GridBox>
         </Panel>
+
+        {/* 🚀 GLOBAL INSTALLATION (Only show in edit mode for category placement) */}
+        {isEdit && formData.placementLocation === "category" && (
+          <Panel header="Global Installation" marginBottom="xLarge">
+            <Box marginBottom="medium">
+              <BigText bold>Install on All Category Pages</BigText>
+              <Text color="secondary60" marginTop="xSmall">
+                This will automatically place this product table on all category pages using BigCommerce Widgets API.
+                You won't need to manually add it to each category via Page Builder.
+              </Text>
+            </Box>
+
+            <Message
+              type="info"
+              messages={[
+                {
+                  text: "💡 After global installation, this widget will appear on every category page automatically. " +
+                        "It will auto-detect the category and show the correct products."
+                }
+              ]}
+              marginBottom="medium"
+            />
+
+            <Button
+              variant="secondary"
+              onClick={handleGlobalInstall}
+              isLoading={globalInstall.isPending}
+              disabled={!initialData?.productTableId}
+            >
+              {globalInstall.isPending ? "Installing..." : "Install Globally on All Category Pages"}
+            </Button>
+
+            {!initialData?.productTableId && (
+              <Small color="secondary60" marginTop="xSmall">
+                Save the product table first to enable global installation
+              </Small>
+            )}
+          </Panel>
+        )}
 
         {/* 🧭 ACTIONS */}
         <Flex justifyContent="flex-end" marginTop="xxLarge">

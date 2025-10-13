@@ -10,12 +10,13 @@ import {
   Text,
   Textarea,
 } from "@bigcommerce/big-design";
-import { AddIcon, CodeIcon, ContentCopyIcon, DeleteIcon, EditIcon, FileCopyIcon } from "@bigcommerce/big-design-icons";
+import { AddIcon, CodeIcon, ContentCopyIcon, DeleteIcon, EditIcon, FileCopyIcon, PublicIcon } from "@bigcommerce/big-design-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "../api";
 import { useDeleteProductTable, useDuplicateProductTable, useProductTables } from "../hooks/useProductTables";
+import { useGlobalInstallWidget } from "../hooks/useGlobalInstall";
 import type { ProductTableInstance } from "../types";
 
 export const ProductTablesPage = () => {
@@ -36,6 +37,7 @@ export const ProductTablesPage = () => {
   // Mutations
   const deleteProductTable = useDeleteProductTable();
   const duplicateProductTable = useDuplicateProductTable(store?.id);
+  const globalInstall = useGlobalInstallWidget();
 
   const handleDelete = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
@@ -74,6 +76,30 @@ export const ProductTablesPage = () => {
     if (selectedProductTable) {
       navigator.clipboard.writeText(getEmbedCode(selectedProductTable.productTableId));
       alert("Embed code copied to clipboard!");
+    }
+  };
+
+  const handleGlobalInstall = async (productTable: ProductTableInstance) => {
+    if (!productTable.productTableId) {
+      alert("Product Table ID not found");
+      return;
+    }
+
+    if (!confirm(
+      `Install "${productTable.productTableName}" globally on all category pages?\n\n` +
+      "The widget will automatically appear on every category page."
+    )) {
+      return;
+    }
+
+    try {
+      await globalInstall.mutateAsync({
+        productTableId: productTable.productTableId,
+      });
+
+      alert("✅ Product table installed globally on all category pages!");
+    } catch (error) {
+      alert(`Failed to install globally: ${(error as Error).message}`);
     }
   };
 
@@ -166,6 +192,16 @@ export const ProductTablesPage = () => {
                   </Flex>
                 </Box>
                 <Flex alignItems="center" flexGap="xSmall">
+                  {productTable.placementLocation === "category" && (
+                    <Button
+                      iconOnly={<PublicIcon />}
+                      variant="secondary"
+                      onClick={() => handleGlobalInstall(productTable)}
+                      isLoading={globalInstall.isPending}
+                      aria-label="Install Globally on All Category Pages"
+                    />
+                  )}
+
                   <Button
                     iconOnly={<CodeIcon />}
                     variant="secondary"

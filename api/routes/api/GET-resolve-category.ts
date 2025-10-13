@@ -80,20 +80,55 @@ export default async function route({ request, reply, logger, connections, api }
     logger.info(`Resolving category slug: ${categorySlug}`);
 
     // Fetch all categories and find matching slug
-    // Note: BigCommerce v3 API doesn't support filtering by custom_url directly,
-    // so we need to fetch and filter
-    const response = await bigcommerceConnection.v3.get<any>(
-      '/catalog/categories?include_fields=id,name,custom_url'
-    ) as any;
+    let categories: any[] = [];
 
-    if (!response || !response.data) {
-      return reply.code(404).send({
+    try {
+      // BigCommerce API returns a direct array (not wrapped in data property)
+      const response = await bigcommerceConnection.v3.get<any>(
+        '/catalog/categories'
+      ) as any;
+
+      logger.info(`BigCommerce API response type: ${typeof response}, isArray: ${Array.isArray(response)}`);
+
+      if (!response) {
+        logger.error('BigCommerce API returned null/undefined');
+        return reply.code(500).send({
+          success: false,
+          error: "BigCommerce API returned empty response"
+        });
+      }
+
+      // Handle response format
+      if (Array.isArray(response)) {
+        categories = response;
+        logger.info(`✓ Fetched ${categories.length} categories (direct array format)`);
+      } else if (response.data && Array.isArray(response.data)) {
+        categories = response.data;
+        logger.info(`✓ Fetched ${categories.length} categories (wrapped data format)`);
+      } else {
+        logger.error(`Unexpected response format: ${JSON.stringify(response).substring(0, 200)}`);
+        return reply.code(500).send({
+          success: false,
+          error: "Unexpected response format from BigCommerce"
+        });
+      }
+
+      if (categories.length === 0) {
+        logger.warn('No categories found in store');
+        return reply.code(404).send({
+          success: false,
+          error: "No categories found in store"
+        });
+      }
+
+    } catch (apiError: any) {
+      logger.error(`BigCommerce API error: ${apiError.message}`);
+      return reply.code(500).send({
         success: false,
-        error: "Could not fetch categories from BigCommerce"
+        error: "Failed to fetch categories from BigCommerce",
+        details: apiError.message
       });
     }
-
-    const categories = Array.isArray(response.data) ? response.data : [];
 
     // Find category by matching URL slug
     const matchingCategory = categories.find((cat: any) => {

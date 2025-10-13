@@ -3,7 +3,7 @@ import type { RouteContext } from "gadget-server";
 import { join } from "path";
 
 // Widget version - increment this when you rebuild the widget to bust cache
-const WIDGET_VERSION = "1.0.56";
+const WIDGET_VERSION = "1.0.57";
 
 /**
  * GET /widget-loader.js
