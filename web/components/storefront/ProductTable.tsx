@@ -77,13 +77,19 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
       filters.includeVariants = "true";
     } else if (config.productSource === "specific-categories" && config.selectedCategories && config.selectedCategories.length > 0) {
       filters.categories = config.selectedCategories.join(",");
+      console.log('[Product Table Component] Using specific categories:', filters.categories);
     } else if (config.productSource === "current-category" && pageContext?.categoryId) {
       filters.categories = pageContext.categoryId;
+      console.log('[Product Table Component] Using current category filter:', filters.categories);
+    } else if (config.productSource === "current-category" && !pageContext?.categoryId) {
+      console.warn('[Product Table Component] ⚠️ current-category mode but no categoryId in pageContext!', { config, pageContext });
     }
 
     if (customerContext?.customerGroupId) {
       filters.userGroup = customerContext.customerGroupId;
     }
+
+    console.log('[Product Table Component] Final filters:', filters);
 
     return filters;
   }, [config, pageContext, currentPage, sortBy, searchQuery, customerContext]);

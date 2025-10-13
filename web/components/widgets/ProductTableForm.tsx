@@ -245,6 +245,7 @@ export const ProductTableForm = ({
               options={[
                 { value: "all-products", content: "All Products" },
                 { value: "specific-categories", content: "Specific Categories" },
+                { value: "current-category", content: "Current Category (Auto-detect)" },
                 ...(formData.tableType === "variant" ||
                   formData.placementLocation === "pdp"
                   ? [
@@ -268,6 +269,19 @@ export const ProductTableForm = ({
               }
             />
           </Box>
+
+          {formData.productSource === "current-category" && (
+            <Box marginBottom="medium">
+              <Message
+                type="info"
+                messages={[
+                  {
+                    text: "💡 This Product Table will automatically detect the current category and display products from that category. Perfect for placing on category page templates!"
+                  }
+                ]}
+              />
+            </Box>
+          )}
 
           {formData.productSource === "specific-categories" && (
             <Box marginBottom="medium">

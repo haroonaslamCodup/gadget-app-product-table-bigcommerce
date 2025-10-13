@@ -93,25 +93,160 @@ export const initProductTableWidget = (config: ProductTableConfig) => {
     return undefined;
   };
 
-  const getCategoryId = () => {
-    // Try data attribute first
+  const getCategoryIdSync = () => {
+    // Try data attribute first (manual override)
     const dataAttr = document.querySelector('[data-category-id]')?.getAttribute('data-category-id');
-    if (dataAttr) return dataAttr;
+    if (dataAttr) {
+      console.log('[Product Table] ✓ Category ID from data-category-id:', dataAttr);
+      return dataAttr;
+    }
 
-    // Try window.BCData
+    // Try window.BCData (most reliable for BigCommerce - when available)
     if (typeof window !== 'undefined' && (window as any).BCData?.category_id) {
-      return String((window as any).BCData.category_id);
+      const categoryId = String((window as any).BCData.category_id);
+      console.log('[Product Table] ✓ Category ID from BCData:', categoryId);
+      return categoryId;
+    }
+
+    // Try body element data attribute
+    const bodyDataCategoryId = document.body.getAttribute('data-category-id');
+    if (bodyDataCategoryId) {
+      console.log('[Product Table] ✓ Category ID from body[data-category-id]:', bodyDataCategoryId);
+      return bodyDataCategoryId;
+    }
+
+    // Try page body class with various formats (some themes)
+    const bodyClasses = document.body.className;
+
+    // Format: categoryId--123
+    const categoryMatch1 = bodyClasses.match(/categoryId--(\d+)/);
+    if (categoryMatch1 && categoryMatch1[1]) {
+      console.log('[Product Table] ✓ Category ID from body class (format 1):', categoryMatch1[1]);
+      return categoryMatch1[1];
+    }
+
+    // Format: category-123 or cat-123
+    const categoryMatch2 = bodyClasses.match(/(?:category|cat)-(\d+)/);
+    if (categoryMatch2 && categoryMatch2[1]) {
+      console.log('[Product Table] ✓ Category ID from body class (format 2):', categoryMatch2[1]);
+      return categoryMatch2[1];
+    }
+
+    // Try meta tag
+    const metaCategory = document.querySelector('meta[name="category-id"]') ||
+                         document.querySelector('meta[property="category:id"]');
+    if (metaCategory) {
+      const categoryId = metaCategory.getAttribute('content');
+      if (categoryId) {
+        console.log('[Product Table] ✓ Category ID from meta tag:', categoryId);
+        return categoryId;
+      }
+    }
+
+    // Try finding category link in breadcrumbs
+    const breadcrumbLink = document.querySelector('a[href*="/garden/"], a[href*="/category/"]');
+    if (breadcrumbLink) {
+      const href = breadcrumbLink.getAttribute('href') || '';
+      const urlCategoryMatch = href.match(/\/(?:garden|category)\/([^\/]+)/);
+      if (urlCategoryMatch) {
+        console.log('[Product Table] ⚠️ Found category in breadcrumb, but cannot get numeric ID. URL slug:', urlCategoryMatch[1]);
+      }
+    }
+
+    // Last resort: Check if we're on a category-like page based on URL patterns
+    const pathname = window.location.pathname;
+    const isLikelyCategoryPage = /^\/(garden|shop|category|products|collection)\//.test(pathname);
+
+    if (isLikelyCategoryPage) {
+      console.warn('[Product Table] ❌ Category page detected by URL pattern, but no category ID found.');
+      console.warn('[Product Table] URL:', pathname);
+      console.warn('[Product Table] This theme does not inject category_id. Manual fix required.');
+    } else {
+      console.log('[Product Table] ℹ️ Not on a category page. URL:', pathname);
+    }
+
+    console.warn('[Product Table] Category auto-detection failed. BCData:', (window as any).BCData);
+    return undefined;
+  };
+
+  // Async function to resolve category ID from URL if BCData is not available
+  const getCategoryIdAsync = async (): Promise<string | undefined> => {
+    // First try synchronous detection
+    const syncId = getCategoryIdSync();
+    if (syncId) return syncId;
+
+    // If no category ID found and we're likely on a category page, try API resolution
+    const pathname = window.location.pathname;
+    const isLikelyCategoryPage = /^\/(garden|shop|category|products|collection|[^\/]+)\/$/.test(pathname);
+
+    if (!isLikelyCategoryPage) {
+      return undefined;
+    }
+
+    // Check localStorage cache (5 minute TTL)
+    const cacheKey = `ptw_category_${pathname}`;
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { categoryId, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          console.log('[Product Table] ✓ Category ID from localStorage cache:', categoryId);
+          return categoryId;
+        }
+      }
+    } catch (e) {
+      // localStorage might be disabled or full
+    }
+
+    try {
+      console.log('[Product Table] 🔄 Attempting API category resolution for URL:', pathname);
+
+      const baseUrl = (window as any).__GADGET_API_URL__ || window.location.origin;
+      const apiUrl = `${baseUrl}/api/resolve-category?url=${encodeURIComponent(pathname)}`;
+
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        console.warn('[Product Table] API category resolution failed:', response.status);
+        return undefined;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.categoryId) {
+        console.log('[Product Table] ✓ Category ID resolved from API:', data.categoryId, `(${data.categoryName})`);
+
+        // Cache the result
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            categoryId: data.categoryId,
+            categoryName: data.categoryName,
+            timestamp: Date.now()
+          }));
+        } catch (e) {
+          // localStorage might be disabled or full
+        }
+
+        return data.categoryId;
+      }
+    } catch (error) {
+      console.warn('[Product Table] Error resolving category from API:', error);
     }
 
     return undefined;
   };
 
-  // Allow manual override of page context via config
-  const pageContext = {
-    categoryId: config.pageContext?.categoryId || getCategoryId(),
+  // Get initial page context (synchronous)
+  const initialPageContext = {
+    categoryId: config.pageContext?.categoryId || getCategoryIdSync(),
     productId: config.pageContext?.productId || getProductId(),
     pageType: config.pageContext?.pageType || document.querySelector('[data-page-type]')?.getAttribute('data-page-type') || undefined,
   };
+
+  // If category ID is not found and this is likely a category page, fetch async
+  const pageContext = initialPageContext;
 
   // Debug logging for page context detection
   if (config.showVariantsOnPDP || config.productSource === 'current-product-variants') {
@@ -126,16 +261,69 @@ export const initProductTableWidget = (config: ProductTableConfig) => {
     });
   }
 
+  // Debug logging for current-category mode
+  if (config.productSource === 'current-category') {
+    console.log('[Product Table] 🔍 Current Category Mode Enabled');
+    console.log('[Product Table] Product Source:', config.productSource);
+    console.log('[Product Table] Detected Category ID:', pageContext.categoryId);
+    console.log('[Product Table] Full Page Context:', pageContext);
+    console.log('[Product Table] BCData Available:', (window as any).BCData);
+    console.log('[Product Table] Body Classes:', document.body.className);
+
+    if (!pageContext.categoryId) {
+      console.error('[Product Table] ❌ Category ID not detected! Widget may show all products.');
+      console.log('[Product Table] 💡 Troubleshooting tips:');
+      console.log('  1. Check if window.BCData.category_id exists on this page');
+      console.log('  2. Verify you are on a category page');
+      console.log('  3. Check if your theme injects BCData properly');
+    } else {
+      console.log('[Product Table] ✅ Category detected successfully!');
+    }
+  }
+
   // Create React root and render the product table
   const root = createRoot(container);
 
-  root.render(
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ProductTable config={config} pageContext={pageContext} />
-      </QueryClientProvider>
-    </ErrorBoundary>
-  );
+  // If category ID not found but we're in current-category mode, try async resolution
+  if (config.productSource === 'current-category' && !pageContext.categoryId) {
+    console.log('[Product Table] 🔄 Category ID not available, attempting async resolution...');
+
+    // Show loading state initially
+    root.render(
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <ProductTable config={config} pageContext={pageContext} />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    );
+
+    // Resolve category ID asynchronously
+    getCategoryIdAsync().then((categoryId) => {
+      if (categoryId) {
+        console.log('[Product Table] ✅ Async category resolution successful, re-rendering with category:', categoryId);
+        // Re-render with resolved category ID
+        const updatedPageContext = { ...pageContext, categoryId };
+        root.render(
+          <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+              <ProductTable config={config} pageContext={updatedPageContext} />
+            </QueryClientProvider>
+          </ErrorBoundary>
+        );
+      } else {
+        console.warn('[Product Table] ⚠️ Async category resolution failed, widget will show all products');
+      }
+    });
+  } else {
+    // Render immediately with available data
+    root.render(
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <ProductTable config={config} pageContext={pageContext} />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    );
+  }
 
   // Store cleanup function
   (window as any).__productTableWidgets = (window as any).__productTableWidgets || {};
