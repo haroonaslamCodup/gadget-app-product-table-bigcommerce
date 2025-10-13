@@ -213,6 +213,11 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // Defensive: ensure props are valid arrays
+  const safeColumns = Array.isArray(columns) ? columns : [];
+  const safeColumnsOrder = Array.isArray(columnsOrder) ? columnsOrder : [];
+  const safeColumnLabels = columnLabels && typeof columnLabels === 'object' ? columnLabels : {};
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -246,23 +251,23 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
     }
 
     if (checked) {
-      const newColumns = [...columns, columnId];
-      const newOrder = [...columnsOrder, columnId];
+      const newColumns = [...safeColumns, columnId];
+      const newOrder = [...safeColumnsOrder, columnId];
       const [finalCols, finalOrder] = ensureRequiredColumns(newColumns, newOrder);
-      onChange(finalCols, finalOrder, columnLabels);
+      onChange(finalCols, finalOrder, safeColumnLabels);
     } else {
-      const newColumns = columns.filter((c) => c !== columnId);
-      const newOrder = columnsOrder.filter((c) => c !== columnId);
+      const newColumns = safeColumns.filter((c) => c !== columnId);
+      const newOrder = safeColumnsOrder.filter((c) => c !== columnId);
       const [finalCols, finalOrder] = ensureRequiredColumns(newColumns, newOrder);
-      onChange(finalCols, finalOrder, columnLabels);
+      onChange(finalCols, finalOrder, safeColumnLabels);
     }
-  }, [columns, columnsOrder, columnLabels, ensureRequiredColumns, onChange]);
+  }, [safeColumns, safeColumnsOrder, safeColumnLabels, ensureRequiredColumns, onChange]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const draggedId = event.active.id as string;
     // Prevent dragging required columns to maintain their order
     if (REQUIRED_COLUMNS.includes(draggedId)) {
-      const index = columnsOrder.indexOf(draggedId);
+      const index = safeColumnsOrder.indexOf(draggedId);
       if (index < 2) {
         // Don't allow dragging if in first two positions
         return;
@@ -279,20 +284,20 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
       const overId = over.id as string;
 
       // Don't allow moving items into the first two positions (reserved for required columns)
-      const overIndex = columnsOrder.indexOf(overId);
+      const overIndex = safeColumnsOrder.indexOf(overId);
       if (overIndex < 2 && !REQUIRED_COLUMNS.includes(activeId)) {
         setActiveId(null);
         return;
       }
 
-      const oldIndex = columnsOrder.indexOf(activeId);
-      const newIndex = columnsOrder.indexOf(overId);
+      const oldIndex = safeColumnsOrder.indexOf(activeId);
+      const newIndex = safeColumnsOrder.indexOf(overId);
 
-      let newOrder = arrayMove(columnsOrder, oldIndex, newIndex);
+      let newOrder = arrayMove(safeColumnsOrder, oldIndex, newIndex);
 
       // Ensure image and name stay in first two positions
-      const [finalCols, finalOrder] = ensureRequiredColumns(columns, newOrder);
-      onChange(finalCols, finalOrder, columnLabels);
+      const [finalCols, finalOrder] = ensureRequiredColumns(safeColumns, newOrder);
+      onChange(finalCols, finalOrder, safeColumnLabels);
     }
 
     setActiveId(null);
@@ -301,40 +306,40 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
 
-    const columnId = columnsOrder[index];
+    const columnId = safeColumnsOrder[index];
 
     // Prevent moving into required column positions
     if (index === 1 || (index === 2 && REQUIRED_COLUMNS.includes(columnId))) {
       return;
     }
 
-    const newOrder = [...columnsOrder];
+    const newOrder = [...safeColumnsOrder];
     [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
 
-    const [finalCols, finalOrder] = ensureRequiredColumns(columns, newOrder);
-    onChange(finalCols, finalOrder, columnLabels);
+    const [finalCols, finalOrder] = ensureRequiredColumns(safeColumns, newOrder);
+    onChange(finalCols, finalOrder, safeColumnLabels);
   };
 
   const handleMoveDown = (index: number) => {
-    if (index === columnsOrder.length - 1) return;
+    if (index === safeColumnsOrder.length - 1) return;
 
-    const columnId = columnsOrder[index];
+    const columnId = safeColumnsOrder[index];
 
     // Prevent moving first required column down
     if (index === 0 && REQUIRED_COLUMNS.includes(columnId)) {
       return;
     }
 
-    const newOrder = [...columnsOrder];
+    const newOrder = [...safeColumnsOrder];
     [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
 
-    const [finalCols, finalOrder] = ensureRequiredColumns(columns, newOrder);
-    onChange(finalCols, finalOrder, columnLabels);
+    const [finalCols, finalOrder] = ensureRequiredColumns(safeColumns, newOrder);
+    onChange(finalCols, finalOrder, safeColumnLabels);
   };
 
   const handleEditLabel = (columnId: string, newLabel: string) => {
-    const newLabels = { ...columnLabels, [columnId]: newLabel };
-    onChange(columns, columnsOrder, newLabels);
+    const newLabels = { ...safeColumnLabels, [columnId]: newLabel };
+    onChange(safeColumns, safeColumnsOrder, newLabels);
   };
 
   const handleResetOrder = () => {
@@ -346,14 +351,14 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
 
     // Reset to default order based on AVAILABLE_COLUMNS
     const defaultOrder = AVAILABLE_COLUMNS
-      .filter(col => columns.includes(col.id))
+      .filter(col => safeColumns.includes(col.id))
       .map(col => col.id);
 
-    const [finalCols, finalOrder] = ensureRequiredColumns(columns, defaultOrder);
-    onChange(finalCols, finalOrder, columnLabels);
+    const [finalCols, finalOrder] = ensureRequiredColumns(safeColumns, defaultOrder);
+    onChange(finalCols, finalOrder, safeColumnLabels);
   };
 
-  const enabledItems = columnsOrder
+  const enabledItems = safeColumnsOrder
     .map((id) => {
       const found = AVAILABLE_COLUMNS.find((c) => c.id === id);
       if (!found) {
@@ -379,19 +384,12 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
             <SectionTitle bold>
               Available Columns
             </SectionTitle>
-            <ColumnCount>{columns.length} / {AVAILABLE_COLUMNS.length} selected</ColumnCount>
+            <ColumnCount>{safeColumns.length} / {AVAILABLE_COLUMNS.length} selected</ColumnCount>
           </SectionHeader>
-
-          <Message
-            type="info"
-            messages={[
-              { text: "Product Image and Product Name are required columns and will always appear first." }
-            ]}
-            marginBottom="medium"
-          />
 
           <SearchBox marginBottom="medium">
             <Input
+              width="100%"
               placeholder="Search columns..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -402,11 +400,11 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
             {filteredAvailableColumns.map((column) => (
               <ColumnCheckboxCard
                 key={column.id}
-                $isChecked={columns.includes(column.id)}
+                $isChecked={safeColumns.includes(column.id)}
                 $isRequired={column.required}
               >
                 <Checkbox
-                  checked={columns.includes(column.id)}
+                  checked={safeColumns.includes(column.id)}
                   onChange={(e) => handleToggleColumn(column.id, e.target.checked)}
                   label={`${column.icon} ${column.label}${column.required ? ' (Required)' : ''}`}
                   disabled={column.required}
@@ -422,7 +420,7 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
             <SectionTitle bold>
               Column Display Order
             </SectionTitle>
-            {columnsOrder.length > 1 && (
+            {safeColumnsOrder.length > 1 && (
               <Button variant="subtle" onClick={handleResetOrder}>
                 Reset to Default
               </Button>
@@ -453,7 +451,7 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={columnsOrder}
+                items={safeColumnsOrder}
                 strategy={verticalListSortingStrategy}
               >
                 <DragList>
@@ -462,7 +460,7 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
                       key={item.id}
                       id={item.id}
                       label={item.label}
-                      customLabel={columnLabels[item.id]}
+                      customLabel={safeColumnLabels[item.id]}
                       icon={item.icon}
                       index={index}
                       isRequired={item.required || false}
@@ -485,11 +483,11 @@ export const ColumnManager = ({ columns, columnsOrder, columnLabels, onChange }:
                     <CardContent>
                       <ColumnInfo>
                         <OrderBadge>
-                          #{columnsOrder.indexOf(activeId) + 1}
+                          #{safeColumnsOrder.indexOf(activeId) + 1}
                         </OrderBadge>
                         <ColumnLabel>
                           <span style={{ marginRight: "8px" }}>{activeItem.icon}</span>
-                          <Text bold>{columnLabels[activeId] || activeItem.label}</Text>
+                          <Text bold>{safeColumnLabels[activeId] || activeItem.label}</Text>
                         </ColumnLabel>
                       </ColumnInfo>
                     </CardContent>
