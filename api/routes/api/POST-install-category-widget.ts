@@ -66,7 +66,7 @@ export default async function route({ request, reply, logger, connections, api }
         const templateData = {
           name: 'Product Table Widget Template',
           schema: [] as const,
-          template: `<div data-product-table-widget="${productTableId}"></div>`
+          template: `<div data-product-table-widget="{{productTableId}}" id="product-table-{{productTableId}}"></div>`
         };
 
         logger.info(`Creating widget template with data: ${JSON.stringify(templateData)}`);
