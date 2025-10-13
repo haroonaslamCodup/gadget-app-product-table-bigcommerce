@@ -15,7 +15,10 @@
       "mcp__ide__getDiagnostics",
       "Bash(npx vite:*)",
       "Bash(yarn build:*)",
-      "Bash(yarn install)"
+      "Bash(yarn install)",
+      "mcp__linear-server__get_project",
+      "mcp__linear-server__create_issue",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

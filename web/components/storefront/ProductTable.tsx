@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { useCustomerContext, useBigCommerceContext } from "../../hooks/useCustomer";
+import { useBigCommerceContext, useCustomerContext } from "../../hooks/useCustomer";
 import { useProducts } from "../../hooks/useProducts";
 import { ExpandableProductRow } from "./ExpandableProductRow";
 import { GroupedView } from "./GroupedView";
@@ -77,10 +77,8 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
       filters.includeVariants = "true";
     } else if (config.productSource === "specific-categories" && config.selectedCategories && config.selectedCategories.length > 0) {
       filters.categories = config.selectedCategories.join(",");
-      console.log('[Product Table Component] Using specific categories:', filters.categories);
     } else if (config.productSource === "current-category" && pageContext?.categoryId) {
       filters.categories = pageContext.categoryId;
-      console.log('[Product Table Component] Using current category filter:', filters.categories);
     } else if (config.productSource === "current-category" && !pageContext?.categoryId) {
       console.warn('[Product Table Component] ⚠️ current-category mode but no categoryId in pageContext!', { config, pageContext });
     }
@@ -88,9 +86,6 @@ export const ProductTable = ({ config, pageContext }: ProductTableProps) => {
     if (customerContext?.customerGroupId) {
       filters.userGroup = customerContext.customerGroupId;
     }
-
-    console.log('[Product Table Component] Final filters:', filters);
-
     return filters;
   }, [config, pageContext, currentPage, sortBy, searchQuery, customerContext]);
 
