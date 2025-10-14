@@ -46,9 +46,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build main app
-        run: yarn build
-
       - name: Build widget
         run: yarn build:widget
 
