@@ -12,23 +12,26 @@ on:
 
 jobs:
   lint:
-    name: Lint Code
+    name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "yarn"
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-      - name: Run linter
+
+      - name: Run type check
         run: yarn lint
 
   build:
-    name: Build Project
+    name: Build App & Widget
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -43,44 +46,21 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build project
+      - name: Build main app
         run: yarn build
 
-      - name: Check build output
+      - name: Build widget
+        run: yarn build:widget
+
+      - name: Check build outputs
         run: |
           if [ ! -d "dist" ]; then
             echo "Error: dist directory not found"
             exit 1
           fi
           echo "Build successful! Output directory:"
-          ls -la dist
+          ls -la dist/
 
-  widget-build:
-    name: Build Widget
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "yarn"
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build widget
-        run: yarn build:widget
-
-      - name: Check widget bundle
-        run: |
-          if [ -f "dist/widget.js" ]; then
-            echo "Widget bundle created successfully"
-            ls -lh dist/widget.js
-          else
-            echo "Warning: widget.js not found in dist/"
-            echo "Available files in dist:"
-            ls -la dist/ || echo "dist/ directory not found"
-          fi
+          echo ""
+          echo "Widget files:"
+          ls -lh dist/widget* 2>/dev/null || echo "No widget files found"
