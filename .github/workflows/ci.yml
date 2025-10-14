@@ -11,9 +11,58 @@ on:
       - staging
 
 jobs:
+  validate-branch:
+    name: Validate Branch Rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR target branch
+        if: github.event_name == 'pull_request'
+        run: |
+          PR_BASE_BRANCH="${{ github.base_ref }}"
+          PR_HEAD_BRANCH="${{ github.head_ref }}"
+
+          echo "🔍 Validating branch protection rules..."
+          echo "PR from: $PR_HEAD_BRANCH → to: $PR_BASE_BRANCH"
+
+          # Only main branch PRs should come from staging
+          if [ "$PR_BASE_BRANCH" = "main" ]; then
+            if [ "$PR_HEAD_BRANCH" != "staging" ]; then
+              echo "❌ ERROR: Only staging branch can create PRs to main"
+              echo "This PR is from '$PR_HEAD_BRANCH' but main only accepts PRs from 'staging'"
+              exit 1
+            fi
+            echo "✅ Main branch rule satisfied: PR from staging"
+          fi
+
+          # Staging accepts PRs from feature branches (any branch except main)
+          if [ "$PR_BASE_BRANCH" = "staging" ]; then
+            if [ "$PR_HEAD_BRANCH" = "main" ]; then
+              echo "❌ ERROR: Cannot create PR from main to staging"
+              exit 1
+            fi
+            echo "✅ Staging branch rule satisfied: PR from $PR_HEAD_BRANCH"
+          fi
+
+  prevent-direct-main-merge:
+    name: Prevent Direct Main Merge
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Block direct push to main
+        run: |
+          echo "❌ ERROR: Direct pushes to main are not allowed!"
+          echo "You must create a PR from staging branch instead."
+          exit 1
+
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
+    needs: validate-branch
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,8 +80,9 @@ jobs:
         run: yarn lint
 
   build:
-    name: build
+    name: Build
     runs-on: ubuntu-latest
+    needs: validate-branch
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -64,3 +114,17 @@ jobs:
 
           echo ""
           echo "All builds completed successfully!"
+
+  ci-status:
+    name: CI Status Check
+    runs-on: ubuntu-latest
+    needs: [lint, build]
+    if: always()
+    steps:
+      - name: Check CI Status
+        run: |
+          if [ "${{ needs.lint.result }}" = "failure" ] || [ "${{ needs.build.result }}" = "failure" ]; then
+            echo "❌ CI Pipeline Failed"
+            exit 1
+          fi
+          echo "✅ CI Pipeline Passed"
