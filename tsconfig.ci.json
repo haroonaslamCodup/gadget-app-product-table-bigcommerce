@@ -2,9 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
     "noEmit": true,
-    "types": []
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./web/types"]
   },
   "include": [
     "web/**/*.ts",
