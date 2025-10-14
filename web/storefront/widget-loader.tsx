@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { ProductTable } from "../components/storefront/ProductTable";
+import { APP_VERSION, WIDGET_VERSION } from "../version";
 
 // Get the Gadget app URL from the script tag
 // Look for the script tag that loaded widget-loader.js
@@ -340,4 +341,9 @@ if (document.readyState === 'loading') {
   init: initProductTableWidget,
   autoInit: autoInitWidgets,
   cleanup: cleanupAllWidgets,
+  version: WIDGET_VERSION,
+  appVersion: APP_VERSION,
 };
+
+// Log widget version
+console.log(`📦 Product Table Widget ${WIDGET_VERSION} loaded`);

@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - staging  # Only run on push to staging
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  validate-branch:
+    name: Validate Branch Rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR target branch
+        if: github.event_name == 'pull_request'
+        run: |
+          PR_BASE_BRANCH="${{ github.base_ref }}"
+          PR_HEAD_BRANCH="${{ github.head_ref }}"
+
+          echo "🔍 Validating branch protection rules..."
+          echo "PR from: $PR_HEAD_BRANCH → to: $PR_BASE_BRANCH"
+
+          # Only main branch PRs should come from staging
+          if [ "$PR_BASE_BRANCH" = "main" ]; then
+            if [ "$PR_HEAD_BRANCH" != "staging" ]; then
+              echo "❌ ERROR: Only staging branch can create PRs to main"
+              echo "This PR is from '$PR_HEAD_BRANCH' but main only accepts PRs from 'staging'"
+              exit 1
+            fi
+            echo "✅ Main branch rule satisfied: PR from staging"
+          fi
+
+          # Staging accepts PRs from feature branches (any branch except main)
+          if [ "$PR_BASE_BRANCH" = "staging" ]; then
+            if [ "$PR_HEAD_BRANCH" = "main" ]; then
+              echo "❌ ERROR: Cannot create PR from main to staging"
+              exit 1
+            fi
+            echo "✅ Staging branch rule satisfied: PR from $PR_HEAD_BRANCH"
+          fi
+
+  prevent-direct-main-merge:
+    name: prevent-direct-main-merge
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Block direct push to main
+        run: |
+          echo "❌ ERROR: Direct pushes to main are not allowed!"
+          echo "You must create a PR from staging branch instead."
+          exit 1
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    needs: validate-branch
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run lint check
+        run: yarn lint
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    needs: validate-branch
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build widget
+        run: yarn build:widget
+
+      - name: Check build outputs
+        run: |
+          echo "Checking build outputs..."
+
+          if [ -d "web/dist/widget" ]; then
+            echo "✅ Widget build successful!"
+            echo "Widget files:"
+            ls -lh web/dist/widget/
+          else
+            echo "❌ Error: web/dist/widget directory not found"
+            exit 1
+          fi
+
+          echo ""
+          echo "All builds completed successfully!"
+
+  ci-status:
+    name: CI Status Check
+    runs-on: ubuntu-latest
+    needs: [lint, build]
+    if: always()
+    steps:
+      - name: Check CI Status
+        run: |
+          if [ "${{ needs.lint.result }}" = "failure" ] || [ "${{ needs.build.result }}" = "failure" ]; then
+            echo "❌ CI Pipeline Failed"
+            exit 1
+          fi
+          echo "✅ CI Pipeline Passed"
