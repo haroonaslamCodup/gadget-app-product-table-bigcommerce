@@ -31,7 +31,7 @@ jobs:
         run: yarn lint
 
   build:
-    name: Build App & Widget
+    name: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
