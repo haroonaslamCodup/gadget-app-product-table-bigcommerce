@@ -3,13 +3,12 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"],
-    "typeRoots": ["./node_modules/@types", "./web/types"]
+    "types": ["node"]
   },
   "include": [
     "web/**/*.ts",
     "web/**/*.tsx",
-    "web/types/**/*.d.ts"
+    "web/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
