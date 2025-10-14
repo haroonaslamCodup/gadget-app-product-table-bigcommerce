@@ -7,7 +7,7 @@
   "scripts": {
     "build": "vite build",
     "build:widget": "vite build --config vite.widget.config.mts",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc --noEmit --project tsconfig.ci.json",
     "type-check:watch": "tsc --noEmit --watch",
     "prebuild": "npm run type-check",
     "prepare": "husky install",
