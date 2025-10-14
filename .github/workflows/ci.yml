@@ -46,18 +46,24 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Build main app
+        run: yarn build
+
       - name: Build widget
         run: yarn build:widget
 
       - name: Check build outputs
         run: |
-          if [ ! -d "dist" ]; then
-            echo "Error: dist directory not found"
+          echo "Checking build outputs..."
+
+          if [ -d "web/dist/widget" ]; then
+            echo "✅ Widget build successful!"
+            echo "Widget files:"
+            ls -lh web/dist/widget/
+          else
+            echo "❌ Error: web/dist/widget directory not found"
             exit 1
           fi
-          echo "Build successful! Output directory:"
-          ls -la dist/
 
           echo ""
-          echo "Widget files:"
-          ls -lh dist/widget* 2>/dev/null || echo "No widget files found"
+          echo "All builds completed successfully!"
