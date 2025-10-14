@@ -44,7 +44,11 @@ export default async function route({ request, reply, logger, connections, api }
 
     try {
       const templates = await bigcommerceConnection.v3.get('/content/widget-templates') as any;
-      const existingTemplate = templates?.data?.find((t: any) =>
+      logger.info(`Templates response: ${JSON.stringify(templates)}`);
+
+      // Handle both direct array and wrapped response
+      const templateList = Array.isArray(templates) ? templates : (templates?.data || []);
+      const existingTemplate = templateList.find((t: any) =>
         t.name === 'Product Table Widget Template'
       );
 
@@ -62,18 +66,28 @@ export default async function route({ request, reply, logger, connections, api }
         const templateData = {
           name: 'Product Table Widget Template',
           schema: [] as const,
-          template: `<div data-product-table-widget="${productTableId}"></div>`
+          template: `<div data-product-table-widget="{{productTableId}}" id="product-table-{{productTableId}}"></div>`
         };
+
+        logger.info(`Creating widget template with data: ${JSON.stringify(templateData)}`);
 
         const createResponse = await bigcommerceConnection.v3.post(
           '/content/widget-templates',
           { body: templateData }
         ) as any;
 
-        widgetTemplateUuid = createResponse?.data?.uuid;
-        logger.info(`Created widget template: ${widgetTemplateUuid}`);
+        logger.info(`Create response: ${JSON.stringify(createResponse)}`);
+
+        // Handle both direct response and wrapped response
+        widgetTemplateUuid = createResponse?.uuid || createResponse?.data?.uuid;
+        logger.info(`Created widget template UUID: ${widgetTemplateUuid}`);
+
+        if (!widgetTemplateUuid) {
+          logger.error(`No UUID found in response: ${JSON.stringify(createResponse)}`);
+        }
       } catch (e) {
         logger.error(`Failed to create widget template: ${(e as Error).message}`);
+        logger.error(`Error stack: ${(e as Error).stack}`);
         return reply.code(500).send({
           success: false,
           error: "Failed to create widget template",
@@ -101,15 +115,21 @@ export default async function route({ request, reply, logger, connections, api }
         }
       };
 
+      logger.info(`Creating widget with data: ${JSON.stringify(widgetData)}`);
+
       const widgetResponse = await bigcommerceConnection.v3.post(
         '/content/widgets',
         { body: widgetData }
       ) as any;
 
-      widgetUuid = widgetResponse?.data?.uuid;
-      logger.info(`Created widget instance: ${widgetUuid}`);
+      logger.info(`Widget response: ${JSON.stringify(widgetResponse)}`);
+
+      // Handle both direct response and wrapped response
+      widgetUuid = widgetResponse?.uuid || widgetResponse?.data?.uuid;
+      logger.info(`Created widget instance UUID: ${widgetUuid}`);
     } catch (e) {
       logger.error(`Failed to create widget: ${(e as Error).message}`);
+      logger.error(`Error stack: ${(e as Error).stack}`);
       return reply.code(500).send({
         success: false,
         error: "Failed to create widget",
