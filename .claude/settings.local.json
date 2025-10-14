@@ -18,7 +18,9 @@
       "Bash(yarn install)",
       "mcp__linear-server__get_project",
       "mcp__linear-server__create_issue",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(yarn lint)",
+      "Bash(yarn type-check:*)"
     ],
     "deny": [],
     "ask": []
