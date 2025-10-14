@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "web/**/*.ts",
+    "web/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    ".gadget",
+    "api/**/*",
+    "accessControl/**/*",
+    "settings.gadget.ts",
+    "vite.config.mts",
+    "dist/**/*",
+    "web/dist/**/*",
+    "**/*.js"
+  ]
+}

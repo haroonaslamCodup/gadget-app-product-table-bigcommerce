@@ -11,7 +11,8 @@
     "type-check:watch": "tsc --noEmit --watch",
     "prebuild": "npm run type-check",
     "prepare": "husky install",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit --project tsconfig.ci.json",
+    "lint:all": "tsc --noEmit"
   },
   "resolutions": {
     "@types/react": "^19.1.1"

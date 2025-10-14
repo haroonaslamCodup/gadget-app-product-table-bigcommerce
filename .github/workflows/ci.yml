@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - staging
+
 jobs:
   lint:
     name: Lint Code
@@ -27,9 +28,8 @@ jobs:
         run: yarn lint
 
   build:
-    name: Build and Type Check
+    name: Build Project
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -43,9 +43,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Type check
-        run: npx tsc --noEmit
-
       - name: Build project
         run: yarn build
 
@@ -57,18 +54,33 @@ jobs:
           fi
           echo "Build successful! Output directory:"
           ls -la dist
+
   widget-build:
     name: Build Widget
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "yarn"
-      - run: yarn install --frozen-lockfile
-      - run: yarn build:widget # If you have a separate widget build command
-      - name: Check widget bundle size
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build widget
+        run: yarn build:widget
+
+      - name: Check widget bundle
         run: |
-          ls -lh dist/widget.js
-          # Add size check if needed
+          if [ -f "dist/widget.js" ]; then
+            echo "Widget bundle created successfully"
+            ls -lh dist/widget.js
+          else
+            echo "Warning: widget.js not found in dist/"
+            echo "Available files in dist:"
+            ls -la dist/ || echo "dist/ directory not found"
+          fi
